@@ -64,7 +64,7 @@ a 3PL-norm model may be evaluated alongside the 2PL-norm model. If guessing is u
 only 1PL- and 2PL-norm models need to be considered.
 
 To compare the fit of the plausible IRT models, the function `compare_IRTnorm_models` can be utulized. This functions fits the set of plausible models and returns their expected log predictive density ELPD differences for comparison, thereby heavily relying on the `loo` package, see 
-Vehtari A, Gabry J, Magnusson M, Yao Y, Bürkner P, Paananen T, Gelman A (2026). “loo: Efficient leave-one-out cross-validation and WAIC for Bayesian models.” R package version 2.10.0, \url{https://mc-stan.org/loo/}.
+Vehtari A, Gabry J, Magnusson M, Yao Y, Bürkner P, Paananen T, Gelman A (2026). “loo: Efficient leave-one-out cross-validation and WAIC for Bayesian models.” R package version 2.10.0, <https://mc-stan.org/loo/>.
 
 The norming models to compare are indicated with `model_specifications`. 
 This expected a list of which each element holds the model information of one 
