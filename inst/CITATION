@@ -1,0 +1,11 @@
+bibentry(
+  bibtype = "Article",
+  title = "Bayesian IRT-based continuous norming with the R-package IRTnorm",
+  author = "Hannah M. Heister, Casper J. Albers and Marieke E. Timmerman",
+  journal = "XX",
+  year = "XX",
+  volume = "XX",
+  number = "XX",
+  pages = "XX",
+  doi = "XX"
+)
