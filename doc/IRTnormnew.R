@@ -60,7 +60,7 @@ visual_polynomial_selection(different_poly_2PL, perspective = "ELPD", highlightr
 ## ----load_info,  echo=FALSE, include= TRUE------------------------------------
 data("info")
 
-## ----showfit02, echo=TRUE, include=FALSE,eval = TRUE--------------------------
+## ----showfit02, echo=TRUE, include=TRUE,eval = TRUE---------------------------
 info$conv_info 
 
 ## ----showfit03, echo=TRUE, include=TRUE ,eval = FALSE-------------------------

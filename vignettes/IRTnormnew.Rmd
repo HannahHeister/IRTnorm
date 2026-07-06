@@ -187,7 +187,7 @@ algorithm has converged, as model results are reliable only if convergence is ac
 To check convergence the  potential scale reduction factor (Rhat) and the effective 
 sample size (ESS) should be evaluated. Rhat values should be close to 1, and larger 
 ESS values indicate more reliable parameter estimates. 
-```{r showfit02, echo=TRUE, include=FALSE,eval = TRUE}
+```{r showfit02, echo=TRUE, include=TRUE,eval = TRUE}
 info$conv_info 
 ``` 
 

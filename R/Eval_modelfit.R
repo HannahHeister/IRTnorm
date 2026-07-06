@@ -1174,7 +1174,7 @@ data <- fit_info$newdata
     }
 
     xname <- "Proportion correct per item observed"
-    yname <- "Proportion correct per item based on irt_mod"
+    yname <- "Proportion correct per item based on model"
     titlename <- "Item fit"
   }
 
@@ -1198,7 +1198,7 @@ if(data$irt_mod <=3){
       }
     }
     xname <- "Realized raw score"
-    yname <- "irt_mod-implied raw score"
+    yname <- "model-implied raw score"
     titlename <- "Person fit"
   }
   if(data$irt_mod == 4 & parameter == "item"){
