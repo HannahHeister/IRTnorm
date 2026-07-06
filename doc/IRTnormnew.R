@@ -31,7 +31,7 @@ different_IRTmodels
 #                                          raw_data = response_data,
 #                                          age_variable = "age",
 #                                          int_variables = 1:50,
-#                                          include_splines = TRUE)
+#                                          include_splines = FALSE)
 # 
 
 ## ----load_modelcompare,  echo=FALSE, include= TRUE----------------------------
@@ -101,7 +101,7 @@ item_person_fit(fit_info =info, parameter = "item")
 item_person_fit(fit_info =info, parameter = "person")
 
 ## ----rawsjpw, echo=TRUE, include=TRUE ,eval = FALSE---------------------------
-# quantile_curves(fit_info = info, "rawscore",
+# quantile_curves(fit_info = info, perspective = "rawscore",
 #                             probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
 
 ## ----showfit3_raw, echo=TRUE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center"----
@@ -109,7 +109,7 @@ knitr::include_graphics("figures/plot_rawscore.png")
 
 
 ## ----showfit5_consist, echo=TRUE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center"----
-quantile_curves(fit_info = info, "ability", 
+quantile_curves(fit_info = info, perspective = "ability", 
                             probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
 
 ## ----showfit6_2, echo=TRUE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center"----

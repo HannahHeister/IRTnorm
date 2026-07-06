@@ -37,10 +37,10 @@ This vignette introduces the main modeling concepts and demonstrates the use of 
   
 The main workflow in `IRTnorm` consists of:
 
-1. Select best IRTnorm model (`compare_polynomial_degrees`, `visual_polynomial_degrees`, `compare_IRTnorm_models`)
+1. Select best IRTnorm model (`compare_IRTnorm_models`,`compare_polynomial_degrees`, `visual_polynomial_degrees`)
 2. Fit the selected IRTnorm model and extract all important model information (`estimate_norming_model`)
-3. Evaluate model fit (`NC`, `NC_visual`,`normscore_dist`,`quantile_curves`,`item_person_fit`,`effect_age`) 
-4. Norm new individuals using the chosen IRT-norm model (`info_new_norming`,`estimate_theta_new`)
+3. Evaluate model fit (`NC`, `NC_visual`, `normscore_dist`, `quantile_curves`, `item_person_fit`, `effect_age`) 
+4. Norm new individuals using the chosen IRT-norm model (`norm_new_individual`)
 
 ---
   
@@ -56,32 +56,37 @@ data("response_data")
 
 ## Perform model comparison
 Selecting an appropriate IRT-based norming model requires considering a set of plausible models.
-Because model estimation is computationally intensive, it is not recommended to fit and 
-compare all possible models. Instead, a pre-selection should be made based on characteristics of the test.
+This set can differ in both the IRT model choice and the model specifications for the age effects. 
 
+When selecting candidate IRT models, a pre-selection should be made based on the characteristics of the test.
 For example, if the test contains binary items and guessing might influence responses,
 a 3PL-norm model may be evaluated alongside the 2PL-norm model. If guessing is unlikely, 
 only 1PL- and 2PL-norm models need to be considered.
 
-To compare the fit of the plausible IRT models, the function `compare_IRTnorm_models` can be utulized. This functions fits the set of plausible models and returns their expected log predictive density ELPD differences for comparison, thereby heavily relying on the `loo` package, see 
-Vehtari A, Gabry J, Magnusson M, Yao Y, Bürkner P, Paananen T, Gelman A (2026). “loo: Efficient leave-one-out cross-validation and WAIC for Bayesian models.” R package version 2.10.0, <https://mc-stan.org/loo/>.
+To compare the fit of the plausible IRT models, the function `compare_IRTnorm_models` 
+can be used. This functions fits the set of plausible models and returns their
+expected log predictive density (ELPD) differences for comparison,
+relying heavily on the `loo` package, see Vehtari A, Gabry J, Magnusson M, Yao Y, Bürkner P,
+Paananen T, Gelman A (2026). “loo: Efficient leave-one-out cross-validation and WAIC
+for Bayesian models.” R package version 2.10.0, <https://mc-stan.org/loo/>.
 
-The norming models to compare are indicated with `model_specifications`. 
-This expected a list of which each element holds the model information of one 
-norming model. The norming model information them self are a list of minimal 
-`irt_model` which indicates which IRT model should be fitted and 
-`age_model` which indicates if splines or polynomial regression should be used for 
-modelling the age effects. Further depended on the selection of splines or polynomial
-additional configuration choices exists which can be viewed in the documentation. 
-To keep the comparison fair and simple we recommend selecting the same polynomial 
-for all models and setting it relativly high such that it can be expected to cover the 
-true trajactory sufficently. Here we choose the fourth polynomial degree for the mean 
-and the third for the standard deviation. 
+The IRT models to compare are indicated via `model_specifications`. 
+This expects a list in which each element holds the model information for one 
+norming model. Each element is itself a list containing, at minimum, `irt_model`, 
+which indicates which IRT model should be fitted, and `age_model`, which indicates
+whether splines or polynomial regression should be used to model the age effects. 
+Depending on whether splines or polynomials are selected, additional configuration 
+options are available; see the documentation for details.
 
-Further, the norming data set needs to be provided as either data.frame or matrix, containing individuals’ ages and item responses. 
-In this example the data is response_data. To indicate which variables/rows hold which information
-either the position or the variable name have to be indicated for the age variable 
-and the item responses. 
+To keep the comparison fair and simple, we recommend selecting the same polynomial degrees
+for all models and setting them relatively high, so that they can be expected to
+sufficiently capture the true trajectory. Here we choose the fourth-degree polynomial
+for the mean and the third-degree polynomial for the standard deviation. 
+
+Finally, the norming data set must be provided as either a `data.frame` or `matrix`,
+containing individuals’ ages and item responses. 
+The age variable (`age_variable`) and the item response variables (`int_variables`)
+must each be indicated by either their position or their variable name.
 
 ```{r fit_IRTmod, echo=TRUE, include=TRUE, eval = FALSE}
  model_list <- list( A = list(irt_model = "1PLnorm", age_model = "poly",        
@@ -99,15 +104,16 @@ compare_IRTnorm_models(model_specifications = model_list,
 data("different_IRTmodels")
 different_IRTmodels
 ```
-We recommend selecting the more complex IRT bases if ELPD_diff/SE < -1.96 for the less complex model. 
-In this comparison we therefore select the 2PLnorm model and focus on this model in the following. 
+We recommend selecting the more complex IRT model only if ELPD_diff/SE < -1.96 
+for the less complex model. In this example, this holds and we therefore select 
+the 2PL-norm model and focus on it in what follows.
 
-Once a IRT model is chosen, the best specification of the age effect must be evaluated. 
-The function `compar_age_models` comapares models based on their ELPD either 
+Once an IRT model is chosen, the best specification of the age effect must be evaluated. 
+The function `compare_age_models` compares models based on their ELPD either 
 on a user specified grid of polynomial degrees or using forward selection. 
-We would recommend using a grid, as this gives further insights into the age effect behavior. 
-Further, it is often useful to compare the polynomial regression with penalized 
-splines which can be done by additionally setting `include_splines = TRUE`
+We recommend using a grid, as this provides further insights into the behavior of the age effects. 
+It is also often useful to compare the polynomial regression with penalized 
+splines, which can be done by additionally setting `include_splines = TRUE`
 ```{r fit_poly, echo=TRUE, include=TRUE, eval = FALSE}
 my_grid <- expand.grid(mu = 1:4, sd = 0:3)
 different_poly_2PL <- compare_age_models(method = "grid", 
@@ -115,7 +121,7 @@ different_poly_2PL <- compare_age_models(method = "grid",
                                          raw_data = response_data, 
                                          age_variable = "age", 
                                          int_variables = 1:50, 
-                                         include_splines = TRUE)
+                                         include_splines = FALSE)
 
 ``` 
 
@@ -123,32 +129,34 @@ different_poly_2PL <- compare_age_models(method = "grid",
 data("different_poly_2PL")
 ``` 
 Since model complexity differences between the polynomial degrees are relatively 
-small we recommend selecting the specification with the largest ELPD, when their 
-resulting trajectories are plausible. 
-
-To check the ELPD differences visually, the `visual_polynomial_selection` can be used, 
+small, we recommend selecting the specification with the largest ELPD,
+provided that the resulting trajectory is plausible.
+To check the ELPD differences visually,`visual_polynomial_selection` can be used
 by setting `perspective= "ELPD"`. 
 ```{r load_modelcompare2,  echo=TRUE, include= TRUE, eval = TRUE,fig.width=6,fig.height=4, fig.align = "center"}
 visual_polynomial_selection(different_poly_2PL, perspective = "ELPD", highlightranks = 3)
 ```
-The resulting plot shows that the secound order polynomial for the standard deviation
-is clearly needed for the model, as all models with lower polynomial degrees 
-result in lower ELPD values. For the mean it seems as the first oder polynomial degree
+The best model has second-order polynomials for both the mean and the standard deviation, highlighted with red. 
+Further, the resulting plot shows that a second-order polynomial for the standard deviation
+is clearly needed, as all models with lower polynomial degrees 
+result in lower ELPD values. For the mean a first-order polynomial degree
 is not sufficient as the ELPD is lower for those when there are high enough polynomials 
 for the standard deviation. 
 
-To now evaluate the trajectory of the models, the perspective can be set to `"trajacteory"` and 
+To evaluate the trajectory of the models, the perspective can be set to `"trajacteory"` and 
 the number of visually highlighted best models can be set with `highlightranks`
 ```{r load_modelcompare3,  echo=TRUE, include= TRUE, eval = TRUE,fig.width=6,fig.height=4, fig.align = "center"}
  visual_polynomial_selection(different_poly_2PL, perspective = "trajectory", highlightranks = 3)
 ```
-This supports the choice that the 2PL model with second polynomial degree for both the latent trait mean and variance is a good model and we will select this model for norming the test. 
-The trajectory of all the models looks relatively similar between all the models 
-that have a sufficient high degree to follow the trajectory. 
+This supports the choice of the 2PL model with a second-degree polynomial for both
+the latent trait mean and standard deviation as a good model, and we will select this model 
+for norming the test. 
+The trajectories of all models with a sufficiently high degree to follow the 
+trend look relatively similar.
 
 ## Fit best model and extract all important information 
-Now that the norming model is selected, it needs to be fitted with a sufficient 
-number of iterations and all required norming information needs to be extracted. 
+Now that the norming model has been selected, it needs to be fitted with a sufficient 
+number of iterations, and all required norming information needs to be extracted. 
 This can be done with the `estimate_norming_model` function. 
 ```{r data_prep2, echo=TRUE, include=TRUE, eval = FALSE}
 info <- estimate_norming_model(raw_data = response_data, 
@@ -170,24 +178,29 @@ data("info")
 ``` 
 ## Check model convergance 
 
-After fitting the IRT-norm model, its fit has to be evaluated to judge if the 
-resulting model is trust worthy. The `IRTnorm` package offers multiple
-functions to visualize and assess the model fit from different perspectives. 
+After fitting the IRT-norm model, its fit must be evaluated to judge whether the 
+resulting model is trustworthy. The `IRTnorm` package offers multiple
+functions to visualize and assess model fit from different perspectives. 
 
-A first step in evaluating a Bayesian IRT-norm model is to check whether the MCMC algorithm has converged. 
-Model results are reliable only if convergence is achieved.
-
-To check convergence Rhat and the effective sample size (ESS) should be evaluated. 
-Rhat values should be close to 1, and larger ESS values indicate more reliable parameter estimates. 
+A first step in evaluating a Bayesian IRT-norm model is to check whether the MCMC 
+algorithm has converged, as model results are reliable only if convergence is achieved.
+To check convergence the  potential scale reduction factor (Rhat) and the effective 
+sample size (ESS) should be evaluated. Rhat values should be close to 1, and larger 
+ESS values indicate more reliable parameter estimates. 
 ```{r showfit02, echo=TRUE, include=FALSE,eval = TRUE}
 info$conv_info 
 ``` 
 
-In this example, Rhat is below 1.01 for all parameter groups and the effective sample size is above 400 for nearly all parameters,  indicating good convergence. 
-The ESS for the tail (ess_tail) and bulk (ess_bulk) are similar, which is another good sign. 
-A large imbalance between the two indicates sampling issues, in which case the model should be checked further. Possible remedies include increasing `adapt_delta` or adjusting the number of draws via `iter_warmup` and `iter_sampling` when fitting the model.
+In this example, Rhat is below 1.01 for all parameter groups, and the effective 
+sample size is above 400 for nearly all parameters,  indicating good convergence. 
+The ESS for the tail (`ess_tail`) and bulk (`ess_bulk`) are similar, which is another good sign. 
+A large imbalance between the two indicates sampling issues, 
+in which case the model should be checked further. Possible remedies include 
+increasing `adapt_delta` or adjusting the number of draws via `iter_warmup` and 
+`iter_sampling` when fitting the model.
 
-Additionally, convergence should be inspected visually for key parameters, such as p1_theta:
+Additionally, convergence should be inspected visually for key parameters, such as 
+the regression coefficient for the mean (`p1_theta`):
 ```{r showfit03, echo=TRUE, include=TRUE ,eval = FALSE}
 conv_plot <- bayesplot::mcmc_trace(info$model_stan_obj$draws(c("p1_theta")))
 #mcmc_trace(mod_poly$draws(c("p2_theta")))
@@ -207,14 +220,13 @@ If you observe any pattern here, have high values for Rhat or have low
 effective sample size values, you can try increasing the number of warm up iterations. 
 
 ## Fit evaluation  
-For converged models, the next step is to evaluate their fit to the data
-
+For converged models, the next step is to evaluate their fit to the data.
 A useful indicator of model fit is the comparison between the observed raw score
 distribution and the posterior predictive (model-implied) raw score distributions obtained from the fitted model. 
-This information can be obtained by using the function `NC()` and visualized 
+This information can be obtained using the function `NC()` and visualized 
 using the function `NC_visual()`. 
 
-This evaluation can be perform either for the entire sample or separately for multiple age groups.
+This evaluation can be performed either for the entire sample or separately for multiple age groups.
 Here, we first assess model performance across the entire sample.
 
 ```{r NC1, echo=TRUE, include=TRUE ,eval = FALSE}
@@ -228,7 +240,7 @@ NC_visual(NC_info = NC_info)
 knitr::include_graphics("figures/plot_NC.png")
 ``` 
 One can see that the observed raw score distribution is plausible under the 
-estimated model. Most observed raw scores (black dots) fall within the 90\% interval
+estimated model. Most observed raw scores (black dots) fall within the 90% interval
 of the raw score distribution (dotted lines) and all points fall within the 
 possible range indicated by the orange point. This indicated the fitted model
 reproduces the observed data patterns well.
@@ -236,7 +248,7 @@ reproduces the observed data patterns well.
 To check if the model fits well over the entire age range of the tested population,
 the NC visualization should also be performed separately for different age groups. 
 This can be performed using the same `NC` and `NC_visual` functions by adding the 
-arguments `age_range` and `age_variable`. This will result in the NC statistics 
+argument `age_range`. This will result in the NC statistics 
 being evaluated based on the groups indicated.
 ```{r ageMC, echo=TRUE, include=TRUE ,eval = FALSE}
 NC_info_age <- NC(fit_info = info, 
@@ -271,31 +283,32 @@ Next, person-level fit is evaluated.
 ```{r showfit4_2, echo=TRUE, include=TRUE, fig.show="hold", fig.width=6,fig.height=4, fig.align = "center"}
 item_person_fit(fit_info =info, parameter = "person")
 ``` 
-One can see a strong agreement between the observed and model implied frequencies. 
-Further, it is visible that for the highly performing individuals the expected 
-number of correct items is slightly below the observed and vice versa for the
-low performing once. This is a phenomena often observable in IRT. Since the 
-observed responses are affected by systematic measurement error, which implied 
-that they are biased towards the mean. 
+One can see a strong agreement between the observed and model-implied frequencies. 
+Further, it is visible that for high-performing individuals, the expected 
+number of correct items is slightly below the observed number, and vice versa for the
+low-performing individuals. This is a phenomena often observed in IRT models, since the 
+observed responses are affected by systematic measurement error, which implies
+that they are slightly biased towards the mean. This does not imply poor model fit, 
+but test constructors should be aware of it. 
 
-
-A visual inspection usually performed when evaluating continuous norming models 
+A visual inspection commonly performed when evaluating continuous norming models 
 is a plot of the observed raw sum scores and model-implied quantile curves. 
 
-Because IRT models evaluate individuals based on their item responses, the raw 
-score does not capture all the information used for norming.In particular, the same 
+Because IRT models evaluate individuals based on their item response patterns, the raw 
+score does not capture all the information used for norming. In particular, the same 
 raw score can correspond to different latent trait estimates if the item response patterns differ. 
-Although this implies that the logic of these plots does not 
+Although this means that the logic of these plots does not 
 fully align with that of the IRT-based continuous norming models, such a plot 
 can still provide a useful overview of model fit.
 
-The `fquantile_curves()` function visualizes observed raw sum scores across age
+The `quantile_curves()` function with `perspective = "rawscore"` visualizes 
+observed raw sum scores across age
 alongside model-implied quantile curves derived from an age-dependent
 IRT norming model. Quantile curves are computed from posterior predictive
-replicated responses and smoothed as a function of age.  The plot therefore 
-provides an approximation of the model-implied quantiles corresponding to the raw scores.
+replicated responses and smoothed as a function of age. The plot therefore 
+provides an approximation of the model-implied quantiles corresponding to the observed raw scores.
 ```{r rawsjpw, echo=TRUE, include=TRUE ,eval = FALSE}
-quantile_curves(fit_info = info, "rawscore", 
+quantile_curves(fit_info = info, perspective = "rawscore", 
                             probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
 ``` 
 
@@ -303,42 +316,41 @@ quantile_curves(fit_info = info, "rawscore",
 knitr::include_graphics("figures/plot_rawscore.png")
 
 ``` 
-In this example the model implied quantile curves seem to align with the 
-approximated model implied quantile curves. 
-
+In this example, the observed raw score curves align well with the model-implied quantile curves.
 
 A visualization more natural to the interpretation of the norming model can be produced using
-`quantile_curves`. This function plots the estimated latent trait values against 
-the estimated model-implied quantile curves. These quantile curves corresponds to the true model-implied
-curves. Because this plot compares different aspects of the model, it provides insight into the model’s internal consistency and how the latent trait distribution varies with age. For a well-fitting model, the plot should show no signs of inconsistency. However, the absence of inconsistencies does not, by itself, guarantee good overall model fit.
+`quantile_curves` with `perspective = "ability"`. This function plots the estimated latent trait values against 
+the estimated model-implied quantile curves. These quantile curves correspond to the true model-implied
+curves. Because this plot compares different aspects of the model, it provides insight into the model’s internal consistency and into how the latent trait distribution varies with age. For a well-fitting model, the plot should show no signs of inconsistency. However, the absence of inconsistencies does not, by itself, guarantee good overall model fit.
 
 ```{r showfit5_consist, echo=TRUE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center"}
-quantile_curves(fit_info = info, "ability", 
+quantile_curves(fit_info = info, perspective = "ability", 
                             probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
 ``` 
 The quantile curves of the latent trait and the estimated latent traits match well, 
-which indicates the model is consistent in itself. 
+which indicates the model is internally consistent. 
 
-Another consistency check is to evaluate the dsirtibution of the normed latent 
+Another consistency check is to evaluate the distribution of the normed latent 
 trait within age groups. 
-The model assumes taht the normed latent trait is standard normally distributed. 
+The model assumes that the normed latent trait is standard normally distributed. 
 To assess whether this assumption holds in the fitted model,
-the function `normscore_dist()` plots a histogram of the estimated normed latent traits alongside the density of a standard normal distribution per age group. 
+the function `normscore_dist()` plots a histogram of the estimated normed latent
+traits alongside the density of a standard normal distribution per age group. 
 ```{r showfit6_2, echo=TRUE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center"}
 normscore_dist(fit_info= info, age_range = seq(-2,2,1), binwidth = 0.5)
 ``` 
-In this example the normed latent traits looks normal distributed in all 
-age groups. This further supports the assumption of inner consistency of the model. 
+In this example the normed latent traits appear normal distributed in all 
+age groups. This further supports the assumption of internal consistency of the model. 
 
-Another general check is to evaluate the change of the mean and standard deviation
+An additional check is to evaluate the change of the mean and standard deviation
 of the  latent trait distribution with age. Based on theoretical knowledge the 
 test constructor can evaluate whether the model implied change coincides with 
 theoretical knowledge. 
 ```{r showfit6, echo=TRUE, include=TRUE, fig.width=6,fig.height=3, fig.align = "center"}
 effect_age(fit_info = info)
 ``` 
-Since these are relatively close to the age effects in the data generating mechanisms 
-this plot this relationship is plausible. 
+Since these model-implied age effects are relatively close to the age effects
+in the data-generating mechanism, this plot indicates that the relationship is plausible.
 
 ## Norms for a new sample of individuals
 The new individual of interest has the response pattern `y`and the age `age`. 
@@ -347,13 +359,14 @@ y <-  c(1,1,0,0,1,0,1,1,0,0,1,0,0,1,1,0,0,1,1,0,1,1,1,0,1,0,1,1,1,1,1,1,0,0,0,
         1,0,1,1,0,0,0,0,1,1,1,0,1,0,0) 
 age <- -1 
 ```
-To obtain a norm score for this individual, the  latent trait estimate is obtained
+To obtain a norm score for this individual, the latent trait estimate is obtained
 by fitting the IRT-norm model with given item parameter and latent trait distribution draws. 
 The only parameter estimated is the latent trait of the new individual, given all others. 
 The individual’s norm score is the latent trait estimate set in relation to the corresponding 
 latent trait distribution in the reference population. 
 The new data is used only to estimate the individual’s latent trait; the model 
 parameters are not updated and remain fixed at the posterior draws obtained from the original model fit.
+
 
 ```{r getinfo_norming, echo=TRUE, include=TRUE, eval = FALSE}
 info_newperson <- norm_new_individual(new_y = y, new_age= age,
@@ -366,9 +379,7 @@ info_newperson$summary
 data("int_info_newperson")
 int_info_newperson
 ``` 
-
-
 Our best estimate of the individuals latent trait is 0.895 which implied the 
-individual is above average. Further, one can say that with 95\% certanty the true 
+individual is above average. Further, one can say that with 95\% certainty the true 
 norm score values lies between -0.033 and 1.848. 
 
