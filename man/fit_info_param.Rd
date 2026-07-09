@@ -7,14 +7,14 @@
 fit_info_param(fit, data)
 }
 \arguments{
-\item{fit}{the data output from \code{fit_IRTnorm()}}
+\item{fit}{the data output from \code{fit_IRTnorm()}.}
 
 \item{data}{named list as returned by \code{\link{data_prep}} containing
 all data and indexing information required for fitting the IRT norming
 model and evaluating its fit.}
 }
 \value{
-a data.frame summarizing Rhat, Ess bulk and ess tail per variable group
+A data.frame summarizing Rhat, Ess bulk and ess tail per variable group.
 }
 \description{
 Computes the convergence diagnostics \strong{R-hat},

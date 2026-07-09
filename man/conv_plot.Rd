@@ -3,7 +3,7 @@
 \docType{data}
 \name{conv_plot}
 \alias{conv_plot}
-\title{Presaved conv_plot inorder for the vingette to run fast}
+\title{Presaved conv_plot in order for the vignette to run fast.}
 \format{
 A \code{ggplot2} object.
 }
@@ -14,6 +14,6 @@ Simulated data.
 data(conv_plot)
 }
 \description{
-Presaved conv_plot inorder for the vingette to run fast
+Presaved conv_plot in order for the vignette to run fast.
 }
 \keyword{datasets}

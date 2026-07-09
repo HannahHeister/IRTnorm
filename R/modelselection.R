@@ -185,7 +185,7 @@ check_dimension <- function(model_specifications){
 }
 
 #' Compare IRTnorm models modeled with different polynomial degrees 
-#' via Grid Search or Forward Selection
+#' via Grid Search or via Forward Selection
 #'
 #' Fits a series of IRTnorm with polynomial age trajectories (varying the
 #' polynomial degree for the mean, \code{mu}, and standard deviation, \code{sd},
@@ -205,20 +205,20 @@ check_dimension <- function(model_specifications){
 #' @param grid A data frame with columns \code{mu} and \code{sd} giving the
 #'   polynomial degree combinations to evaluate. Required (and only used) when
 #'   \code{method = "grid"}; ignored otherwise.
-#'@param raw_data a \code{data.frame} or \code{matrix} containing individual-level
+#'@param raw_data A \code{data.frame} or \code{matrix} containing individual-level
 #'   data. Each row represents one individual. The object must contain at least
 #'   an age variable and item response variables. Item responses may
 #'   contain missing values (\code{NA}).
 #'
-#'@param age_variable either a \code{numeric} index or a \code{character} string specifying
+#'@param age_variable Either a \code{numeric} index or a \code{character} string specifying
 #'   the column in \code{raw_data} that contains the individuals' age information.
 #'   Age is assumed to be continuous.
 #'
-#'@param int_variables a \code{numeric} or \code{character} vector specifying the columns in
+#'@param int_variables A \code{numeric} or \code{character} vector specifying the columns in
 #'   \code{raw_data} that contain the item response variables.
 #'
-#'@param irt_model a \code{character} scalar indicating for which IRT norming model the
-#'   data should be prepared. Currently supported option is:
+#'@param irt_model A \code{character} scalar indicating for which IRT norming model the
+#'   data should be prepared. The currently supported options are:
 #'   \describe{
 #'     \item{\code{"1PLnorm"}}{One-parameter logistic IRT model / Rasch model with
 #'     age-dependent mean and variance.}
@@ -245,38 +245,37 @@ check_dimension <- function(model_specifications){
 #'      \item{\code{"HO2PLnorm-F"}}{Higher order 2PL IRT model with
 #'     age-dependent mean and variance and free correlation matrix across age.}
 #'   }
-#' @param prior_knowledge only required if prior knowledge should be incoperated
-#' in the model. A list of the parameter groups for which prior_knowledge
-#' should be incorporated for each parameter group with prior knowledge a list of
-#' prior means and prior standard deviations has to be indicated. For b in the GRM model
+#' @param prior_knowledge Only required if prior knowledge should be incorporated
+#' in the model. A list of prior means and prior standard deviations has to be indicated,
+#' for each parameter group for which prior knowledge is to be incorporated. For b in the GRM model
 #' this has to be a list per means and standard deviations.
-#' Below in the example a example list is used.
-#' @param parameter_fixed only required if model parameters should be fixed.
-#' A list where the parameter groups that should be fixed are indicated with the list names
+#' Below in the example an example list is used.
+#' @param parameter_fixed Only required if model parameters should be fixed.
+#' A list which indicates the parameter groups that should be fixed, with the list names
 #' and the list elements indicating the values to which the parameters should be fixed.
 #' @param maxeval Integer. Maximum number of individual model fits to perform
 #'   during forward selection before stopping, regardless of whether
 #'   improvement has plateaued. Only used when \code{method = "forward"}.
 #'   Defaults to 10.
 
-#' @param seed an optional \code{integer} specifying the random seed for
+#' @param seed An optional \code{integer} specifying the random seed for
 #'   reproducibility. If \code{NULL} (default), a random seed is generated
 #'   internally.
 #'
-#' @param iter_warmup an \code{integer} specifying the number of warm-up
+#' @param iter_warmup An \code{integer} specifying the number of warm-up
 #'   iterations per chain used by the MCMC sampler.
 #'
-#' @param iter_sampling an \code{integer} specifying the number of post
+#' @param iter_sampling An \code{integer} specifying the number of post
 #'   warm-up (sampling) iterations per chain.
 #'
-#' @param chains an \code{integer} specifying the number of Markov chains to
+#' @param chains An \code{integer} specifying the number of Markov chains to
 #'   run in parallel. The default is 4 chains.
 #'
-#' @param parallel_chains an optional \code{integer} specifying the number of
+#' @param parallel_chains An optional \code{integer} specifying the number of
 #'   CPU cores used for parallel sampling. If \code{NULL} (default), all
 #'   available cores detected by \code{\link[parallel]{detectCores}} are used.
 #'
-#'@param include_splines logical if penalized splines should be compared to the 
+#'@param include_splines Logical, if penalized splines should be compared to the 
 #'polynomial selection or not. 
 #' @details
 #' Each candidate model is fit via \code{fit_one_row}, which prepares the
@@ -544,7 +543,7 @@ compare_age_models <- function(method = c("grid", "forward"),
 #'   (\code{mean}/\code{sd}), with the top-ranked model(s) highlighted.
 #'   Defaults to \code{"ELPD"}. Partial matching is supported via
 #'   \code{\link[base]{match.arg}}.
-#'@param  highlightranks numeric value indicating the top highlightranks to be 
+#'@param  highlightranks Numeric value indicating the top highlightranks to be 
 #' highlighted in color. 
 #' @details
 #' Under \code{perspective = "ELPD"}, each point represents one fitted
@@ -622,7 +621,7 @@ visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "t
 #' Compare Multiple IRTnorm models via Leave-One-Out Cross-Validation
 #'
 #' Fits a set of user-specified IRTnorm models (e.g. differing in IRT model
-#' type, age trajectory specification, or other modeling choices) and
+#' type, or age trajectory specification) and
 #' compares them using leave-one-out cross-validation (LOO-ELPD). Unlike
 #' \code{\link{compare_age_models}}, which searches over polynomial
 #' degree combinations for a single model specification,
@@ -637,42 +636,42 @@ visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "t
 #'   dimensionality} — i.e. all unidimensional or all multidimensional.
 #'   Comparing models of different dimensionality is not supported, since
 #'   LOO-ELPD comparisons assume a common outcome/likelihood structure
-#'   across models
+#'   across models.
 #'   
-#'@param raw_data a \code{data.frame} or \code{matrix} containing individual-level
+#'@param raw_data A \code{data.frame} or \code{matrix} containing individual-level
 #'   data. Each row represents one individual. The object must contain at least
 #'   an age variable and item response variables. Item responses may
 #'   contain missing values (\code{NA}).
 #'
-#'@param age_variable either a \code{numeric} index or a \code{character} string specifying
+#'@param age_variable Either a \code{numeric} index or a \code{character} string specifying
 #'   the column in \code{raw_data} that contains the individuals' age information.
 #'   Age is assumed to be continuous.
 #'
-#'@param int_variables a \code{numeric} or \code{character} vector specifying the columns in
+#'@param int_variables A \code{numeric} or \code{character} vector specifying the columns in
 #'   \code{raw_data} that contain the item response variables.
 #'
-#' @param seed an optional \code{integer} specifying the random seed for
+#' @param seed An optional \code{integer} specifying the random seed for
 #'   reproducibility. If \code{NULL} (default), a random seed is generated
 #'   internally.
 #'
-#' @param iter_warmup an \code{integer} specifying the number of warm-up
+#' @param iter_warmup An \code{integer} specifying the number of warm-up
 #'   iterations per chain used by the MCMC sampler.
 #'
-#' @param iter_sampling an \code{integer} specifying the number of post
+#' @param iter_sampling An \code{integer} specifying the number of post
 #'   warm-up (sampling) iterations per chain.
 #'
-#' @param chains an \code{integer} specifying the number of Markov chains to
+#' @param chains An \code{integer} specifying the number of Markov chains to
 #'   run in parallel. The default is 4 chains.
 #'
-#' @param parallel_chains an optional \code{integer} specifying the number of
+#' @param parallel_chains An optional \code{integer} specifying the number of
 #'   CPU cores used for parallel sampling. If \code{NULL} (default), all
 #'   available cores detected by \code{\link[parallel]{detectCores}} are used.
 #'
 #' @details
 #' Each element of \code{model_specifications} is validated before fitting begins, ensuring there
 #' are at least two model entries and that each specifies \code{irt_model}
-#' and \code{age_model}. For every model the data is prepared, the model is fitted, and
-#' extracts pointwise and summary LOO-ELPD values are reported. All fitted models share
+#' and \code{age_model}. For every model the data is prepared, the model is fitted, 
+#' and pointwise and summary LOO-ELPD values are extracted and reported. All fitted models share
 #' the same \code{raw_data}, \code{age_variable}, \code{int_variables}, and
 #' MCMC settings (\code{seed}, \code{iter_warmup}, \code{iter_sampling},
 #' \code{chains}, \code{parallel_chains}); only the model specification

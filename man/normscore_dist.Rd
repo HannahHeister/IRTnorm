@@ -7,7 +7,7 @@
 normscore_dist(fit_info, age_range, binwidth = 0.5, dim_plot = NULL)
 }
 \arguments{
-\item{fit_info}{a named \code{list} as returned by \code{\link{estimate_norming_model}}}
+\item{fit_info}{A named \code{list} as returned by \code{\link{estimate_norming_model}}.}
 
 \item{age_range}{A \code{numeric} vector specifying the cut-off points for
 age groups. Consecutive values define the lower (exclusive) and upper
@@ -16,17 +16,17 @@ age groups. Consecutive values define the lower (exclusive) and upper
 \item{binwidth}{A \code{numeric} value specifying the bin width of the
 histogram. Defaults to \code{0.5}.}
 
-\item{dim_plot}{only required for multidimensional IRTnorm models.
+\item{dim_plot}{Only required for multidimensional IRTnorm models.
 \code{character} indicating which latent trait of the higher-order model
 should be visualized.
-Can only be of the following characters: "general", "domain1"...}
+Can only be of the following characters: "general", "domain1".}
 }
 \value{
 A \pkg{ggplot2} object showing histograms of norm scores by age group,
 overlaid with the scaled density of a standard normal distribution.
 }
 \description{
-Visualize the distribution of norm scores across age ranges
+Visualize the distribution of norm scores across age ranges.
 }
 \details{
 The \code{normscore_dist} function visualizes whether estimated norm scores

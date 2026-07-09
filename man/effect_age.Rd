@@ -7,7 +7,7 @@
 effect_age(fit_info)
 }
 \arguments{
-\item{fit_info}{a list containing IRTnorm model output from the \code{extract_info()} function.
+\item{fit_info}{A list containing IRTnorm model output from the \code{extract_info()} function.
 It must include the elements \code{info_sample} (person-level information,
 including latent trait estimates) and \code{info_item} (item parameters).}
 }

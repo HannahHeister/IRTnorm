@@ -3,7 +3,7 @@
 \name{compare_age_models}
 \alias{compare_age_models}
 \title{Compare IRTnorm models modeled with different polynomial degrees
-via Grid Search or Forward Selection}
+via Grid Search or via Forward Selection}
 \usage{
 compare_age_models(
   method = c("grid", "forward"),
@@ -36,13 +36,13 @@ model or \code{maxeval} model fits have been reached.}
 polynomial degree combinations to evaluate. Required (and only used) when
 \code{method = "grid"}; ignored otherwise.}
 
-\item{raw_data}{a \code{data.frame} or \code{matrix} containing individual-level
+\item{raw_data}{A \code{data.frame} or \code{matrix} containing individual-level
 data. Each row represents one individual. The object must contain at least
 an age variable and item response variables. Item responses may
 contain missing values (\code{NA}).}
 
-\item{irt_model}{a \code{character} scalar indicating for which IRT norming model the
-data should be prepared. Currently supported option is:
+\item{irt_model}{A \code{character} scalar indicating for which IRT norming model the
+data should be prepared. The currently supported options are:
 \describe{
 \item{\code{"1PLnorm"}}{One-parameter logistic IRT model / Rasch model with
 age-dependent mean and variance.}
@@ -70,11 +70,11 @@ age-dependent mean and variance and free correlation matrix across age.}
 age-dependent mean and variance and free correlation matrix across age.}
 }}
 
-\item{age_variable}{either a \code{numeric} index or a \code{character} string specifying
+\item{age_variable}{Either a \code{numeric} index or a \code{character} string specifying
 the column in \code{raw_data} that contains the individuals' age information.
 Age is assumed to be continuous.}
 
-\item{int_variables}{a \code{numeric} or \code{character} vector specifying the columns in
+\item{int_variables}{A \code{numeric} or \code{character} vector specifying the columns in
 \code{raw_data} that contain the item response variables.}
 
 \item{maxeval}{Integer. Maximum number of individual model fits to perform
@@ -82,35 +82,34 @@ during forward selection before stopping, regardless of whether
 improvement has plateaued. Only used when \code{method = "forward"}.
 Defaults to 10.}
 
-\item{prior_knowledge}{only required if prior knowledge should be incoperated
-in the model. A list of the parameter groups for which prior_knowledge
-should be incorporated for each parameter group with prior knowledge a list of
-prior means and prior standard deviations has to be indicated. For b in the GRM model
+\item{prior_knowledge}{Only required if prior knowledge should be incorporated
+in the model. A list of prior means and prior standard deviations has to be indicated,
+for each parameter group for which prior knowledge is to be incorporated. For b in the GRM model
 this has to be a list per means and standard deviations.
-Below in the example a example list is used.}
+Below in the example an example list is used.}
 
-\item{parameter_fixed}{only required if model parameters should be fixed.
-A list where the parameter groups that should be fixed are indicated with the list names
+\item{parameter_fixed}{Only required if model parameters should be fixed.
+A list which indicates the parameter groups that should be fixed, with the list names
 and the list elements indicating the values to which the parameters should be fixed.}
 
-\item{seed}{an optional \code{integer} specifying the random seed for
+\item{seed}{An optional \code{integer} specifying the random seed for
 reproducibility. If \code{NULL} (default), a random seed is generated
 internally.}
 
-\item{iter_warmup}{an \code{integer} specifying the number of warm-up
+\item{iter_warmup}{An \code{integer} specifying the number of warm-up
 iterations per chain used by the MCMC sampler.}
 
-\item{iter_sampling}{an \code{integer} specifying the number of post
+\item{iter_sampling}{An \code{integer} specifying the number of post
 warm-up (sampling) iterations per chain.}
 
-\item{chains}{an \code{integer} specifying the number of Markov chains to
+\item{chains}{An \code{integer} specifying the number of Markov chains to
 run in parallel. The default is 4 chains.}
 
-\item{parallel_chains}{an optional \code{integer} specifying the number of
+\item{parallel_chains}{An optional \code{integer} specifying the number of
 CPU cores used for parallel sampling. If \code{NULL} (default), all
 available cores detected by \code{\link[parallel]{detectCores}} are used.}
 
-\item{include_splines}{logical if penalized splines should be compared to the
+\item{include_splines}{Logical, if penalized splines should be compared to the
 polynomial selection or not.}
 }
 \value{

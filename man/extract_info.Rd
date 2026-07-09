@@ -38,7 +38,7 @@ item parameters, and for all models holding the value 1.}
 \description{
 The \code{extract_info} function extracts key posterior summaries and
 posterior draws from a fitted Stan-based IRT norming model obtained with
-\code{\link{fit_IRTnorm}}. The function returns person-level norm scores and
+\code{\link{fit_IRTnorm}}. The function returns person-level norm scores, person-level
 latent trait estimates, item parameter estimates, full posterior draws, and
 replicated response data for posterior predictive checks.
 }
@@ -49,8 +49,8 @@ the 5\% and 95\% quantiles as uncertainty bounds.
 
 Item parameters are summarized using posterior means only.
 
-The returned object is intended to be used for further norming analyses,
-reporting, and model diagnostics.
+The returned object is intended to be used for model diagnostics,
+reporting and further norming analyses.
 }
 \examples{
 \dontrun{

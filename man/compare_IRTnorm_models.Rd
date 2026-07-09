@@ -25,34 +25,34 @@ accepted by \code{\link{estimate_norming_model}}).
 dimensionality} — i.e. all unidimensional or all multidimensional.
 Comparing models of different dimensionality is not supported, since
 LOO-ELPD comparisons assume a common outcome/likelihood structure
-across models}
+across models.}
 
-\item{raw_data}{a \code{data.frame} or \code{matrix} containing individual-level
+\item{raw_data}{A \code{data.frame} or \code{matrix} containing individual-level
 data. Each row represents one individual. The object must contain at least
 an age variable and item response variables. Item responses may
 contain missing values (\code{NA}).}
 
-\item{age_variable}{either a \code{numeric} index or a \code{character} string specifying
+\item{age_variable}{Either a \code{numeric} index or a \code{character} string specifying
 the column in \code{raw_data} that contains the individuals' age information.
 Age is assumed to be continuous.}
 
-\item{int_variables}{a \code{numeric} or \code{character} vector specifying the columns in
+\item{int_variables}{A \code{numeric} or \code{character} vector specifying the columns in
 \code{raw_data} that contain the item response variables.}
 
-\item{seed}{an optional \code{integer} specifying the random seed for
+\item{seed}{An optional \code{integer} specifying the random seed for
 reproducibility. If \code{NULL} (default), a random seed is generated
 internally.}
 
-\item{iter_warmup}{an \code{integer} specifying the number of warm-up
+\item{iter_warmup}{An \code{integer} specifying the number of warm-up
 iterations per chain used by the MCMC sampler.}
 
-\item{iter_sampling}{an \code{integer} specifying the number of post
+\item{iter_sampling}{An \code{integer} specifying the number of post
 warm-up (sampling) iterations per chain.}
 
-\item{chains}{an \code{integer} specifying the number of Markov chains to
+\item{chains}{An \code{integer} specifying the number of Markov chains to
 run in parallel. The default is 4 chains.}
 
-\item{parallel_chains}{an optional \code{integer} specifying the number of
+\item{parallel_chains}{An optional \code{integer} specifying the number of
 CPU cores used for parallel sampling. If \code{NULL} (default), all
 available cores detected by \code{\link[parallel]{detectCores}} are used.}
 }
@@ -64,7 +64,7 @@ model-identifying columns (e.g. \code{modelcombi}, \code{irt_model},
 }
 \description{
 Fits a set of user-specified IRTnorm models (e.g. differing in IRT model
-type, age trajectory specification, or other modeling choices) and
+type, or age trajectory specification) and
 compares them using leave-one-out cross-validation (LOO-ELPD). Unlike
 \code{\link{compare_age_models}}, which searches over polynomial
 degree combinations for a single model specification,
@@ -74,8 +74,8 @@ model configurations to be compared directly against one another.
 \details{
 Each element of \code{model_specifications} is validated before fitting begins, ensuring there
 are at least two model entries and that each specifies \code{irt_model}
-and \code{age_model}. For every model the data is prepared, the model is fitted, and
-extracts pointwise and summary LOO-ELPD values are reported. All fitted models share
+and \code{age_model}. For every model the data is prepared, the model is fitted,
+and pointwise and summary LOO-ELPD values are extracted and reported. All fitted models share
 the same \code{raw_data}, \code{age_variable}, \code{int_variables}, and
 MCMC settings (\code{seed}, \code{iter_warmup}, \code{iter_sampling},
 \code{chains}, \code{parallel_chains}); only the model specification

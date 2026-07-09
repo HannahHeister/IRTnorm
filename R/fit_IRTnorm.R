@@ -7,30 +7,30 @@
 #' the data prepared with \code{\link{data_prep}} using Bayesian estimation via \pkg{cmdstanr}.
 #' The specific model is specified with data_prep().
 #' Depending on the specified model in the prepared data object, the
-#' The specifics of the IRT-based continuous norming model are specified in
-#' \code{data} using \code{\link{data_prep}}.
+#' specifics of the IRT-based continuous norming model are specified in
+#' \code{data}, using \code{\link{data_prep}}.
 #' The function supports fitting the norming model with either polynomial or spline-based
 #' age effects.
 #'
 #'
-#' @param data a named list as returned by \code{\link{data_prep}} containing
+#' @param data A named list as returned by \code{\link{data_prep}} containing
 #'   all data and indexing information required for fitting the IRT norming
 #'   model and evaluating its fit.
 #'
-#' @param seed an optional \code{integer} specifying the random seed for
+#' @param seed An optional \code{integer} specifying the random seed for
 #'   reproducibility. If \code{NULL} (default), a random seed is generated
 #'   internally.
 #'
-#' @param iter_warmup an \code{integer} specifying the number of warm-up
+#' @param iter_warmup An \code{integer} specifying the number of warm-up
 #'   iterations per chain used by the MCMC sampler.
 #'
-#' @param iter_sampling an \code{integer} specifying the number of post
+#' @param iter_sampling An \code{integer} specifying the number of post
 #'   warm-up (sampling) iterations per chain.
 #'
-#' @param chains an \code{integer} specifying the number of Markov chains to
+#' @param chains An \code{integer} specifying the number of Markov chains to
 #'   run in parallel. The default is 4 chains.
 #'
-#' @param parallel_chains an optional \code{integer} specifying the number of
+#' @param parallel_chains An optional \code{integer} specifying the number of
 #'   CPU cores used for parallel sampling. If \code{NULL} (default), all
 #'   available cores detected by \code{\link[parallel]{detectCores}} are used.
 #' @param ... Additional arguments passed directly to the
@@ -396,7 +396,7 @@ extract_relationinfo <- function(fit, irt_mod,
 #'@description
 #' The \code{extract_info} function extracts key posterior summaries and
 #' posterior draws from a fitted Stan-based IRT norming model obtained with
-#' \code{\link{fit_IRTnorm}}. The function returns person-level norm scores and
+#' \code{\link{fit_IRTnorm}}. The function returns person-level norm scores, person-level 
 #' latent trait estimates, item parameter estimates, full posterior draws, and
 #' replicated response data for posterior predictive checks.
 #' @param fit A \pkg{cmdstanr} \code{CmdStanMCMC} object as returned by
@@ -431,8 +431,8 @@ extract_relationinfo <- function(fit, irt_mod,
 #'
 #' Item parameters are summarized using posterior means only.
 #'
-#' The returned object is intended to be used for further norming analyses,
-#' reporting, and model diagnostics.
+#' The returned object is intended to be used for model diagnostics, 
+#' reporting and further norming analyses.
 #'
 #'@seealso \code{\link{data_prep}}, \code{\link{fit_IRTnorm}},  \code{\link{norm_new_individual}}
 #'

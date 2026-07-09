@@ -15,24 +15,24 @@ fit_IRTnorm(
 )
 }
 \arguments{
-\item{data}{a named list as returned by \code{\link{data_prep}} containing
+\item{data}{A named list as returned by \code{\link{data_prep}} containing
 all data and indexing information required for fitting the IRT norming
 model and evaluating its fit.}
 
-\item{seed}{an optional \code{integer} specifying the random seed for
+\item{seed}{An optional \code{integer} specifying the random seed for
 reproducibility. If \code{NULL} (default), a random seed is generated
 internally.}
 
-\item{iter_warmup}{an \code{integer} specifying the number of warm-up
+\item{iter_warmup}{An \code{integer} specifying the number of warm-up
 iterations per chain used by the MCMC sampler.}
 
-\item{iter_sampling}{an \code{integer} specifying the number of post
+\item{iter_sampling}{An \code{integer} specifying the number of post
 warm-up (sampling) iterations per chain.}
 
-\item{chains}{an \code{integer} specifying the number of Markov chains to
+\item{chains}{An \code{integer} specifying the number of Markov chains to
 run in parallel. The default is 4 chains.}
 
-\item{parallel_chains}{an optional \code{integer} specifying the number of
+\item{parallel_chains}{An optional \code{integer} specifying the number of
 CPU cores used for parallel sampling. If \code{NULL} (default), all
 available cores detected by \code{\link[parallel]{detectCores}} are used.}
 
@@ -50,8 +50,8 @@ The \code{fit_IRTnorm} function fits an IRT-based continuous norming model to
 the data prepared with \code{\link{data_prep}} using Bayesian estimation via \pkg{cmdstanr}.
 The specific model is specified with data_prep().
 Depending on the specified model in the prepared data object, the
-The specifics of the IRT-based continuous norming model are specified in
-\code{data} using \code{\link{data_prep}}.
+specifics of the IRT-based continuous norming model are specified in
+\code{data}, using \code{\link{data_prep}}.
 The function supports fitting the norming model with either polynomial or spline-based
 age effects.
 }

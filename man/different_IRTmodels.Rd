@@ -3,9 +3,9 @@
 \docType{data}
 \name{different_IRTmodels}
 \alias{different_IRTmodels}
-\title{Presaved different_IRTmodels in order for the vingette to run fast}
+\title{Presaved different_IRTmodels for the vignette to run fast.}
 \format{
-A \code{list} with information for norming new individuals
+A \code{list} with information for norming new individuals.
 }
 \source{
 Simulated data.
@@ -14,6 +14,6 @@ Simulated data.
 data(different_IRTmodels)
 }
 \description{
-Presaved different_IRTmodels in order for the vingette to run fast
+Presaved different_IRTmodels for the vignette to run fast.
 }
 \keyword{datasets}

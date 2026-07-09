@@ -23,7 +23,7 @@ estimated age trajectories for every fitted model, faceted by moment
 Defaults to \code{"ELPD"}. Partial matching is supported via
 \code{\link[base]{match.arg}}.}
 
-\item{highlightranks}{numeric value indicating the top highlightranks to be
+\item{highlightranks}{Numeric value indicating the top highlightranks to be
 highlighted in color.}
 }
 \value{

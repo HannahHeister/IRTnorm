@@ -7,10 +7,10 @@
 NC(fit_info, age_range = NULL)
 }
 \arguments{
-\item{fit_info}{a named \code{list} as returned by \code{\link{estimate_norming_model}}}
+\item{fit_info}{a named \code{list} as returned by \code{\link{estimate_norming_model}}.}
 
 \item{age_range}{Numeric \code{vector} defining age group boundaries. If \code{NULL}
-(default), no age grouping is performed. If specified, must contain at least
+(default), no age grouping is performed. If specified, it must contain at least
 two values defining the boundaries of age groups (e.g., \code{c(0, 30, 60, 90)}
 creates three groups: (0,30], (30,60], (60,90]).}
 }
@@ -36,7 +36,7 @@ where each element contains the same structure as above plus:
 }
 }
 \description{
-The function \code{NC} computes both the observed raw score distribution from data
+The function \code{NC} computes the observed raw score distribution from data
 and the posterior predictive (IRTnorm model-implied) raw score distributions from a fitted
 Bayesian IRT-based norming model. The function can perform the analysis either
 for the entire sample or separately for multiple age groups.
@@ -46,15 +46,15 @@ Compute Observed and IRTnorm model-implied Raw Score Distributions
 
 The function performs the following steps:
 \enumerate{
-\item Computes raw scores by summing item responses for each individual
-\item Calculates the observed frequency distribution of raw scores
-\item Extracts posterior predictive replications from the fitted IRTnorm model
-\item Computes the distribution of replicated raw scores for each MCMC draw
-\item Summarizes the replicated distributions using 5th, 50th, and 95th percentiles
+\item Computes raw scores by summing item responses for each individual.
+\item Calculates the observed frequency distribution of raw scores.
+\item Extracts posterior predictive replications from the fitted IRTnorm model.
+\item Computes the distribution of replicated raw scores for each MCMC draw.
+\item Summarizes the replicated distributions using 5th, 50th, and 95th percentiles.
 }
 
 When \code{age_range} is specified, all steps are performed separately for each
-age group, allowing assessment of IRTnorm model fit across different demographic subgroups.
+age group, allowing assessment of the IRTnorm model fit across different demographic subgroups.
 
 The \eqn{90\%} credible interval (between Q5 and Q95) provides a range of plausible
 frequencies under the fitted IRTnorm model. Good IRTnorm model fit is indicated when observed

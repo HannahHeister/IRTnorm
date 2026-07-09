@@ -45,7 +45,7 @@ Age is assumed to be continuous.}
 \code{raw_data} that contain the item response variables.}
 
 \item{irt_model}{a \code{character} scalar indicating for which IRT norming model the
-data should be prepared. Currently supported option is:
+data should be prepared. The supported options are:
 \describe{
 \item{\code{"1PLnorm"}}{One-parameter logistic IRT model / Rasch model with
 age-dependent mean and variance.}
@@ -85,8 +85,8 @@ used to model the mean and standard deviation of the latent trait.}
 \item{itemD}{only required if \code{model} is a multidimensional model.
 A \code{vector} indicating on which domain each item is loading on.
 It is important that the first domain has the value 1 and the following domains
-have the following integers. For 4 domains the vector should only consist of the
-values 1,2,3,4 and has the length of the number of tested items.}
+have the subsequent integers. E.g., for 4 domains the vector should only contain the
+values 1,2,3,4. itemD has the length of the number of tested items.}
 
 \item{K_item}{only required if \code{model = "GRMnorm"}.
 A \code{vector} indicating the number of categories of each item.
@@ -94,13 +94,13 @@ The minimum number in K_item is 2, since binary items have two response categori
 K_item has the length of the number of tested items.}
 
 \item{poly_mean}{only required if \code{age_model = "polynom"}.
-For all models expect HO2PLnorm an \code{integer} specifying the degree of the polynomial used to model the
+For all models except HO2PLnorm an \code{integer} specifying the degree of the polynomial used to model the
 age-dependent mean of the latent trait. For HO2PLnorm
 either a \code{vector} indicating the polynomial degree per domain or a \code{integer}
 then the same polynomial degree is used for all dimensions.}
 
 \item{poly_sd}{only required if \code{age_model = "polynom"}.
-For all models expect HO2PLnorm an \code{integer} specifying the degree of the polynomial used to model the
+For all models except HO2PLnorm an \code{integer} specifying the degree of the polynomial used to model the
 age-dependent standard deviation of the latent trait. For HO2PLnorm
 either a \code{vector} indicating the polynomial degree per domain or a \code{integer}
 then the same polynomial degree is used for all dimensions.}
@@ -109,12 +109,11 @@ then the same polynomial degree is used for all dimensions.}
 For HO-P a\code{integer} specifying the degree of the polynomial used to model the
 age-dependent lambda of the latent trait. For HO-F
 either a \code{vector} indicating the polynomial degree per domain or a \code{integer}
-then the same polynomial degree is used for all dimensions.
-#'}
+then the same polynomial degree is used for all dimensions.}
 
 \item{k_mean}{only required if \code{age_model = "splines"}.
 A \code{num} indicating the number of knots used for modelling the
-latent trait mean}
+latent trait mean.}
 
 \item{k_sd}{only required if \code{age_model = "splines"}.
 A \code{num} indicating the number of knots used for modelling the
@@ -132,12 +131,12 @@ specified which a numerical vector of knot values}
 \item{fixed_knots_sd}{only required if knots should not be chosen based on
 data such as the default in \code{s} from \code{mgcv}. It can be choose between
 equidistant knots by setting fixed_knots_sd =  "equidistant" or fully user
-specified which a numerical vector of knot values}
+specified which a numerical vector of knot values.}
 
 \item{fixed_knots_sd2}{only required if knots should not be chosen based on
 data such as the default in \code{s} from \code{mgcv}. It can be choose between
 equidistant knots by setting fixed_knots_sd =  "equidistant" or fully user
-specified which a numerical vector of knot values}
+specified which a numerical vector of knot values.}
 
 \item{prior_knowledge}{only required if prior knowledge should be incoperated
 in the model. A list of the parameter groups for which prior_knowledge
@@ -197,8 +196,8 @@ list.}
 Fits a Bayesian Item Response Theory (IRT) norming model that jointly estimates
 item parameters and age-based regression models for the mean and standard
 deviation of the latent trait. The function prepares the data, fits the Stan
-model, and extracts all information needed for model evaluation and
-subsequent norming of new individuals.
+model, and extracts all information needed for model evaluation, and
+subsequently norm of new individuals.
 }
 \details{
 The function implements a three-stage workflow:

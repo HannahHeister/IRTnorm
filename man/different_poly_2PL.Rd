@@ -3,9 +3,9 @@
 \docType{data}
 \name{different_poly_2PL}
 \alias{different_poly_2PL}
-\title{Presaved different_poly_2PL in order for the vingette to run fast}
+\title{Presaved different_poly_2PL for the vignette to run fast.}
 \format{
-A \code{list} with information for norming new individuals
+A \code{list} with information for norming new individuals.
 }
 \source{
 Simulated data.
@@ -14,6 +14,6 @@ Simulated data.
 data(different_poly_2PL)
 }
 \description{
-Presaved different_poly_2PL in order for the vingette to run fast
+Presaved different_poly_2PL for the vignette to run fast.
 }
 \keyword{datasets}

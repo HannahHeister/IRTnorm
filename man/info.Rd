@@ -3,7 +3,7 @@
 \docType{data}
 \name{info}
 \alias{info}
-\title{Presaved info for the vingette to run fast}
+\title{Presaved info for the vignette to run fast.}
 \format{
 A \code{list} with information of the fitted model.
 }
@@ -14,6 +14,6 @@ Simulated data.
 data(info)
 }
 \description{
-Presaved info for the vingette to run fast
+Presaved info for the vignette to run fast.
 }
 \keyword{datasets}

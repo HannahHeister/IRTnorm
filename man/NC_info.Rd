@@ -3,9 +3,9 @@
 \docType{data}
 \name{NC_info}
 \alias{NC_info}
-\title{Presaved NC_info in order for the vingette to run fast}
+\title{Presaved NC_info for the vignette to run fast.}
 \format{
-A \code{list} with information for norming new individuals
+A \code{list} with information for norming new individuals.
 }
 \source{
 Simulated data.
@@ -14,6 +14,6 @@ Simulated data.
 data(NC_info)
 }
 \description{
-Presaved NC_info in order for the vingette to run fast
+Presaved NC_info for the vignette to run fast.
 }
 \keyword{datasets}

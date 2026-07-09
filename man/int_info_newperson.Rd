@@ -3,7 +3,7 @@
 \docType{data}
 \name{int_info_newperson}
 \alias{int_info_newperson}
-\title{Presaved information of newnormed individual for the vingette to run fast}
+\title{Presaved information of a newly normed individual for the vignette to run fast.}
 \format{
 Output form loo compare function.
 }
@@ -14,6 +14,6 @@ Simulated data.
 data(int_info_newperson)
 }
 \description{
-Presaved information of newnormed individual for the vingette to run fast
+Presaved information of a newly normed individual for the vignette to run fast.
 }
 \keyword{datasets}

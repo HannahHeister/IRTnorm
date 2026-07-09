@@ -24,15 +24,15 @@ estimates with model-implied quantiles across age. Default is "ability".}
 Default is c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95).}
 }
 \value{
-A \pkg{ggplot2} object. For \code{perspective = "rawscore"}, observed
-raw sum scores plotted against age together with smoothed model-implied
+A \pkg{ggplot2} object.
+For \code{perspective = "rawscore"}, observed #'   raw sum scores plotted against age together with smoothed model-implied
 quantile curves (\eqn{5\%}, \eqn{25\%}, \eqn{50\%}, \eqn{75\%}, \eqn{95\%}).
 For \code{perspective = "ability"}, realized latent trait estimates
 plotted against age together with smoothed model-implied latent trait
 quantile curves (\eqn{5\%}, \eqn{25\%}, \eqn{50\%}, \eqn{75\%}, \eqn{95\%}).
 }
 \description{
-Visualize observed data and IRT norming model–implied quantile curves
+Visualize observed data and IRT norming model–implied quantile curves.
 }
 \details{
 \code{plot_quantile_curves} visualizes observed data across age together
@@ -44,7 +44,7 @@ estimates to model-implied latent trait quantiles
 (\code{perspective = "ability"}).
 
 For the raw score perspective, quantile curves are computed from posterior
-predictive replicated responses and smoothed as a function of age. It is
+predictive replicated responses, which are smoothed as a function of age. It is
 important to note that, based on the IRT-based norming model, the raw score
 does not provide all information on the estimated normed latent trait.
 Therefore the plot can only show the aggregated information of the model,

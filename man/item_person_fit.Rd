@@ -7,9 +7,9 @@
 item_person_fit(fit_info, parameter)
 }
 \arguments{
-\item{fit_info}{a named \code{list} as returned by \code{\link{estimate_norming_model}}}
+\item{fit_info}{A named \code{list} as returned by \code{\link{estimate_norming_model}}.}
 
-\item{parameter}{a \code{character} indicating whether item fit or person fit
+\item{parameter}{A \code{character} indicating whether item fit or person fit
 should be visualized. Must be either \code{"item"} or \code{"person"}.}
 }
 \value{
@@ -18,7 +18,7 @@ IRTnorm model-implied latent trait distribution (\eqn{5\%},\eqn{ 25\%},\eqn{ 50\
 \eqn{75\%}, and \eqn{95\%}). together with realized latent trait estimates plotted against age.
 }
 \description{
-Visualizes item-level or person-level fit by comparing observed
+Visualizes item-level fit or person-level fit by comparing observed
 response patterns with IRTnorm model-implied response patterns.
 }
 \details{
@@ -33,7 +33,7 @@ If \code{parameter = "person"}, the plot compares observed and the IRTnorm model
 raw score per person.
 
 A diagnonal reference line is added to facilitate visual assessment of fit.
-The closer the observed points to the diagonal the better the fit.
+The closer the observed points are to the diagonal, the better the fit is.
 }
 \examples{
 \dontrun{

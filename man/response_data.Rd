@@ -5,11 +5,14 @@
 \alias{response_data}
 \title{Response data example dataset}
 \format{
-A \code{data.frame} with \eqn{n} rows and \eqn{p} columns:
+A \code{data.frame} with \eqn{n} = 500 rows and \eqn{p}  = 56 columns:
 \describe{
-\item{age}{Numeric. Age of the respondent in years.}
 \item{item1}{Numeric. Response to item 1 (0 = incorrect, 1 = correct).}
 \item{item2}{Numeric. Response to item 2 (0 = incorrect, 1 = correct).}
+...
+\item{item50}{Numeric. Response to item 56 (0 = incorrect, 1 = correct).}
+\item{age}{Numeric. Age of the respondent in years.}
+
 }
 }
 \source{

@@ -23,7 +23,7 @@
 #'   \item R-hat values close to 1 (e.g., < 1.01) indicate good mixing,
 #'   \item larger ESS values indicate more reliable posterior summaries.
 #' }
-#'@param fit  the data output from `fit_IRTnorm()`
+#'@param fit  the data output from `fit_IRTnorm()`.
 #'@param data named list as returned by \code{\link{data_prep}} containing
 #'   all data and indexing information required for fitting the IRT norming
 #'   model and evaluating its fit.
@@ -32,7 +32,7 @@
 #' \code{\link[posterior]{rhat}},
 #' \code{\link[posterior]{ess_bulk}},
 #' \code{\link[posterior]{ess_tail}}
-#'@return a data.frame summarizing Rhat, Ess bulk and ess tail per variable group
+#'@return A data.frame summarizing Rhat, Ess bulk and ess tail per variable group.
 #'@examples
 #' \dontrun{
 #' # Fit an IRTnorm model
@@ -139,14 +139,14 @@ fit_info_param <- function(fit, data){
 #' @name NC
 #'
 #' @description
-#' The function \code{NC} computes both the observed raw score distribution from data
+#' The function \code{NC} computes the observed raw score distribution from data
 #' and the posterior predictive (IRTnorm model-implied) raw score distributions from a fitted
 #' Bayesian IRT-based norming model. The function can perform the analysis either
 #' for the entire sample or separately for multiple age groups.
 #'
-#' @param fit_info a named \code{list} as returned by \code{\link{estimate_norming_model}}
+#' @param fit_info a named \code{list} as returned by \code{\link{estimate_norming_model}}.
 #' @param age_range Numeric \code{vector} defining age group boundaries. If \code{NULL}
-#'   (default), no age grouping is performed. If specified, must contain at least
+#'   (default), no age grouping is performed. If specified, it must contain at least
 #'   two values defining the boundaries of age groups (e.g., \code{c(0, 30, 60, 90)}
 #'   creates three groups: (0,30], (30,60], (60,90]).
 #' @return
@@ -173,15 +173,15 @@ fit_info_param <- function(fit, data){
 #' @details
 #' The function performs the following steps:
 #' \enumerate{
-#'   \item Computes raw scores by summing item responses for each individual
-#'   \item Calculates the observed frequency distribution of raw scores
-#'   \item Extracts posterior predictive replications from the fitted IRTnorm model
-#'   \item Computes the distribution of replicated raw scores for each MCMC draw
-#'   \item Summarizes the replicated distributions using 5th, 50th, and 95th percentiles
+#'   \item Computes raw scores by summing item responses for each individual.
+#'   \item Calculates the observed frequency distribution of raw scores.
+#'   \item Extracts posterior predictive replications from the fitted IRTnorm model.
+#'   \item Computes the distribution of replicated raw scores for each MCMC draw.
+#'   \item Summarizes the replicated distributions using 5th, 50th, and 95th percentiles.
 #' }
 #'
 #' When \code{age_range} is specified, all steps are performed separately for each
-#' age group, allowing assessment of IRTnorm model fit across different demographic subgroups.
+#' age group, allowing assessment of the IRTnorm model fit across different demographic subgroups.
 #'
 #' The \eqn{90\%} credible interval (between Q5 and Q95) provides a range of plausible
 #' frequencies under the fitted IRTnorm model. Good IRTnorm model fit is indicated when observed
@@ -398,9 +398,9 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
   return(results)
 }
 
-#' Visualize IRTnorm model-Implied vs Observed Raw Score Distributions
+#' Visualize IRTnorm model-implied vs Observed raw score distributions
 #'
-#' @title Posterior Predictive IRTnorm model Check for Raw Score Distributions
+#' @title Posterior Predictive IRTnorm model Check for raw score distributions
 #' @name NC_visual
 #' @description
 #' The function \code{NC_visual} creates a visualization comparing the IRTnorm model-implied
@@ -414,19 +414,19 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #'
 #' @param NC_info A list object returned by the \code{NC} function. This can be either:
 #'   \itemize{
-#'     \item A single result list (when \code{age_range = NULL} in \code{NC})
-#'     \item A list of results by age groups (when \code{age_range} is specified in \code{NC})
+#'     \item A single result list (when \code{age_range = NULL} in \code{NC}).
+#'     \item A list of results by age groups (when \code{age_range} is specified in \code{NC}).
 #'   }
 #'   Each result contains:
 #'   \itemize{
-#'     \item \code{df}: Data frame with observed frequencies and quantiles
-#'     \item \code{replicated}: Matrix of replicated raw score distributions
-#'     \item \code{nitem}: Number of items
-#'     \item \code{age}: Age group label (only for age-grouped results)
+#'     \item \code{df}: Data frame with observed frequencies and quantiles.
+#'     \item \code{replicated}: Matrix of replicated raw score distributions.
+#'     \item \code{nitem}: Number of items.
+#'     \item \code{age}: Age group label (only for age-grouped results).
 #'   }
 #'@param dim_plot \code{character} indicating which latent trait of the HO-2PL-norm
 #'IRTnorm model should be visualized.
-#'Can only be of the following characters: "general", "domain1"...
+#'Can only be of the following characters: "general", "domain1".
 #'
 #' @return Invisibly returns a ggplot2 object. The plot is printed to the current
 #'   graphics device. The returned object can be further customized or saved.
@@ -435,11 +435,11 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #' The visualization includes:
 #' \itemize{
 #'   \item \strong{Orange jittered points}: Individual posterior predictive draws
-#'     showing the distribution of replicated frequencies across MCMC iterations
-#'   \item \strong{Dashed line}: Median (50th percentile) of the replicated distributions
+#'     showing the distribution of replicated frequencies across MCMC iterations.
+#'   \item \strong{Dashed line}: Median (50th percentile) of the replicated distributions.
 #'   \item \strong{Dotted lines}: 5th and 95th percentiles of the replicated distributions,
-#'     forming a \eqn{90\%}credible interval
-#'   \item \strong{Black points}: Observed raw score frequencies from the actual data
+#'     forming a \eqn{90\%}credible interval.
+#'   \item \strong{Black points}: Observed raw score frequencies from the actual data.
 #' }
 #'
 #' Good IRTnorm model fit is indicated when observed frequencies (black points) fall within
@@ -628,7 +628,7 @@ print(p)
 return(invisible(p))
 }
 
-#' Visualize the distribution of norm scores across age ranges
+#' Visualize the distribution of norm scores across age ranges.
 #'
 #' The \code{normscore_dist} function visualizes whether estimated norm scores
 #' follow an approximately standard normal distribution across different age
@@ -643,7 +643,7 @@ return(invisible(p))
 #'
 #' @name normscore_dist
 #'
-#' @param fit_info a named \code{list} as returned by \code{\link{estimate_norming_model}}
+#' @param fit_info A named \code{list} as returned by \code{\link{estimate_norming_model}}.
 #'
 #' @param age_range A \code{numeric} vector specifying the cut-off points for
 #'   age groups. Consecutive values define the lower (exclusive) and upper
@@ -652,10 +652,10 @@ return(invisible(p))
 #' @param binwidth A \code{numeric} value specifying the bin width of the
 #'   histogram. Defaults to \code{0.5}.
 #'
-#' @param dim_plot only required for multidimensional IRTnorm models.
+#' @param dim_plot Only required for multidimensional IRTnorm models.
 #' \code{character} indicating which latent trait of the higher-order model 
 #' should be visualized.
-#'Can only be of the following characters: "general", "domain1"...
+#' Can only be of the following characters: "general", "domain1".
 #' @return A \pkg{ggplot2} object showing histograms of norm scores by age group,
 #'   overlaid with the scaled density of a standard normal distribution.
 #'
@@ -763,7 +763,7 @@ irt_plot_theme <- function(){
 is_multidim <- function(irt_mod) irt_mod >= 5
 
 
-#' Visualize observed data and IRT norming model–implied quantile curves
+#' Visualize observed data and IRT norming model–implied quantile curves.
 #'
 #' \code{plot_quantile_curves} visualizes observed data across age together
 #' with IRTnorm model-implied quantile curves derived from an age-dependent IRT
@@ -774,7 +774,7 @@ is_multidim <- function(irt_mod) irt_mod >= 5
 #' (\code{perspective = "ability"}).
 #'
 #' For the raw score perspective, quantile curves are computed from posterior
-#' predictive replicated responses and smoothed as a function of age. It is
+#' predictive replicated responses, which are smoothed as a function of age. It is
 #' important to note that, based on the IRT-based norming model, the raw score
 #' does not provide all information on the estimated normed latent trait.
 #' Therefore the plot can only show the aggregated information of the model,
@@ -806,8 +806,8 @@ is_multidim <- function(irt_mod) irt_mod >= 5
 #'@param probs vector indicating which quantiles should be plotted. 
 #' Default is c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95). 
 #' 
-#' @return A \pkg{ggplot2} object. For \code{perspective = "rawscore"}, observed
-#'   raw sum scores plotted against age together with smoothed model-implied
+#' @return A \pkg{ggplot2} object. 
+#' For \code{perspective = "rawscore"}, observed #'   raw sum scores plotted against age together with smoothed model-implied
 #'   quantile curves (\eqn{5\%}, \eqn{25\%}, \eqn{50\%}, \eqn{75\%}, \eqn{95\%}).
 #'   For \code{perspective = "ability"}, realized latent trait estimates
 #'   plotted against age together with smoothed model-implied latent trait
@@ -1036,11 +1036,11 @@ make_dummy_matrix <- function(info, K_item) {
 
 #'@title Visualization of item and person fit
 #'@name item_person_fit
-#'@description Visualizes item-level or person-level fit by comparing observed
+#'@description Visualizes item-level fit or person-level fit by comparing observed
 #'response patterns with IRTnorm model-implied response patterns.
 #'
-#' @param fit_info a named \code{list} as returned by \code{\link{estimate_norming_model}}
-#'@param parameter a \code{character} indicating whether item fit or person fit
+#' @param fit_info A named \code{list} as returned by \code{\link{estimate_norming_model}}.
+#'@param parameter A \code{character} indicating whether item fit or person fit
 #' should be visualized. Must be either \code{"item"} or \code{"person"}.
 #' @return A \pkg{ggplot2} object showing smoothed quantile curves of the
 #'   IRTnorm model-implied latent trait distribution (\eqn{5\%},\eqn{ 25\%},\eqn{ 50\%},
@@ -1056,7 +1056,7 @@ make_dummy_matrix <- function(info, K_item) {
 #' raw score per person.
 #'
 #' A diagnonal reference line is added to facilitate visual assessment of fit.
-#' The closer the observed points to the diagonal the better the fit.
+#' The closer the observed points are to the diagonal, the better the fit is.
 #'@examples
 #'\dontrun{
 #' # Load data
@@ -1243,8 +1243,8 @@ if(data$irt_mod <=3){
 #' Visualizes the IRTnorm model-implied relationship between age and the
 #' latent trait distribution mean and standard deviation.
 #'
-#'@param fit_info a list containing IRTnorm model output from the \code{extract_info()} function.
-#'It must include the elements \code{info_sample} (person-level information,
+#'@param fit_info A list containing IRTnorm model output from the \code{extract_info()} function.
+#' It must include the elements \code{info_sample} (person-level information,
 #' including latent trait estimates) and \code{info_item} (item parameters).
 #'@return A \pkg{ggplot2} object showing the estimated mean and standard deviation of the
 #' latent trait as functions of age.

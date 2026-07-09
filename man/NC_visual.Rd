@@ -2,27 +2,27 @@
 % Please edit documentation in R/Eval_modelfit.R
 \name{NC_visual}
 \alias{NC_visual}
-\title{Posterior Predictive IRTnorm model Check for Raw Score Distributions}
+\title{Posterior Predictive IRTnorm model Check for raw score distributions}
 \usage{
 NC_visual(NC_info, dim_plot = NULL)
 }
 \arguments{
 \item{NC_info}{A list object returned by the \code{NC} function. This can be either:
 \itemize{
-\item A single result list (when \code{age_range = NULL} in \code{NC})
-\item A list of results by age groups (when \code{age_range} is specified in \code{NC})
+\item A single result list (when \code{age_range = NULL} in \code{NC}).
+\item A list of results by age groups (when \code{age_range} is specified in \code{NC}).
 }
 Each result contains:
 \itemize{
-\item \code{df}: Data frame with observed frequencies and quantiles
-\item \code{replicated}: Matrix of replicated raw score distributions
-\item \code{nitem}: Number of items
-\item \code{age}: Age group label (only for age-grouped results)
+\item \code{df}: Data frame with observed frequencies and quantiles.
+\item \code{replicated}: Matrix of replicated raw score distributions.
+\item \code{nitem}: Number of items.
+\item \code{age}: Age group label (only for age-grouped results).
 }}
 
 \item{dim_plot}{\code{character} indicating which latent trait of the HO-2PL-norm
 IRTnorm model should be visualized.
-Can only be of the following characters: "general", "domain1"...}
+Can only be of the following characters: "general", "domain1".}
 }
 \value{
 Invisibly returns a ggplot2 object. The plot is printed to the current
@@ -39,16 +39,16 @@ or from age-grouped analyses, and creates the appropriate visualization (single
 plot or faceted plot by age groups).
 }
 \details{
-Visualize IRTnorm model-Implied vs Observed Raw Score Distributions
+Visualize IRTnorm model-implied vs Observed raw score distributions
 
 The visualization includes:
 \itemize{
 \item \strong{Orange jittered points}: Individual posterior predictive draws
-showing the distribution of replicated frequencies across MCMC iterations
-\item \strong{Dashed line}: Median (50th percentile) of the replicated distributions
+showing the distribution of replicated frequencies across MCMC iterations.
+\item \strong{Dashed line}: Median (50th percentile) of the replicated distributions.
 \item \strong{Dotted lines}: 5th and 95th percentiles of the replicated distributions,
-forming a \eqn{90\%}credible interval
-\item \strong{Black points}: Observed raw score frequencies from the actual data
+forming a \eqn{90\%}credible interval.
+\item \strong{Black points}: Observed raw score frequencies from the actual data.
 }
 
 Good IRTnorm model fit is indicated when observed frequencies (black points) fall within

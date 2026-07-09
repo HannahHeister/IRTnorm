@@ -188,32 +188,32 @@ log_post_draw_theta <- function(data, theta, a_vec, b_vec, c_vec,  y_vec, mu, si
 
 #'@title Estimate norm score for new observations
 #'@name norm_new_individual
-#'@description Performs Bayesian estimates the norm score for a new individual using
+#'@description Performs Bayesian estimates of the norm score for a new individual using
 #' Metropolis-Hastings sampling. This function integrates over
 #' posterior uncertainty in item parameters and norming parameters from a
 #' previously fitted IRT model.
 #' @param new_y Numeric vector of binary item responses (0/1) for a single individual.
 #'   Can contain NAs for missing responses.
 #' @param new_age Numeric scalar. The age of the individual for whom theta is being estimated.
-#' @param fit_info a named \code{list} as returned by \code{\link{estimate_norming_model}}
+#' @param fit_info A named \code{list} as returned by \code{\link{estimate_norming_model}}.
 #' @param mh_args List of Metropolis-Hastings algorithm tuning parameters:
 #'   \itemize{
-#'     \item \code{n_iter}: Total number of MCMC iterations (default: 250)
-#'     \item \code{burnin}: Number of initial iterations to discard (default: 125)
-#'     \item \code{thin}: Thinning interval - keep every nth sample (default: 1)
-#'     \item \code{proposal_sd}: Standard deviation of proposal distribution (default: 0.6)
+#'     \item \code{n_iter}: Total number of MCMC iterations (default: 250).
+#'     \item \code{burnin}: Number of initial iterations to discard (default: 125).
+#'     \item \code{thin}: Thinning interval - keep every nth sample (default: 1).
+#'     \item \code{proposal_sd}: Standard deviation of proposal distribution (default: 0.6).
 #'   }
 #'
 #' @return A list with the following components:
-#'   \item{theta_samples}{Numeric vector of all posterior samples of theta (post-burnin, post-thinning)}
-#'   \item{theta_zsample}{Numeric vector of standardized theta samples}
-#'   \item{by_draw_samples}{List of length M, each element containing theta samples for one posterior draw}
-#'   \item{acceptance_rates}{Numeric vector of length M with acceptance rates for each posterior draw}
-#'   \item{summary}{List containing: mean, sd, median, and 95% credible interval of theta}
-#'   \item{mh_args}{List of MH arguments used}
-#'   \item{obs_items}{Integer vector of indices for observed (non-NA) items}
-#'   \item{mean_mu}{Mean of the posterior distribution for mu (theta population mean)}
-#'   \item{mean_sigma}{Mean of the posterior distribution for sigma (theta population SD)}
+#'   \item{theta_samples}{Numeric vector of all posterior samples of theta (post-burnin, post-thinning)}.
+#'   \item{theta_zsample}{Numeric vector of standardized theta samples}.
+#'   \item{by_draw_samples}{List of length M, each element containing theta samples for one posterior draw}.
+#'   \item{acceptance_rates}{Numeric vector of length M with acceptance rates for each posterior draw}.
+#'   \item{summary}{List containing: mean, sd, median, and 95% credible interval of theta}.
+#'   \item{mh_args}{List of MH arguments used}.
+#'   \item{obs_items}{Integer vector of indices for observed (non-NA) items}.
+#'   \item{mean_mu}{Mean of the posterior distribution for mu (theta population mean)}.
+#'   \item{mean_sigma}{Mean of the posterior distribution for sigma (theta population SD)}. 
 #'
 #' @details
 #' This function runs a Metropolis-Hastings algorithm to sample theta conditional on the
