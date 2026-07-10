@@ -66,7 +66,7 @@ data(response_data)
 prep_data <- data_prep(
   raw_data = response_data,
   age_variable = "age",
-  int_variables = 1:50,
+  item_variables = 1:50,
   irt_mod = "2PLnorm",
   age_mod = "polynom",
   poly_mean = 2,

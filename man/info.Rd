@@ -8,7 +8,7 @@
 A \code{list} with information of the fitted model.
 }
 \source{
-Simulated data.
+output from the estimate_norming_model function.
 }
 \usage{
 data(info)

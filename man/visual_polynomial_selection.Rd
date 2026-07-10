@@ -7,7 +7,7 @@
 visual_polynomial_selection(
   compare_info,
   perspective = c("ELPD", "trajectory"),
-  highlightranks = 1
+  highlight_ranks = 1
 )
 }
 \arguments{
@@ -23,7 +23,7 @@ estimated age trajectories for every fitted model, faceted by moment
 Defaults to \code{"ELPD"}. Partial matching is supported via
 \code{\link[base]{match.arg}}.}
 
-\item{highlightranks}{Numeric value indicating the top highlightranks to be
+\item{highlight_ranks}{Numeric value indicating the top highlight_ranks to be
 highlighted in color.}
 }
 \value{
@@ -41,14 +41,14 @@ perspective of the estimated age trajectories themselves.
 Under \code{perspective = "ELPD"}, each point represents one fitted
 model's ELPD difference from the best-performing model, plotted against
 \code{mu} and faceted by \code{sd}. Models within the top
-\code{highlightranks} ranks are colored by rank; all other models are
+\code{highlight_ranks} ranks are colored by rank; all other models are
 shown as faint unfilled points for context.
 
 Under \code{perspective = "trajectory"}, each line represents one fitted
 model's estimated age trajectory (separately for the mean and SD moments,
 via \code{facet_wrap(~moment)}). All trajectories are drawn faintly in
 the background, with trajectories from models within the top
-\code{highlightranks} ranks overlaid in color and at greater line
+\code{highlight_ranks} ranks overlaid in color and at greater line
 thickness, making it easy to see whether top-ranked models agree on the
 shape of the trajectory or diverge.
 }
@@ -57,7 +57,7 @@ shape of the trajectory or diverge.
 res <- compare_age_models(
   method = "grid", grid = expand.grid(mu = 1:3, sd = 0:2),
   raw_data = my_data, irt_model = "1PLnorm",
-  age_variable = "age", int_variables = c("sex")
+  age_variable = "age", item_variables = c("sex")
 )
 
 # ELPD comparison across (mu, sd) combinations

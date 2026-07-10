@@ -8,7 +8,7 @@ compare_IRTnorm_models(
   model_specifications,
   raw_data,
   age_variable,
-  int_variables,
+  item_variables,
   seed = NULL,
   iter_warmup = 500,
   iter_sampling = 500,
@@ -36,7 +36,7 @@ contain missing values (\code{NA}).}
 the column in \code{raw_data} that contains the individuals' age information.
 Age is assumed to be continuous.}
 
-\item{int_variables}{A \code{numeric} or \code{character} vector specifying the columns in
+\item{item_variables}{A \code{numeric} or \code{character} vector specifying the columns in
 \code{raw_data} that contain the item response variables.}
 
 \item{seed}{An optional \code{integer} specifying the random seed for
@@ -44,10 +44,14 @@ reproducibility. If \code{NULL} (default), a random seed is generated
 internally.}
 
 \item{iter_warmup}{An \code{integer} specifying the number of warm-up
-iterations per chain used by the MCMC sampler.}
+iterations per chain used by the MCMC sampler.  The default value of 500 is
+sufficient for well-fitting data, but it may need to be increased for
+complex models or to improve precision.}
 
 \item{iter_sampling}{An \code{integer} specifying the number of post
-warm-up (sampling) iterations per chain.}
+warm-up (sampling) iterations per chain.  The default value of 500 is
+sufficient for well-fitting data, but it may need to be increased for
+complex models or to improve precision.}
 
 \item{chains}{An \code{integer} specifying the number of Markov chains to
 run in parallel. The default is 4 chains.}
@@ -57,7 +61,7 @@ CPU cores used for parallel sampling. If \code{NULL} (default), all
 available cores detected by \code{\link[parallel]{detectCores}} are used.}
 }
 \value{
-A data frame as returned, giving the LOO-ELPD,
+A data frame giving the LOO-ELPD,
 \code{ELPD_diff}, and \code{rank} for each fitted model, along with
 model-identifying columns (e.g. \code{modelcombi}, \code{irt_model},
 \code{age_model}) carried over from each model's \code{elpd_summary}.
@@ -72,18 +76,14 @@ degree combinations for a single model specification,
 model configurations to be compared directly against one another.
 }
 \details{
-Each element of \code{model_specifications} is validated before fitting begins, ensuring there
-are at least two model entries and that each specifies \code{irt_model}
-and \code{age_model}. For every model the data is prepared, the model is fitted,
-and pointwise and summary LOO-ELPD values are extracted and reported. All fitted models share
-the same \code{raw_data}, \code{age_variable}, \code{int_variables}, and
+For every model the data is prepared, the model is fitted,
+and LOO-ELPD values are extracted and reported. All fitted models share
+the same \code{raw_data}, \code{age_variable}, \code{item_variables}, and
 MCMC settings (\code{seed}, \code{iter_warmup}, \code{iter_sampling},
 \code{chains}, \code{parallel_chains}); only the model specification
 itself varies across entries in \code{model_specifications}.
-
-Pointwise and summary ELPD values are accumulated across all models and
-then computes ELPD differences and ranks
-across the full set of compared models.
+For direct model comparison the ELPD differences and the resulting ranks
+across the full set of compared models are reported.
 }
 \examples{
 \dontrun{
@@ -99,7 +99,7 @@ result <- compare_IRTnorm_models(
   model_specifications   = model_specifications,
   raw_data     = my_data,
   age_variable = "age",
-  int_variables = 1:50
+  item_variables = 1:50
 )
 }
 

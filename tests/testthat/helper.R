@@ -42,33 +42,33 @@ make_fit_info_random <- function(data, n_draws = 200, seed = 42) {
 }
 
 #' Raw data where every person scores the same fixed value on every item
-make_raw_data_constant <- function(data, int_variables,
+make_raw_data_constant <- function(data, item_variables,
                                    item_value   = 1L,
                                    age_variable = "age",
                                    age_min = 6, age_max = 18) {
   n_persons <- max(data$jj)
-  n_items   <- length(int_variables)
+  n_items   <- length(item_variables)
   df <- as.data.frame(
     matrix(item_value, nrow = n_persons, ncol = n_items,
-           dimnames = list(NULL, int_variables))
+           dimnames = list(NULL, item_variables))
   )
   df[[age_variable]] <- seq(age_min, age_max, length.out = n_persons)
   df
 }
 
 #' Raw data with random binary responses
-make_raw_data_random <- function(data, int_variables,
+make_raw_data_random <- function(data, item_variables,
                                  age_variable = "age",
                                  age_min = 6, age_max = 18,
                                  seed = 7) {
   n_persons <- max(data$jj)
-  n_items   <- length(int_variables)
+  n_items   <- length(item_variables)
   set.seed(seed)
   df <- as.data.frame(
     matrix(
       sample(0:1, size = n_persons * n_items, replace = TRUE),
       nrow = n_persons, ncol = n_items,
-      dimnames = list(NULL, int_variables)
+      dimnames = list(NULL, item_variables)
     )
   )
   df[[age_variable]] <- runif(n_persons, age_min, age_max)

@@ -81,12 +81,12 @@ for(irtmod in irt_models){
     
     print(paste(irtmod, agemod, prior_names, fixed_names))
       if(irtmod %in% c("1PLnorm","2PLnorm","3PLnorm")){
-        data_temp <- data_prep(raw_data = data_1PL, age_variable = "age", int_variables = 1:50, irt_model = irtmod, age_model = agemod, 
+        data_temp <- data_prep(raw_data = data_1PL, age_variable = "age", item_variables = 1:50, irt_model = irtmod, age_model = agemod, 
                                poly_mean = 4, poly_sd = 3,
                                prior_knowlegde = prior, parameter_fixed = fixed)
       }
       if(irtmod %in% c("GRMnorm")){
-        data_temp <- data_prep(raw_data = data_GRM$response, age_variable = "age", int_variables = 1:40,
+        data_temp <- data_prep(raw_data = data_GRM$response, age_variable = "age", item_variables = 1:40,
                                irt_model = "GRMnorm", age_model = agemod, 
                                poly_mean = 4, poly_sd = 3, 
                                K_item =  data_GRM$m_categories,
@@ -96,7 +96,7 @@ for(irtmod in irt_models){
                        "HO1PLnorm-C", "HO2PLnorm-C",
                        "HO1PLnorm-P", "HO2PLnorm-P",
                        "HO1PLnorm-F", "HO2PLnorm-F")){
-        data_temp <- data_prep(raw_data = data_T$response, age_variable = "age", int_variables = 1:90,
+        data_temp <- data_prep(raw_data = data_T$response, age_variable = "age", item_variables = 1:90,
                                irt_model = irtmod, age_model = agemod, itemD = data_T$itemD,
                                poly_mean = 4, poly_sd = 3, 
                                prior_knowlegde = prior, parameter_fixed = fixed)

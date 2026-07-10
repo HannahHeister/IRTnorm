@@ -51,14 +51,8 @@ build_spline <- function(age_df, k, fixed_knots) {
 #'   the column in \code{raw_data} that contains the individuals' age information.
 #'   Age is assumed to be continuous.
 #'
-#'@param int_variables a \code{numeric} or \code{character} vector specifying the columns in
+#'@param item_variables a \code{numeric} or \code{character} vector specifying the columns in
 #'   \code{raw_data} that contain the item response variables.
-#'
-# @param fixed_item For all models expect HO2PLnorm an \code{integer} indicating which item is used as the reference
-#   item for model identification. For this item, the discrimination parameter
-#   (\eqn{\alpha}) is fixed to 1 and the difficulty parameter (\eqn{\beta}) is
-#   fixed to 0. For HO2PLnorm a \code{vector} indicating one item per domain used as the reference
-#   items for model identification.
 #'
 #'@param irt_model a \code{character} scalar indicating for which IRT norming model the
 #'   data should be prepared. The supported options are:
@@ -177,7 +171,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #' and constructs age design matrices according to the specified age model.
 #'
 #' Each row in \code{raw_data} corresponds to one individual and each column in
-#' \code{int_variables} corresponds to one dichotomous test item.
+#' \code{item_variables} corresponds to one dichotomous test item.
 
 #' Age is internally standardized using its mean and standard deviation prior
 #' to constructing polynomial or spline basis functions. Missing item responses
@@ -200,7 +194,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #' normdata_poly <- data_prep(
 #'   raw_data = example_data,
 #'   age_variable = "age_years",
-#'   int_variables = paste0("X", 1:5),
+#'   item_variables = paste0("X", 1:5),
 #'   irt_model = "2PLnorm",
 #'   age_model = "poly",
 #'   poly_mean = 2,
@@ -212,7 +206,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #' normdata_spline <- data_prep(
 #'   raw_data = example_data,
 #'   age_variable = "age_years",
-#'   int_variables = paste0("X", 1:5),
+#'   item_variables = paste0("X", 1:5),
 #'   irt_model = "2PLnorm",
 #'   age_model = "splines",
 #'   prior_knowledge = list(alpha = list(alpha_prior_mu = c(1,1,0.9,1.1,0.8),
@@ -223,7 +217,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #'@export
 #'@keywords internal
 
-data_prep <- function(raw_data, age_variable, int_variables, 
+data_prep <- function(raw_data, age_variable, item_variables, 
                       irt_model = c("1PLnorm","2PLnorm","3PLnorm","GRMnorm",
                                     "Testlet1PLnorm","Testlet2PLnorm",
                                     "HO1PLnorm-C", "HO2PLnorm-C",
@@ -239,9 +233,9 @@ data_prep <- function(raw_data, age_variable, int_variables,
   irt_model <- match.arg(irt_model)
 
   age <- as.vector(raw_data[, age_variable])
-  answerpattern <- raw_data[, int_variables]
+  answerpattern <- raw_data[, item_variables]
   nperson <- nrow(raw_data)
-  nitem <- length(int_variables)
+  nitem <- length(item_variables)
   jj_list <- lapply(1:nitem, function(i) which(!is.na(answerpattern[,i])))
 
   R <- as.vector(as.matrix(answerpattern))
@@ -355,9 +349,9 @@ data_prep <- function(raw_data, age_variable, int_variables,
     if(is.null(itemD)){
       stop("itemD missing. Please specify the dimensions each item is loading on.")
     }
-    if(length(itemD) != length(int_variables)){
-      stop("length of itemD and int_variables differ. itemD should indicate the domain each
-           item in int_variables measures.")
+    if(length(itemD) != length(item_variables)){
+      stop("length of itemD and item_variables differ. itemD should indicate the domain each
+           item in item_variables measures.")
     }
     D <- length(unique(itemD))
     #if(model == "HO2PLnorm" | model == "HO1PLnorm"){
@@ -479,9 +473,9 @@ data_prep <- function(raw_data, age_variable, int_variables,
     if(is.null(K_item)){
       stop("K_item missing. Please specify the number of response categories per item.")
     }
-    if(length(K_item) != length(int_variables)){
-      stop("length of K_item and int_variables differ. K_item should indicate the number of response categories per
-           item in int_variables.")
+    if(length(K_item) != length(item_variables)){
+      stop("length of K_item and item_variables differ. K_item should indicate the number of response categories per
+           item in item_variables.")
     }
     if(min(normingdata_IRT$y) < 1){
       normingdata_IRT$y <- normingdata_IRT$y + abs(min(normingdata_IRT$y))

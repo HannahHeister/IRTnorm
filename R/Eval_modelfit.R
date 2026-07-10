@@ -136,10 +136,10 @@ fit_info_param <- function(fit, data){
 #' Compute Observed and IRTnorm model-implied Raw Score Distributions
 #'
 #' @title Posterior Predictive Raw Score Distribution Analysis
-#' @name NC
+#' @name raw_score_ppc
 #'
 #' @description
-#' The function \code{NC} computes the observed raw score distribution from data
+#' The function \code{raw_score_ppc} computes the observed raw score distribution from data
 #' and the posterior predictive (IRTnorm model-implied) raw score distributions from a fitted
 #' Bayesian IRT-based norming model. The function can perform the analysis either
 #' for the entire sample or separately for multiple age groups.
@@ -154,7 +154,7 @@ fit_info_param <- function(fit, data){
 #' \itemize{
 #'   \item \code{df}: Data frame with columns:
 #'     \itemize{
-#'       \item \code{score}: Raw scores from 0 to \code{nitem}
+#'       \item \code{score}: Raw scores range from 0 to the maximum possible score
 #'       \item \code{obs}: Observed frequency for each score
 #'       \item \code{Q5}: 5th percentile of posterior predictive frequencies
 #'       \item \code{Q50}: Median (50th percentile) of posterior predictive frequencies
@@ -186,7 +186,8 @@ fit_info_param <- function(fit, data){
 #' The \eqn{90\%} credible interval (between Q5 and Q95) provides a range of plausible
 #' frequencies under the fitted IRTnorm model. Good IRTnorm model fit is indicated when observed
 #' frequencies fall within or near these credible intervals.
-#'
+#' Further information about posterior predictive assessment of IRT models
+#' can be found in Sinharay, Johnson, & Stern (2006).
 #' @note
 #' \itemize{
 #'   \item Age ranges use the convention (lower, upper], meaning lower is exclusive
@@ -205,38 +206,38 @@ fit_info_param <- function(fit, data){
 #' # Prepare data for IRTnorm model fit
 #' info <- estimate_norming_model(data = response_data,
 #' age_variable = "age",
-#' int_variables = 1:50,
+#' item_variables = 1:50,
 #' irt_model = "2PLnorm",
 #' age__model = "polynom",
 #' poly_mean = 3,
 #' poly_sd = 2)
 #'
 #' # Single analysis (no age grouping)
-#' result <- NC(fit_info = info)
+#' result <- raw_score_ppc(fit_info = info)
 #'
-#' NC_visual(N_info = result)
+#' raw_score_ppc_visual(N_info = result)
 #'
 #' # Age-grouped analysis
-#' result_age <- NC(fit_info = info, age_range = seq(-2,2,1))
+#' result_age <- raw_score_ppc(fit_info = info, age_range = seq(-2,2,1))
 #' 
-#' NC_visual(result_age)
+#' raw_score_ppc_visual(result_age)
 #'}
 #'
 #' @seealso
-#' \code{\link{NC_visual}} for visualizing the results
+#' \code{\link{raw_score_ppc_visual}} for visualizing the results
 #'
 #' @references
 #' Sinharay, S., Johnson, M. S., & Stern, H. S. (2006). Posterior predictive assessment
 #' of item response theory models. Applied Psychological Measurement, 30(4), 298-321.
 #'
 #' @export
-NC <- function(fit_info,
+raw_score_ppc <- function(fit_info,
                age_range = NULL) {
 
   data <- fit_info$newdata
   model_info <- fit_info$model_info
   raw_data <- fit_info$raw_data
-  int_variables <- fit_info$int_variables
+  item_variables <- fit_info$item_variables
   age_variable <- fit_info$age_variable
   
   # Validate inputs
@@ -244,7 +245,7 @@ NC <- function(fit_info,
     stop("'raw_data' must be provided when 'age_range' is specified")
   }
 
-  int_data <- raw_data[, int_variables, drop = FALSE]
+  int_data <- raw_data[, item_variables, drop = FALSE]
   
   if(all(data$itemD == 1)){
     info_all <-  vector("list", 1)
@@ -253,7 +254,7 @@ NC <- function(fit_info,
     info_all <-  vector("list", data$D +1)
   }
 if(data$irt_mod !=  4){
-  nitem <- length(int_variables)
+  nitem <- length(item_variables)
 }else{
   nitem <- sum(data$K_item)
 }
@@ -360,7 +361,7 @@ process_group <- function(score_obs, score_rep, nitem, draws, age_filter = NULL)
   ))
 }
 
-# Compute NC for overall sample
+# Compute raw_score_ppc for overall sample
 compute_nc_overall <- function(observed_scores, score_rep, nitem, draws, dim = 0) {
   result <- process_group(observed_scores, score_rep, nitem, draws)
   result$age <- "full age range"
@@ -368,7 +369,7 @@ compute_nc_overall <- function(observed_scores, score_rep, nitem, draws, dim = 0
   return(result)
 }
 
-# Compute NC by age groups
+# Compute raw_score_ppc by age groups
 compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
                               age_range, score_rep, nitem, draws, dim = 0) {
   age_groups <- length(age_range) - 1
@@ -401,9 +402,9 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #' Visualize IRTnorm model-implied vs Observed raw score distributions
 #'
 #' @title Posterior Predictive IRTnorm model Check for raw score distributions
-#' @name NC_visual
+#' @name raw_score_ppc_visual
 #' @description
-#' The function \code{NC_visual} creates a visualization comparing the IRTnorm model-implied
+#' The function \code{raw_score_ppc_visual} creates a visualization comparing the IRTnorm model-implied
 #' (posterior predictive) raw score distribution against the observed raw score
 #' distribution. This serves as a posterior predictive IRTnorm model check (PPMC) to assess
 #' how well the fitted IRTnorm model reproduces the observed data patterns.
@@ -412,10 +413,10 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #' or from age-grouped analyses, and creates the appropriate visualization (single
 #' plot or faceted plot by age groups).
 #'
-#' @param NC_info A list object returned by the \code{NC} function. This can be either:
+#' @param raw_score_ppc_info A list object returned by the \code{raw_score_ppc} function. This can be either:
 #'   \itemize{
-#'     \item A single result list (when \code{age_range = NULL} in \code{NC}).
-#'     \item A list of results by age groups (when \code{age_range} is specified in \code{NC}).
+#'     \item A single result list (when \code{age_range = NULL} in \code{raw_score_ppc}).
+#'     \item A list of results by age groups (when \code{age_range} is specified in \code{raw_score_ppc}).
 #'   }
 #'   Each result contains:
 #'   \itemize{
@@ -456,35 +457,35 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #' # Prepare data for IRTnorm model fit
 #' info <- estimate_norming_model(data = response_data,
 #' age_variable = "age",
-#' int_variables = 1:50,
+#' item_variables = 1:50,
 #' irt_model = "2PLnorm",
 #' age__model = "polynom",
 #' poly_mean = 3,
 #' poly_sd = 2)
 #' 
 #' # Single analysis (no age grouping)
-#' result <- NC(fit_info = info_poly)
+#' result <- raw_score_ppc(fit_info = info_poly)
 #'
-#' NC_visual(N_info = result)
+#' raw_score_ppc_visual(N_info = result)
 #'
 #' # Age-grouped analysis
-#' result_age <- NC(fit_info = info,
+#' result_age <- raw_score_ppc(fit_info = info,
 #'                  age_range = seq(-2,2,1))
 #'
-#' NC_visual(result_age)
+#' raw_score_ppc_visual(result_age)
 #'}
-#' @seealso \code{\link{NC}} for computing the raw score distributions
+#' @seealso \code{\link{raw_score_ppc}} for computing the raw score distributions
 #'
 #' @references
 #' Gelman, A., Carlin, J. B., Stern, H. S., & Rubin, D. B. (2013).
 #' Bayesian Data Analysis (3rd ed.). Chapman and Hall/CRC.
 #'
 #' @export
-NC_visual <- function(NC_info, dim_plot = NULL) {
+raw_score_ppc_visual <- function(raw_score_ppc_info, dim_plot = NULL) {
 ##TODO NEEDS TO BE CHECKED IF THIS IF CASE IS GOOD 
-  if (length(NC_info) == 1 && is.list(NC_info[[1]]) && 
-      !is.null(NC_info[[1]][[1]]$age)) {
-    NC_info <- NC_info[[1]]
+  if (length(raw_score_ppc_info) == 1 && is.list(raw_score_ppc_info[[1]]) && 
+      !is.null(raw_score_ppc_info[[1]][[1]]$age)) {
+    raw_score_ppc_info <- raw_score_ppc_info[[1]]
   }
   
   
@@ -520,17 +521,17 @@ remove_substr <- function(text, start, end) {
          substring(text, end + 1))
 }
 # True if multiple dimensions are tested and if multiple ages are evaluated
-if(length(NC_info) > 1 & !is.null(NC_info[[1]][[1]]$age)){
+if(length(raw_score_ppc_info) > 1 & !is.null(raw_score_ppc_info[[1]][[1]]$age)){
   if(is.null(dim_plot)){
     stop("'dim_plot' missing. Please provide which latent trait dimension  should be visualized. Due to
         the different age groups the latent trait dimensions have to be plotted individually.")
   }else{
     if(dim_plot == "general"){
-      NC_info <- NC_info[[1]]
+      raw_score_ppc_info <- raw_score_ppc_info[[1]]
     }else{
       int_NC <- as.numeric(remove_substr(dim_plot, 1,6))
       if(!is.na(int_NC)){
-        NC_info <- NC_info[[as.numeric(substr(dim_plot, 7,7))]] # +1
+        raw_score_ppc_info <- raw_score_ppc_info[[as.numeric(substr(dim_plot, 7,7))]] # +1
       }else{
         stop("'dim_plot' has the wrong format. ")
       }
@@ -540,7 +541,7 @@ if(length(NC_info) > 1 & !is.null(NC_info[[1]][[1]]$age)){
 }
 
 # Detect if input is a list of lists or a single result
-n_group <- length(NC_info)
+n_group <- length(raw_score_ppc_info)
 
 if (n_group > 1) {
   # Process multiple  groups
@@ -548,16 +549,16 @@ if (n_group > 1) {
   rep.long_all <- NULL
 
   for (g in 1:n_group) {
-    processed <- process_single_result(result = NC_info[[g]],
-                                       age_label =NC_info[[g]]$age,
-                                       dim_label =NC_info[[g]]$dim)
+    processed <- process_single_result(result = raw_score_ppc_info[[g]],
+                                       age_label =raw_score_ppc_info[[g]]$age,
+                                       dim_label =raw_score_ppc_info[[g]]$dim)
     df_all <- rbind(df_all, processed$df)
     rep.long_all <- rbind(rep.long_all, processed$rep.long)
 
   }
 }else {
   # Process single result (no age grouping)
-  processed <- process_single_result(NC_info[[1]], age_label = "one", dim_label = "none")
+  processed <- process_single_result(raw_score_ppc_info[[1]], age_label = "one", dim_label = "none")
   df_all <- processed$df
   rep.long_all <- processed$rep.long
 
@@ -677,7 +678,7 @@ return(invisible(p))
 #' # Fit IRTnorm model and extract information
 #' info <- estimate_norming_model(data = response_data,
 #' age_variable = "age",
-#' int_variables = 1:50,
+#' item_variables = 1:50,
 #' irt_model = "2PLnorm",
 #' age__model = "polynom",
 #' poly_mean = 3,
@@ -815,7 +816,7 @@ is_multidim <- function(irt_mod) irt_mod >= 5
 #'
 #' @details
 #' \strong{Raw score perspective:} Observed raw sum scores are computed as row
-#' sums across the item response variables specified in \code{int_variables}.
+#' sums across the item response variables specified in \code{item_variables}.
 #' Model-implied raw score distributions are obtained by summing posterior
 #' predictive replicated item responses for each individual. Empirical
 #' quantiles of the replicated raw scores are then smoothed as a function of
@@ -839,7 +840,7 @@ is_multidim <- function(irt_mod) irt_mod >= 5
 #' info <- estimate_norming_model(
 #'   raw_data        = response_data,
 #'   age_variable    = "age",
-#'   int_variables   = 1:50,
+#'   item_variables   = 1:50,
 #'   irt_model       = "2PLnorm",
 #'   poly_mean       = 3,
 #'   poly_sd         = 2,
@@ -1065,7 +1066,7 @@ make_dummy_matrix <- function(info, K_item) {
 #' # Fit IRTnorm model and extract information
 #' info <- estimate_norming_model(data = response_data,
 #' age_variable = "age",
-#' int_variables = 1:50,
+#' item_variables = 1:50,
 #' irt_model = "2PLnorm",
 #' age__model = "polynom",
 #' poly_mean = 3,
@@ -1089,7 +1090,7 @@ make_dummy_matrix <- function(info, K_item) {
 item_person_fit <- function(fit_info,  parameter){
 
 model_info <- fit_info$model_info
-answer_pattern <- fit_info$raw_data[, fit_info$int_variables]
+answer_pattern <- fit_info$raw_data[, fit_info$item_variables]
 data <- fit_info$newdata
   nperson <- data$J
   nitem <- data$I
@@ -1173,8 +1174,8 @@ data <- fit_info$newdata
       df <- df[!is.nan(df$observed) & !is.nan(df$irt_mod), ]
     }
 
-    xname <- "Proportion correct per item observed"
-    yname <- "Proportion correct per item based on model"
+    xname <- "proportion correct per item observed"
+    yname <- "proportion correct per item based on model"
     titlename <- "Item fit"
   }
 
@@ -1197,16 +1198,16 @@ if(data$irt_mod <=3){
           domain = paste0("domain ", d)))
       }
     }
-    xname <- "Realized raw score"
+    xname <- "observed raw score"
     yname <- "model-implied raw score"
-    titlename <- "Person fit"
+    titlename <- "person fit"
   }
   if(data$irt_mod == 4 & parameter == "item"){
     p <- ggplot2::ggplot(df, ggplot2::aes(x = factor(type), y = value, fill = factor(level))) +
       ggplot2::geom_bar(stat = "identity") +
       ggplot2::facet_wrap(~ paste0("item ", item)) +
       #scale_fill_viridis_d(option = "plasma") +
-      ggplot2::labs(x = NULL, y = "Proportion", fill = "Level") +
+      ggplot2::labs(x = NULL, y = "proportion", fill = "Level") +
       ggplot2::theme_bw() +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
 
@@ -1258,7 +1259,7 @@ if(data$irt_mod <=3){
 #' # Fit IRTnorm model and extract information
 #' info <- estimate_norming_model(data = response_data,
 #' age_variable = "age",
-#' int_variables = 1:50,
+#' item_variables = 1:50,
 #' irt_model = "2PLnorm",
 #' age__model = "polynom",
 #' poly_mean = 3,

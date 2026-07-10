@@ -61,7 +61,7 @@ data(response_data)
 prep_data <- data_prep(
   raw_data = response_data,
   age_variable = "age",
-  int_variables = 1:50,
+  item_variables = 1:50,
   model = "2PLnorm",
 
 # Step 3: Fit the IRT norming model

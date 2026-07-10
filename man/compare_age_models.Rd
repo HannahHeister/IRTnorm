@@ -11,7 +11,7 @@ compare_age_models(
   raw_data,
   irt_model,
   age_variable,
-  int_variables,
+  item_variables,
   maxeval = 10,
   prior_knowledge = NULL,
   parameter_fixed = NULL,
@@ -74,7 +74,7 @@ age-dependent mean and variance and free correlation matrix across age.}
 the column in \code{raw_data} that contains the individuals' age information.
 Age is assumed to be continuous.}
 
-\item{int_variables}{A \code{numeric} or \code{character} vector specifying the columns in
+\item{item_variables}{A \code{numeric} or \code{character} vector specifying the columns in
 \code{raw_data} that contain the item response variables.}
 
 \item{maxeval}{Integer. Maximum number of individual model fits to perform
@@ -97,10 +97,14 @@ reproducibility. If \code{NULL} (default), a random seed is generated
 internally.}
 
 \item{iter_warmup}{An \code{integer} specifying the number of warm-up
-iterations per chain used by the MCMC sampler.}
+iterations per chain used by the MCMC sampler.  The default value of 500 is
+sufficient for well-fitting data, but it may need to be increased for
+complex models or to improve precision.}
 
 \item{iter_sampling}{An \code{integer} specifying the number of post
-warm-up (sampling) iterations per chain.}
+warm-up (sampling) iterations per chain.  The default value of 500 is
+sufficient for well-fitting data, but it may need to be increased for
+complex models or to improve precision.}
 
 \item{chains}{An \code{integer} specifying the number of Markov chains to
 run in parallel. The default is 4 chains.}
@@ -140,9 +144,7 @@ starts from the simplest model and incrementally increases polynomial
 complexity as long as model fit improves.
 }
 \details{
-Each candidate model is fit via \code{fit_one_row}, which prepares the
-data (\code{data_prep}), fits the model (\code{fit_IRTnorm}), and extracts
-pointwise and summary LOO-ELPD values (\code{loo_extr}) along with the
+Returns LOO-ELPD values (\code{loo_extr}) along with the
 estimated age trajectory (mean and SD of \code{theta} across the age
 range).
 
@@ -176,14 +178,14 @@ my_grid <- expand.grid(mu = 1:3, sd = 0:2)
 res_grid <- compare_age_models(
   method = "grid", grid = my_grid,
   raw_data = my_data, irt_model = "1PLnorm",
-  age_variable = "age", int_variables = 1:20
+  age_variable = "age", item_variables = 1:20
 )
 
 # forward selection
 res_fwd <- compare_age_models(
   method = "forward",
   raw_data = my_data, irt_model = "1PLnorm",
-  age_variable = "age", int_variables = 1:20,
+  age_variable = "age", item_variables = 1:20,
   maxeval = 12
 )
 res_fwd$best_configuration

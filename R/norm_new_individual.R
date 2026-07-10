@@ -236,7 +236,7 @@ log_post_draw_theta <- function(data, theta, a_vec, b_vec, c_vec,  y_vec, mu, si
 #' info <- estimate_norming_model(
 #'   raw_data        = response_data,
 #'   age_variable    = "age",
-#'   int_variables   = 1:50,
+#'   item_variables   = 1:50,
 #'   irt_model       = "2PLnorm",
 #'   poly_mean       = 3,
 #'   poly_sd         = 2,

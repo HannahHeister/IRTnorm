@@ -19,7 +19,7 @@ loo_comp <- function(loo_info){
   return(loo_order)
 }
 
-fit_one_model <- function(model_specifications, raw_data, age_variable, int_variables,
+fit_one_model <- function(model_specifications, raw_data, age_variable, item_variables,
                           iter_warmup = 500, iter_sampling = 500, traj_info = FALSE, 
                           chains = 4, parallel_chains = NULL, seed = NULL) {
   
@@ -43,7 +43,7 @@ fit_one_model <- function(model_specifications, raw_data, age_variable, int_vari
   model_specifications <- utils::modifyList(defaults, model_specifications)
   
   newdata <- do.call(data_prep, c(
-    list(raw_data = raw_data, age_variable = age_variable, int_variables = int_variables),
+    list(raw_data = raw_data, age_variable = age_variable, item_variables = item_variables),
     model_specifications
   ))
   
@@ -98,7 +98,7 @@ fit_one_model <- function(model_specifications, raw_data, age_variable, int_vari
   
 }
 
-fit_one_row <- function(row, raw_data, irt_model, age_variable, int_variables,
+fit_one_row <- function(row, raw_data, irt_model, age_variable, item_variables,
                         prior_knowledge  = NULL,parameter_fixed  = NULL, 
                         seed = NULL, iter_warmup = 500, iter_sampling = 500,
                         chains = 2, parallel_chains = NULL) {
@@ -114,7 +114,7 @@ fit_one_row <- function(row, raw_data, irt_model, age_variable, int_variables,
     ),
     raw_data        = raw_data,
     age_variable    = age_variable,
-    int_variables   = int_variables,
+    item_variables   = item_variables,
     traj_info = TRUE,
     iter_warmup     = iter_warmup,
     iter_sampling   = iter_sampling,
@@ -214,7 +214,7 @@ check_dimension <- function(model_specifications){
 #'   the column in \code{raw_data} that contains the individuals' age information.
 #'   Age is assumed to be continuous.
 #'
-#'@param int_variables A \code{numeric} or \code{character} vector specifying the columns in
+#'@param item_variables A \code{numeric} or \code{character} vector specifying the columns in
 #'   \code{raw_data} that contain the item response variables.
 #'
 #'@param irt_model A \code{character} scalar indicating for which IRT norming model the
@@ -263,11 +263,15 @@ check_dimension <- function(model_specifications){
 #'   internally.
 #'
 #' @param iter_warmup An \code{integer} specifying the number of warm-up
-#'   iterations per chain used by the MCMC sampler.
+#'   iterations per chain used by the MCMC sampler.  The default value of 500 is 
+#'   sufficient for well-fitting data, but it may need to be increased for 
+#'   complex models or to improve precision.  
 #'
 #' @param iter_sampling An \code{integer} specifying the number of post
-#'   warm-up (sampling) iterations per chain.
-#'
+#'   warm-up (sampling) iterations per chain.  The default value of 500 is 
+#'   sufficient for well-fitting data, but it may need to be increased for
+#'    complex models or to improve precision.  
+#'    
 #' @param chains An \code{integer} specifying the number of Markov chains to
 #'   run in parallel. The default is 4 chains.
 #'
@@ -278,9 +282,7 @@ check_dimension <- function(model_specifications){
 #'@param include_splines Logical, if penalized splines should be compared to the 
 #'polynomial selection or not. 
 #' @details
-#' Each candidate model is fit via \code{fit_one_row}, which prepares the
-#' data (\code{data_prep}), fits the model (\code{fit_IRTnorm}), and extracts
-#' pointwise and summary LOO-ELPD values (\code{loo_extr}) along with the
+#' Returns LOO-ELPD values (\code{loo_extr}) along with the
 #' estimated age trajectory (mean and SD of \code{theta} across the age
 #' range).
 #'
@@ -331,14 +333,14 @@ check_dimension <- function(model_specifications){
 #' res_grid <- compare_age_models(
 #'   method = "grid", grid = my_grid,
 #'   raw_data = my_data, irt_model = "1PLnorm",
-#'   age_variable = "age", int_variables = 1:20
+#'   age_variable = "age", item_variables = 1:20
 #' )
 #'
 #' # forward selection
 #' res_fwd <- compare_age_models(
 #'   method = "forward",
 #'   raw_data = my_data, irt_model = "1PLnorm",
-#'   age_variable = "age", int_variables = 1:20,
+#'   age_variable = "age", item_variables = 1:20,
 #'   maxeval = 12
 #' )
 #' res_fwd$best_configuration
@@ -348,7 +350,7 @@ check_dimension <- function(model_specifications){
 compare_age_models <- function(method = c("grid", "forward"),
                                        grid = NULL,
                                        raw_data, irt_model,
-                                       age_variable, int_variables,
+                                       age_variable, item_variables,
                                        maxeval = 10,
                                        prior_knowledge = NULL, parameter_fixed = NULL,
                                        seed = NULL, iter_warmup = 500,
@@ -381,7 +383,7 @@ compare_age_models <- function(method = c("grid", "forward"),
         raw_data        = raw_data,
         irt_model       = irt_model,
         age_variable    = age_variable,
-        int_variables   = int_variables,
+        item_variables   = item_variables,
         prior_knowledge = prior_knowledge,
         parameter_fixed = parameter_fixed,
         seed            = seed,
@@ -411,7 +413,7 @@ compare_age_models <- function(method = c("grid", "forward"),
         ),
         raw_data        = raw_data,
         age_variable    = age_variable,
-        int_variables   = int_variables,
+        item_variables   = item_variables,
         traj_info = TRUE,
         iter_warmup     = iter_warmup,
         iter_sampling   = iter_sampling,
@@ -543,20 +545,20 @@ compare_age_models <- function(method = c("grid", "forward"),
 #'   (\code{mean}/\code{sd}), with the top-ranked model(s) highlighted.
 #'   Defaults to \code{"ELPD"}. Partial matching is supported via
 #'   \code{\link[base]{match.arg}}.
-#'@param  highlightranks Numeric value indicating the top highlightranks to be 
+#'@param  highlight_ranks Numeric value indicating the top highlight_ranks to be 
 #' highlighted in color. 
 #' @details
 #' Under \code{perspective = "ELPD"}, each point represents one fitted
 #' model's ELPD difference from the best-performing model, plotted against
 #' \code{mu} and faceted by \code{sd}. Models within the top
-#' \code{highlightranks} ranks are colored by rank; all other models are
+#' \code{highlight_ranks} ranks are colored by rank; all other models are
 #' shown as faint unfilled points for context.
 #'
 #' Under \code{perspective = "trajectory"}, each line represents one fitted
 #' model's estimated age trajectory (separately for the mean and SD moments,
 #' via \code{facet_wrap(~moment)}). All trajectories are drawn faintly in
 #' the background, with trajectories from models within the top
-#' \code{highlightranks} ranks overlaid in color and at greater line
+#' \code{highlight_ranks} ranks overlaid in color and at greater line
 #' thickness, making it easy to see whether top-ranked models agree on the
 #' shape of the trajectory or diverge.
 #'
@@ -569,7 +571,7 @@ compare_age_models <- function(method = c("grid", "forward"),
 #' res <- compare_age_models(
 #'   method = "grid", grid = expand.grid(mu = 1:3, sd = 0:2),
 #'   raw_data = my_data, irt_model = "1PLnorm",
-#'   age_variable = "age", int_variables = c("sex")
+#'   age_variable = "age", item_variables = c("sex")
 #' )
 #'
 #' # ELPD comparison across (mu, sd) combinations
@@ -583,7 +585,7 @@ compare_age_models <- function(method = c("grid", "forward"),
 #'
 #' @export
 visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "trajectory"), 
-                                        highlightranks = 1){
+                                        highlight_ranks = 1){
   perspective <-  match.arg(perspective)
   if(perspective == "ELPD"){
     best_model <- compare_info$best_model
@@ -591,7 +593,7 @@ visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "t
     p <- ggplot2::ggplot(best_model) +  ggplot2::theme_bw() +
       ggplot2::geom_point( ggplot2::aes(poly_mean, ELPD_diff)) +
       ggplot2:: geom_point( ggplot2::aes(poly_mean, ELPD_diff, color = ranked), 
-                            data = best_model[best_model$rank <= highlightranks,]) +
+                            data = best_model[best_model$rank <= highlight_ranks,]) +
       ggplot2::facet_grid(~paste0("sd: ",poly_sd)) +  ggplot2::xlab("mean") +
       ggplot2::theme(text =  ggplot2::element_text(size=13,family = "serif"), 
             axis.line =  ggplot2::element_line(color='black'),
@@ -607,7 +609,7 @@ visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "t
     p <-  ggplot2::ggplot(trajectory) +  ggplot2::theme_bw()+
       ggplot2::geom_line( ggplot2::aes(age, est, group = modelcombi), alpha = 0.2) +
       ggplot2::geom_line( ggplot2::aes(age, est, color = ranked), 
-                          data = trajectory[trajectory$rank  <= highlightranks,],linewidth = 1.2) +
+                          data = trajectory[trajectory$rank  <= highlight_ranks,],linewidth = 1.2) +
       ggplot2::facet_wrap(~moment, scale = "free") +  ggplot2::ylab("value") +
       ggplot2::theme(text =  ggplot2::element_text(size=13,family = "serif"), 
             axis.line =  ggplot2::element_line(color='black'),
@@ -647,7 +649,7 @@ visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "t
 #'   the column in \code{raw_data} that contains the individuals' age information.
 #'   Age is assumed to be continuous.
 #'
-#'@param int_variables A \code{numeric} or \code{character} vector specifying the columns in
+#'@param item_variables A \code{numeric} or \code{character} vector specifying the columns in
 #'   \code{raw_data} that contain the item response variables.
 #'
 #' @param seed An optional \code{integer} specifying the random seed for
@@ -655,10 +657,14 @@ visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "t
 #'   internally.
 #'
 #' @param iter_warmup An \code{integer} specifying the number of warm-up
-#'   iterations per chain used by the MCMC sampler.
+#'   iterations per chain used by the MCMC sampler.  The default value of 500 is 
+#'   sufficient for well-fitting data, but it may need to be increased for 
+#'   complex models or to improve precision.  
 #'
 #' @param iter_sampling An \code{integer} specifying the number of post
-#'   warm-up (sampling) iterations per chain.
+#'   warm-up (sampling) iterations per chain.  The default value of 500 is 
+#'   sufficient for well-fitting data, but it may need to be increased for
+#'    complex models or to improve precision.  
 #'
 #' @param chains An \code{integer} specifying the number of Markov chains to
 #'   run in parallel. The default is 4 chains.
@@ -668,20 +674,16 @@ visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "t
 #'   available cores detected by \code{\link[parallel]{detectCores}} are used.
 #'
 #' @details
-#' Each element of \code{model_specifications} is validated before fitting begins, ensuring there
-#' are at least two model entries and that each specifies \code{irt_model}
-#' and \code{age_model}. For every model the data is prepared, the model is fitted, 
-#' and pointwise and summary LOO-ELPD values are extracted and reported. All fitted models share
-#' the same \code{raw_data}, \code{age_variable}, \code{int_variables}, and
+#' For every model the data is prepared, the model is fitted, 
+#' and LOO-ELPD values are extracted and reported. All fitted models share
+#' the same \code{raw_data}, \code{age_variable}, \code{item_variables}, and
 #' MCMC settings (\code{seed}, \code{iter_warmup}, \code{iter_sampling},
 #' \code{chains}, \code{parallel_chains}); only the model specification
 #' itself varies across entries in \code{model_specifications}.
+#' For direct model comparison the ELPD differences and the resulting ranks
+#' across the full set of compared models are reported.
 #'
-#' Pointwise and summary ELPD values are accumulated across all models and
-#' then computes ELPD differences and ranks
-#' across the full set of compared models.
-#'
-#' @return A data frame as returned, giving the LOO-ELPD,
+#' @return A data frame giving the LOO-ELPD,
 #'   \code{ELPD_diff}, and \code{rank} for each fitted model, along with
 #'   model-identifying columns (e.g. \code{modelcombi}, \code{irt_model},
 #'   \code{age_model}) carried over from each model's \code{elpd_summary}.
@@ -700,14 +702,14 @@ visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "t
 #'   model_specifications   = model_specifications,
 #'   raw_data     = my_data,
 #'   age_variable = "age",
-#'   int_variables = 1:50
+#'   item_variables = 1:50
 #' )
 #' }
 #'
 #' @seealso \code{\link{compare_age_models}}
 #'
 #' @export
-compare_IRTnorm_models <- function(model_specifications, raw_data, age_variable, int_variables, 
+compare_IRTnorm_models <- function(model_specifications, raw_data, age_variable, item_variables, 
                                    seed = NULL, iter_warmup = 500,
                                    iter_sampling = 500,
                                    chains = 2, parallel_chains = NULL){
@@ -726,7 +728,7 @@ compare_IRTnorm_models <- function(model_specifications, raw_data, age_variable,
   elpd_value <- NULL
   for(n in seq_len(length(model_specifications))){
     info_model <- fit_one_model(model_specifications = model_specifications[[n]], 
-                                raw_data = raw_data, age_variable =age_variable, int_variables =int_variables,
+                                raw_data = raw_data, age_variable =age_variable, item_variables =item_variables,
                                 seed = seed, iter_warmup = iter_warmup, 
                                 iter_sampling = iter_sampling, 
                                 chains = chains, parallel_chains = parallel_chains)

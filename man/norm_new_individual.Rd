@@ -67,7 +67,7 @@ data(response_data)
 info <- estimate_norming_model(
   raw_data        = response_data,
   age_variable    = "age",
-  int_variables   = 1:50,
+  item_variables   = 1:50,
   irt_model       = "2PLnorm",
   poly_mean       = 3,
   poly_sd         = 2,

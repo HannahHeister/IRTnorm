@@ -8,7 +8,7 @@
 A \code{ggplot2} object.
 }
 \source{
-Simulated data.
+Visual output from the bayesplot::mcmc_trace function.
 }
 \usage{
 data(conv_plot)

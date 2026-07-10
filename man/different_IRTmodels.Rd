@@ -5,10 +5,10 @@
 \alias{different_IRTmodels}
 \title{Presaved different_IRTmodels for the vignette to run fast.}
 \format{
-A \code{list} with information for norming new individuals.
+A \code{list} with information for model comparison.
 }
 \source{
-Simulated data.
+output from the compare_IRTnorm_models function.
 }
 \usage{
 data(different_IRTmodels)

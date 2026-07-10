@@ -5,10 +5,10 @@
 \alias{int_info_newperson}
 \title{Presaved information of a newly normed individual for the vignette to run fast.}
 \format{
-Output form loo compare function.
+list containing the norm score estimates of a newly normed individual.
 }
 \source{
-Simulated data.
+output from the norm_new_individual function.
 }
 \usage{
 data(int_info_newperson)

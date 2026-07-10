@@ -193,7 +193,7 @@ for(irtmod in irt_models){
           }
         }}else{fixed <- NULL; fixed_names <- NULL}
      
-      data_temp <- data_prep(raw_data = rawdata, age_variable = "age", int_variables = seq_len(nitem),
+      data_temp <- data_prep(raw_data = rawdata, age_variable = "age", item_variables = seq_len(nitem),
                                irt_model = irtmod, age_model = agemod, 
                                poly_mean = 4, poly_sd = 3, 
                                K_item =  data_GRM$m_categories, itemD = data_T$itemD,

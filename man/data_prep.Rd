@@ -7,7 +7,7 @@
 data_prep(
   raw_data,
   age_variable,
-  int_variables,
+  item_variables,
   irt_model = c("1PLnorm", "2PLnorm", "3PLnorm", "GRMnorm", "Testlet1PLnorm",
     "Testlet2PLnorm", "HO1PLnorm-C", "HO2PLnorm-C", "HO1PLnorm-P", "HO2PLnorm-P",
     "HO1PLnorm-F", "HO2PLnorm-F"),
@@ -37,7 +37,7 @@ contain missing values (\code{NA}).}
 the column in \code{raw_data} that contains the individuals' age information.
 Age is assumed to be continuous.}
 
-\item{int_variables}{a \code{numeric} or \code{character} vector specifying the columns in
+\item{item_variables}{a \code{numeric} or \code{character} vector specifying the columns in
 \code{raw_data} that contain the item response variables.}
 
 \item{irt_model}{a \code{character} scalar indicating for which IRT norming model the
@@ -162,7 +162,7 @@ The function extracts item responses, handles missing data, scales age,
 and constructs age design matrices according to the specified age model.
 
 Each row in \code{raw_data} corresponds to one individual and each column in
-\code{int_variables} corresponds to one dichotomous test item.
+\code{item_variables} corresponds to one dichotomous test item.
 Age is internally standardized using its mean and standard deviation prior
 to constructing polynomial or spline basis functions. Missing item responses
 are removed and handled via index vectors (\code{ii}, \code{jj}) that map
@@ -184,7 +184,7 @@ example_data <- data.frame(example_responses,
 normdata_poly <- data_prep(
   raw_data = example_data,
   age_variable = "age_years",
-  int_variables = paste0("X", 1:5),
+  item_variables = paste0("X", 1:5),
   irt_model = "2PLnorm",
   age_model = "poly",
   poly_mean = 2,
@@ -196,7 +196,7 @@ normdata_poly <- data_prep(
 normdata_spline <- data_prep(
   raw_data = example_data,
   age_variable = "age_years",
-  int_variables = paste0("X", 1:5),
+  item_variables = paste0("X", 1:5),
   irt_model = "2PLnorm",
   age_model = "splines",
   prior_knowledge = list(alpha = list(alpha_prior_mu = c(1,1,0.9,1.1,0.8),

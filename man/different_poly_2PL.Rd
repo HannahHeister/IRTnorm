@@ -5,10 +5,10 @@
 \alias{different_poly_2PL}
 \title{Presaved different_poly_2PL for the vignette to run fast.}
 \format{
-A \code{list} with information for norming new individuals.
+A \code{list} with information for model comparison.
 }
 \source{
-Simulated data.
+output from the compare_age_models function.
 }
 \usage{
 data(different_poly_2PL)

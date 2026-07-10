@@ -20,7 +20,7 @@
 #' @docType data
 #' @usage data(conv_plot)
 #' @format A \code{ggplot2} object.
-#' @source Simulated data.
+#' @source Visual output from the bayesplot::mcmc_trace function.
 "conv_plot"
 
 
@@ -29,46 +29,29 @@
 #' @docType data
 #' @usage data(info)
 #' @format A \code{list} with information of the fitted model.
-#' @source Simulated data.
+#' @source output from the estimate_norming_model function.
 "info"
 
 #' Presaved information of a newly normed individual for the vignette to run fast.
 #'
 #' @docType data
 #' @usage data(int_info_newperson)
-#' @format Output form loo compare function.
-#' @source Simulated data.
+#' @format list containing the norm score estimates of a newly normed individual.
+#' @source output from the norm_new_individual function.
 "int_info_newperson"
-
-#' Presaved NC_info for the vignette to run fast.
-#'
-#' @docType data
-#' @usage data(NC_info)
-#' @format A \code{list} with information for norming new individuals.
-#' @source Simulated data.
-"NC_info"
-
-
-#' Presaved NC_info_age for the vignette to run fast.
-#'
-#' @docType data
-#' @usage data(NC_info_age)
-#' @format A \code{list} with information for norming new individuals.
-#' @source Simulated data.
-"NC_info_age"
 
 #' Presaved different_poly_2PL for the vignette to run fast.
 #'
 #' @docType data
 #' @usage data(different_poly_2PL)
-#' @format A \code{list} with information for norming new individuals.
-#' @source Simulated data.
+#' @format A \code{list} with information for model comparison. 
+#' @source output from the compare_age_models function.
 "different_poly_2PL"
 
 #' Presaved different_IRTmodels for the vignette to run fast.
 #'
 #' @docType data
 #' @usage data(different_IRTmodels)
-#' @format A \code{list} with information for norming new individuals.
-#' @source Simulated data.
+#' @format A \code{list} with information for model comparison. 
+#' @source output from the compare_IRTnorm_models function.
 "different_IRTmodels"

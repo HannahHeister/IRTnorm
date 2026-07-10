@@ -17,7 +17,7 @@
 #'   the column in \code{raw_data} that contains the individuals' age information.
 #'   Age is assumed to be continuous.
 #'
-#'@param int_variables a \code{numeric} or \code{character} vector specifying the columns in
+#'@param item_variables a \code{numeric} or \code{character} vector specifying the columns in
 #'   \code{raw_data} that contain the item response variables.
 #'
 #'@param irt_model a \code{character} scalar indicating for which IRT norming model the
@@ -162,7 +162,7 @@
 #'     \item{\code{raw_data}}{The original data frame passed to
 #'       \code{raw_data}.}
 #'     \item{\code{age_variable}}{The name of the age variable, as supplied.}
-#'     \item{\code{int_variables}}{The interaction variable names, as supplied.}
+#'     \item{\code{item_variables}}{The interaction variable names, as supplied.}
 #'     \item{\code{model_stan_obj}}{The raw Stan fit object. Only present when
 #'       \code{extract_stan_object = TRUE}.}
 #'   }
@@ -192,7 +192,7 @@
 #' result <- estimate_norming_model(
 #'   raw_data      = my_data,
 #'   age_variable  = "age",
-#'   int_variables = 1:50,
+#'   item_variables = 1:50,
 #'   irt_model     = "2PLnorm",
 #'   age_model     = "splines",
 #'   iter_warmup   = 500,
@@ -206,7 +206,7 @@
 #'}
 #' @export
 
-estimate_norming_model <- function(raw_data, age_variable, int_variables, 
+estimate_norming_model <- function(raw_data, age_variable, item_variables, 
                                    irt_model,
                                    age_model,
                                    itemD = NULL, K_item = NULL,
@@ -220,7 +220,7 @@ estimate_norming_model <- function(raw_data, age_variable, int_variables,
 # data preperation 
   newdata <- data_prep(raw_data = raw_data,
                        age_variable = age_variable,
-                       int_variables = int_variables, 
+                       item_variables = item_variables, 
                        irt_model = irt_model, 
                        age_model = age_model,
                        itemD = itemD, K_item = K_item,
@@ -258,7 +258,7 @@ estimate_norming_model <- function(raw_data, age_variable, int_variables,
                    newdata = newdata,
                    raw_data = raw_data, 
                    age_variable = age_variable,
-                   int_variables = int_variables)
+                   item_variables = item_variables)
   
     
   if(extract_stan_object == TRUE){
