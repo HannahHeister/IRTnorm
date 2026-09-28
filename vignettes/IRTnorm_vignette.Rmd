@@ -24,10 +24,10 @@ knitr::opts_chunk$set(
 Norm-referenced psychological tests evaluate an individual’s performance relative to a reference population, typically using standardized scores such as T-, IQ- or z-scores @AERA2014. Many developmental and intelligence tests rely on reference populations that change continuously with age.
 
 In such settings, item response theory (IRT)-based continuous norming models are useful for deriving age-specific norm information. 
-These models explicitly allow the latent trait distribution to depend on age. As a result, each individual’s latent trait estimate can be directly compared to the age-specific reference population using a z-standardized norm score @heister2014item.
+These models explicitly allow the latent trait distribution to depend on age. As a result, each individual’s latent trait estimate can be directly compared to the age-specific reference population using a z-standardized norm score @heister2024item.
 As in most parametric IRT models, the latent trait distribution is assumed to be normally distributed in the reference population. Further, the latent trait distribution of psychological tests can typically be assumed to change smoothly with age. Therefore, the age-related changes can be captured by modeling the distribution's mean and standard deviation as a smooth function of age, using polynomial regression or penalized splines.
 
-Simulation studies have demonstrated that IRT-based continuous norming models can accurately recover age-specific norms, and empirical evaluation of IDS-2 @grob2018idsNL has shown that these models can fit empirical data well @heister2014item.
+Simulation studies have demonstrated that IRT-based continuous norming models can accurately recover age-specific norms, and empirical evaluation of IDS-2 @grob2018idsNL has shown that these models can fit empirical data well @heister2024item.
 Compared to raw score–based continuous norming methods, which is the default approach in many applications, IRT-based models offer several advantages. These include the use of all available item-level information, the ability to model multiple latent traits and their relationships, and the straightforward integration of adaptive testing procedures.
 
 `IRTnorm` is based on a framework for deriving age-specific norm scores using Bayesian IRT-based continuous norming models. It includes tools for model comparison, model estimation, visual inspection of model fit, and extraction of norm scores.

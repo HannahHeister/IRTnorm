@@ -79,7 +79,10 @@ fit_one_model <- function(model_specifications, raw_data, age_variable, item_var
       poly_mean  = model_specifications$poly_mean,
       poly_sd    = model_specifications$poly_sd,
       modelcombi = modelcombi
-    ))
+    ), 
+    paretok =  loo_info$diagnostics$pareto_k, 
+    neff =  loo_info$diagnostics$n_eff,
+    reff =  loo_info$diagnostics$r_eff)
   if(traj_info){
     age_mean <- fit$summary(variables = "theta_mean")$mean
     age_sd   <- fit$summary(variables = "theta_sigma")$mean
@@ -396,13 +399,14 @@ compare_age_models <- function(method = c("grid", "forward"),
     info <- list(
       loo_ELPD   = do.call(cbind, lapply(results, function(x) x$elpd_pointwise)),
       elpd_value = do.call(rbind, lapply(results, function(x) x$elpd_summary)),
-      trajectory = do.call(rbind, lapply(results, function(x) x$trajectory))
+      trajectory = do.call(rbind, lapply(results, function(x) x$trajectory)),
+      paretok = do.call(cbind, lapply(results, function(x) x$paretok))
     )
     return(info)
   }
   
   # --- shared helper: finalize results (loo comparison, ranks, best flag) ---
-  finalize <- function(loo_ELPD, elpd_value, trajectory, best_configuration = NULL, irt_model,include_splines){
+  finalize <- function(loo_ELPD, elpd_value, trajectory, paretok, best_configuration = NULL, irt_model,include_splines){
     if(include_splines){
       temp <- fit_one_model(
         model_specifications = list(
@@ -421,9 +425,10 @@ compare_age_models <- function(method = c("grid", "forward"),
         parallel_chains = parallel_chains,
         seed            = seed
       )
-      loo_ELPD <- cbind(loo_ELPD,temp$elpd_pointwise )
-      elpd_value <- rbind(loo_ELPD,temp$elpd_summary )
-      trajectory <- rbind(loo_ELPD,temp$trajectory )
+        loo_ELPD <- cbind(loo_ELPD,temp$elpd_pointwise )
+      elpd_value <- rbind(elpd_value,temp$elpd_summary )
+      trajectory <- rbind(trajectory,temp$trajectory )
+      paretok <- cbind(paretok, temp$paretok)
       
     }
     
@@ -455,7 +460,7 @@ compare_age_models <- function(method = c("grid", "forward"),
     }
     
     
-    list(best_model = best_model, trajectory = trajectory,  
+    list(best_model = best_model, trajectory = trajectory,  paretok = paretok,
          best_configuration =  best_configuration)
   }
   
@@ -479,6 +484,7 @@ compare_age_models <- function(method = c("grid", "forward"),
   loo_ELPD   <- out0$loo_ELPD
   elpd_value <- out0$elpd_value
   trajectory <- out0$trajectory
+  paretok <- out0$paretok
   
   best_row  <- elpd_value[nrow(elpd_value), ]
   best_elpd <- best_row$ELPD
@@ -520,7 +526,8 @@ compare_age_models <- function(method = c("grid", "forward"),
                              prior_knowledge = prior_knowledge,
                              parameter_fixed = parameter_fixed)
   
-  finalize(loo_ELPD, elpd_value, trajectory, best_configuration, include_splines = include_splines)
+  finalize(loo_ELPD, elpd_value, trajectory, best_configuration,paretok,
+           include_splines = include_splines)
 }
 
 
@@ -726,6 +733,7 @@ compare_IRTnorm_models <- function(model_specifications, raw_data, age_variable,
   
   loo_ELPD <- NULL
   elpd_value <- NULL
+  diagn <- NULL
   for(n in seq_len(length(model_specifications))){
     info_model <- fit_one_model(model_specifications = model_specifications[[n]], 
                                 raw_data = raw_data, age_variable =age_variable, item_variables =item_variables,
@@ -734,10 +742,16 @@ compare_IRTnorm_models <- function(model_specifications, raw_data, age_variable,
                                 chains = chains, parallel_chains = parallel_chains)
     loo_ELPD <- cbind(loo_ELPD, info_model$elpd_pointwise)
     elpd_value <- rbind(elpd_value,info_model$elpd_summary)
+    diagn <- rbind(diagn, data.frame(pareto_k = info_model$paretok, 
+                                     neff = info_model$neff, 
+                                     reff = info_model$reff, 
+                                     irt_model = model_specifications[[n]]$irt_model))
   } 
   loo_info   <- list(elpd_value = elpd_value, loo_ELPD = loo_ELPD)
   best_model <- loo_comp(loo_info = loo_info)
-  return(best_model)
+  
+  info <- list(best_model, diagn)
+  return(info)
 }
 
 
