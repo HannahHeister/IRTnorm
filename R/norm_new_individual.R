@@ -5,11 +5,17 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
   if(data$age_mod == 1){
     p1_theta_post <- post_draw$p1_theta
     p2_theta_post <- post_draw$p2_theta
-    age_mean <- as.matrix(stats::model.matrix(~ poly(age,data$S - 1, raw = TRUE), data = data.frame(age = age_scale)))
-    age_sd <- as.matrix(stats::model.matrix(~ poly(age,data$W - 1, raw = TRUE), data = data.frame(age = age_scale)))
-    
-    
-    if(multidim == FALSE){
+    if(data$S == 1){
+      age_mean <- matrix(rep(1,length(age_scale)), ncol = 1)
+    }else{
+      age_mean <- as.matrix(stats::model.matrix(~ poly(age,data$S - 1, raw = TRUE), data = data.frame(age = age_scale)))
+    }
+    if(data$W == 1){
+      age_sd <- matrix(rep(1,length(age_scale)), ncol = 1)
+    }else{
+      age_sd <- as.matrix(stats::model.matrix(~ poly(age,data$W - 1, raw = TRUE), data = data.frame(age = age_scale)))
+    }
+        if(multidim == FALSE){
       D <- 1
       mu_post <- p1_theta_post %*% t(age_mean)
       sigma_post <- exp(p2_theta_post %*% t(age_sd))
@@ -29,7 +35,12 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
           sigma_post[,,d] <- exp(p2_theta_post[,seq(d,D*data$W,D)] %*% t(age_sd))
         }
         if(irt_mod >= 9){
-          age3 <- as.matrix(stats::model.matrix(~ poly(age,data$M - 1, raw = TRUE), data = data.frame(age = age_scale)))
+          if(data$M == 1){
+            age3 <- matrix(rep(1,length(age_scale)), ncol = 1)
+            
+          }else{
+            age3 <- as.matrix(stats::model.matrix(~ poly(age,data$M - 1, raw = TRUE), data = data.frame(age = age_scale)))
+          }
           p3_theta_post <- post_draw$p3_theta
         }
         if(irt_mod == 9 | irt_mod == 10){

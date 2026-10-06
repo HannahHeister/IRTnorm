@@ -217,8 +217,15 @@ We first evaluate the item fit.
 ```{r showfit4_ITEM, echo=TRUE, include=TRUE, fig.show="hold",  fig.width=6,fig.height=4, fig.align = "center"}
 item_person_fit(fit_info =info, parameter = "item")
 ``` 
-The observed and model-implied frequencies are in close agreement, indicating that the estimated item parameters adequately describe the observed data.
+The observed and model-implied frequencies are in close agreement, indicating that the estimated item parameters adequately describe the observed data. 
+Further it is assumed that items are conditionally independent. To check if this assumption
+holds the item residual correlation matrix can be evaluated using 
+```{r showfit4_ITEM, echo=TRUE, include=TRUE, fig.show="hold",  fig.width=6,fig.height=4, fig.align = "center"}
+compute_Q3(fit_info = info)
+```
 
+This shows that the correlation between the item residuals are low and only few items exceed a correlation above 0.2. 
+We therefore conclude that the item independence assumption is met. 
 Next, we evaluate the person-level fit.
 ```{r showfit4_2, echo=TRUE, include=TRUE, fig.show="hold", fig.width=6,fig.height=4, fig.align = "center"}
 item_person_fit(fit_info =info, parameter = "person")

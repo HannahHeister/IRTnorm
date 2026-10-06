@@ -19,7 +19,8 @@ Imports:
     parallel,
     posterior,
     stats,
-    tidyr
+    tidyr,
+    ggcorrplot
 Suggests:
     testthat (>= 3.0.0),
     bayesplot,

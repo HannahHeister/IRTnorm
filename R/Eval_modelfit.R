@@ -264,7 +264,7 @@ if(data$irt_mod !=  4){
   draws <- ncol(score_rep)
 
   # Compute observed scores
-  observed_scores <- rowSums(int_data)
+  observed_scores <- rowSums(int_data, na.rm = T)
 
   if (is.null(age_range)) {
     info_all[[1]] <- compute_nc_overall(observed_scores, score_rep, nitem, draws)
@@ -280,7 +280,7 @@ if(data$irt_mod !=  4){
       draws <- ncol(score_rep)
 
       # Compute observed scores
-      observed_scores <- rowSums(int_data[,data$itemD == d ])
+      observed_scores <- rowSums(int_data[,data$itemD == d ], na.rm = T)
       if (is.null(age_range)) {
         info_all[[d +1]] <- compute_nc_overall(observed_scores, score_rep, nitem, draws, dim = d)
       } else {
@@ -721,10 +721,9 @@ normscore_dist <- function(fit_info, age_range, binwidth = 0.5, dim_plot = NULL)
     warning("Some individuals are not within the plotted age groups. These have been removed")
     data <- data[!is.na(data$age_group), ]
   }
-
+  extrem <- max(abs(data$normscore_est))
+  x_val <- seq(-extrem,extrem, length.out = 300)  # standard x values
   
-  x_val <- seq(min(data$normscore_est), max(data$normscore_est), length.out = 300)  # standard x values
-
   curve_list <- lapply(seq_along(n_group), function(i) {
     data.frame(
       x = x_val,
@@ -732,17 +731,17 @@ normscore_dist <- function(fit_info, age_range, binwidth = 0.5, dim_plot = NULL)
       age_group = paste0("age: (", age_range[i], ",", age_range[i + 1], "]")
     )
   })
-
+  
   curve_data <- do.call(rbind, curve_list)
   
   ggplot2::ggplot()  +
     ggplot2::geom_histogram(ggplot2::aes(x = normscore_est), binwidth = binwidth ,
                             data = data, color = "#fdb863", fill = "#fdb863") +
     ggplot2::geom_line(data = curve_data, ggplot2::aes(x, y), linewidth = 1) +
-    ggplot2::facet_grid(~age_group) + ggplot2::xlab("norm score") +
-    ggplot2::ylab("frequency of individuals")
-
-
+    ggplot2::facet_grid(~factor(age_group,levels = paste0("age: (", age_range[1:(n_agegroup)], ",", age_range[-1], "]"))) + ggplot2::xlab("norm score") +
+    ggplot2::ylab("frequency of individuals") + ggplot2::theme_bw()
+  
+  
 }
 
 
@@ -872,9 +871,9 @@ quantile_curves <- function(fit_info, perspective = c("ability", "rawscore"),
     data         <- fit_info$newdata
     raw_data     <- fit_info$raw_data
     age_variable <- fit_info$age_variable
-    int_variable <- fit_info$int_variable 
+    item_variable <- fit_info$item_variable 
     
-    answer_pattern <- raw_data[, int_variable, drop = FALSE]
+    answer_pattern <- raw_data[, item_variable, drop = FALSE]
     
     rep_quantile_all <- lapply(unique(data$itemD), function(d){
       
@@ -901,8 +900,8 @@ quantile_curves <- function(fit_info, perspective = c("ability", "rawscore"),
     rep_quantile_all <- do.call(rbind, rep_quantile_all)
     
     p <- ggplot2::ggplot(rep_quantile_all) +
-      ggplot2::geom_smooth(ggplot2::aes(age, rep, color = quantiles), formula = 'y ~ x', method = 'loess') +
       ggplot2::geom_point(ggplot2::aes(age, observed)) +
+      ggplot2::geom_smooth(ggplot2::aes(age, rep, color = quantiles), formula = 'y ~ x', method = 'loess') +
       ggplot2::ylab("sum score") + ggplot2::theme_bw() + irt_plot_theme()
     
     if (is_multidim(data$irt_mod)) p <- p + ggplot2::facet_grid(~domain)
@@ -1088,10 +1087,10 @@ make_dummy_matrix <- function(info, K_item) {
 #' \code{\link{extract_info}}
 #'@export
 item_person_fit <- function(fit_info,  parameter){
-
-model_info <- fit_info$model_info
-answer_pattern <- fit_info$raw_data[, fit_info$item_variables]
-data <- fit_info$newdata
+  
+  model_info <- fit_info$model_info
+  answer_pattern <- fit_info$raw_data[, fit_info$item_variables]
+  data <- fit_info$newdata
   nperson <- data$J
   nitem <- data$I
   if(nrow(answer_pattern) != nperson){
@@ -1116,8 +1115,8 @@ data <- fit_info$newdata
     info_person <- matrix(temp$est_ability, ncol = data$D)
   }
   info_item   <- model_info$info_item
-
- 
+  
+  
   
   # Take the most likely answer pattern
   if(data$irt_mod != 4){
@@ -1173,17 +1172,17 @@ data <- fit_info$newdata
       warning("One or more items have no valid responses. These items are excluded from the plot.")
       df <- df[!is.nan(df$observed) & !is.nan(df$irt_mod), ]
     }
-
-    xname <- "proportion correct per item observed"
-    yname <- "proportion correct per item based on model"
-    titlename <- "Item fit"
+    
+    xname <- "observed"
+    yname <- "model-implied"
+    titlename <- "item fit: proportion correct per item"
   }
-
+  
   if(parameter == "person"){
     if(data$irt_mod <= 4){
-if(data$irt_mod <=3){
-  data$K_item <- rep(1, nitem)
-}
+      if(data$irt_mod <=3){
+        data$K_item <- rep(1, nitem)
+      }
       df <- data.frame(
         observed = rowSums(answer_pattern, na.rm = TRUE),
         irt_mod    = rowSums(expected *matrix(rep(sequence(data$K_item), nperson), nrow = nperson, byrow = TRUE
@@ -1198,9 +1197,9 @@ if(data$irt_mod <=3){
           domain = paste0("domain ", d)))
       }
     }
-    xname <- "observed raw score"
-    yname <- "model-implied raw score"
-    titlename <- "person fit"
+    xname <- "observed"
+    yname <- "model-implied"
+    titlename <- "person fit: raw score"
   }
   if(data$irt_mod == 4 & parameter == "item"){
     p <- ggplot2::ggplot(df, ggplot2::aes(x = factor(type), y = value, fill = factor(level))) +
@@ -1210,7 +1209,7 @@ if(data$irt_mod <=3){
       ggplot2::labs(x = NULL, y = "proportion", fill = "Level") +
       ggplot2::theme_bw() +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
-
+    
   }else{
     p <- ggplot2::ggplot(df, ggplot2::aes(x = observed, y = irt_mod)) +
       ggplot2::geom_point() +
@@ -1225,11 +1224,11 @@ if(data$irt_mod <=3){
       ) +
       ggplot2::theme_bw()
   }
-
-
+  p <- p + ggplot2::theme(plot.title = ggplot2::element_text(size=12))
+  
   if(data$irt_mod > 4){
     p <- p +  ggplot2::facet_grid(~domain)
-
+    
   }
   return(p)
   invisible(df)
@@ -1332,3 +1331,118 @@ effect_age <- function(fit_info){
   invisible(list(plot = p, data = df_long))
   
 }
+
+#'@title compute item residual correlation 
+#'@name compute_Q3
+#'@description
+#' 
+
+#' The \code{compute_Q3} prints a summaries of the item resdiual correlations.
+#' When visualized is set to true it additionally visualizes the residual correlation matrix form of a heat map.
+#' Returns the item residual correlation matrix when the output is saved. 
+#'
+#' @param fit_info A named \code{list} as returned by \code{\link{estimate_norming_model}}.
+#'
+#' @param visual A logical indicating if the heat map should be visuallized. 
+#' The default is TRUE. 
+#' 
+#' @return A list with the first residual correlation matrix. 
+#' 
+#' @seealso [estimate_norming_model()]
+#'
+#' @examples
+#' \dontrun{
+#' # Load data
+#' data(response_data)
+#'
+#' # Prepare data for IRTnorm model fit
+#' info <- estimate_norming_model(data = response_data,
+#' age_variable = "age",
+#' item_variables = 1:50,
+#' irt_model = "2PLnorm",
+#' age__model = "polynom",
+#' poly_mean = 3,
+#' poly_sd = 2)
+#'
+#' compute_Q3(info)
+#'}
+#'@export
+compute_Q3 <- function(fit_info, visual = TRUE) {
+  
+  data <- fit_info$newdata
+  J <- data$J
+  I <- data$I
+  
+  theta <- fit_info$model_info$info_sample$theta_est
+  
+  raw_data <- fit_info$raw_data
+  item_variables <- fit_info$item_variables
+  raw_data  <- as.matrix(raw_data[,item_variables])
+  
+  
+  irt_mod <- data$irt_mod
+  E <- matrix(NA_real_, nrow = J, ncol = I)
+  if(irt_mod != 4){
+    a_vec <- colMeans(fit_info$norm_info$alpha)
+    b_vec <- colMeans(fit_info$norm_info$beta)
+    c_vec <- colMeans(fit_info$norm_info$gamma)
+    if(irt_mod > 4){
+      nu_vec <-  colMeans(fit_info$norm_info$nu)
+    }
+  }
+  
+  
+  if(irt_mod < 4){
+    for (i in 1:I) {
+      E[, i]  <- c_vec[i] + (1-c_vec[i])*stats::plogis(a_vec[i] * (theta - b_vec[i] ))
+    }
+  }
+  if(irt_mod == 4){
+    a_vec <- colMeans(fit_info$norm_info$alpha)
+    b_vec <- colMeans(fit_info$norm_info$threshold)
+    #p <- NULL
+    for (i in seq_len(I)) {
+      #int_threshold <-((1 + (data$K_max -1)*(i-1)):((data$K_max -1)*(i)))[seq_len(data$K_item[i] -1)]
+      E[, i] <- grm_probs(theta = theta, a = a_vec[i], b = b_vec[[i]][seq_len(data$K_item[i] -1)]) # b_vec[int_threshold])
+      #p <- c(p, p_temp)
+    }
+  }
+  if(irt_mod > 4){
+    itemD <- data$dd
+    if(irt_mod >4 & irt_mod < 9){
+      delta <- mu + nu_vec * sigma * theta + sqrt(1 - nu_vec^2)*sigma *unique
+    }
+    if(irt_mod == 9 | irt_mod == 10){
+      delta <- mu + nu_vec * lambda_vec * sigma * theta + sqrt(1 - (nu_vec *lambda_vec)^2 )*sigma *unique
+    }
+    if(irt_mod == 11 | irt_mod == 12){
+      delta <- mu + sigma * theta + unique_vec *unique
+    }
+    for(i in 1:I){
+      E[, i] <- c_vec[i] + (1-c_vec[i])*stats::plogis(a_vec[i] * (delta[,itemD] - b_vec[i]))
+    }
+  }
+  
+  D <-  raw_data  - E  
+  
+  Q3 <- cor(D, use = "pairwise.complete.obs")
+  colnames(Q3) <- rownames(Q3) <- colnames( raw_data )
+  off_diag <- Q3 [row(Q3 ) != col(Q3 )]
+  
+  print(summary(off_diag))
+  if(visual){
+    p1 <- ggcorrplot::ggcorrplot(Q3, hc.order = TRUE, type = "lower",
+                                 lab = F, colors = c( "#0D0887FF", "white", "#D98F3A")) +
+      ggplot2::theme(text = ggplot2::element_text(size=12,family = "serif"),
+                     axis.text.x = ggplot2::element_blank(),
+                     axis.text.y = ggplot2::element_blank(),
+                     axis.title.x = ggplot2::element_blank(),
+                     axis.title.y = ggplot2::element_blank()) 
+    print(p1)
+  }
+  invisible(Q3)
+}
+
+
+
+

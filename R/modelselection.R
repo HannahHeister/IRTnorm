@@ -363,7 +363,10 @@ compare_age_models <- function(method = c("grid", "forward"),
   
   method <- match.arg(method)
   
-  if(irt_model > 4){
+  if(any(irt_model == c("Testlet1PLnorm","Testlet2PLnorm",
+                   "HO1PLnorm-C", "HO2PLnorm-C",
+                   "HO1PLnorm-P", "HO2PLnorm-P",
+                   "HO1PLnorm-F", "HO2PLnorm-F"))){
     stop("compare_age_models is for unidimensional IRT models. If you want to fit a 
          hierarchical IRT model, you should search for each domains optimal polynomial degree 
          seperatly.")
@@ -470,7 +473,7 @@ compare_age_models <- function(method = c("grid", "forward"),
   if (method == "grid"){
     out <- fit_grid(grid)
     #out$loo_ELPD
-    return(finalize(out$loo_ELPD, out$elpd_value, out$trajectory, 
+    return(finalize(out$loo_ELPD, out$elpd_value, out$trajectory, out$paretok,
                     irt_model = irt_model, include_splines = include_splines))
   }
   
@@ -488,8 +491,8 @@ compare_age_models <- function(method = c("grid", "forward"),
   
   best_row  <- elpd_value[nrow(elpd_value), ]
   best_elpd <- best_row$ELPD
-  best_mu   <- best_row$mu
-  best_sd   <- best_row$sd
+  best_mu   <- best_row$poly_mean
+  best_sd   <- best_row$poly_sd
   
   n_eval   <- 1
   improved <- TRUE
@@ -504,6 +507,7 @@ compare_age_models <- function(method = c("grid", "forward"),
     loo_ELPD   <- cbind(loo_ELPD, out$loo_ELPD)
     elpd_value <- rbind(elpd_value, out$elpd_value)
     trajectory <- rbind(trajectory, out$trajectory)
+    paretok    <- cbind(paretok, out$paretok )
     n_eval     <- n_eval + nrow(candidates)
     
     new_rows <- utils::tail(elpd_value, nrow(candidates))
@@ -511,8 +515,8 @@ compare_age_models <- function(method = c("grid", "forward"),
     
     if (best_new$ELPD > best_elpd){
       best_elpd <- best_new$ELPD
-      best_mu   <- best_new$mu
-      best_sd   <- best_new$sd
+      best_mu   <- best_new$poly_mean
+      best_sd   <- best_new$poly_sd
       improved  <- TRUE
     } else {
       improved <- FALSE
@@ -526,8 +530,8 @@ compare_age_models <- function(method = c("grid", "forward"),
                              prior_knowledge = prior_knowledge,
                              parameter_fixed = parameter_fixed)
   
-  finalize(loo_ELPD, elpd_value, trajectory, best_configuration,paretok,
-           include_splines = include_splines)
+  finalize(loo_ELPD, elpd_value, trajectory,paretok, best_configuration,
+           include_splines = include_splines, irt_model = irt_model)
 }
 
 
@@ -597,17 +601,31 @@ visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "t
   if(perspective == "ELPD"){
     best_model <- compare_info$best_model
     best_model$ranked <- as.factor(best_model$rank)
+    if(any(is.na(best_model$poly_mean))){
+      best_model$poly_mean[is.na(best_model$poly_mean)] <- "splines"
+      best_model$poly_sd[is.na(best_model$poly_sd)] <- "splines"
+    }
+    best_model$poly_sd <- as.factor(best_model$poly_sd)
+    best_model$SE[best_model$SE == 0] <- 1
     p <- ggplot2::ggplot(best_model) +  ggplot2::theme_bw() +
-      ggplot2::geom_point( ggplot2::aes(poly_mean, ELPD_diff)) +
-      ggplot2:: geom_point( ggplot2::aes(poly_mean, ELPD_diff, color = ranked), 
-                            data = best_model[best_model$rank <= highlight_ranks,]) +
-      ggplot2::facet_grid(~paste0("sd: ",poly_sd)) +  ggplot2::xlab("mean") +
+      ggplot2::geom_point( ggplot2::aes(poly_mean, ELPD_diff/SE, color = poly_sd,size =1.2  )) +
+      ggplot2::geom_text(
+        data = subset(best_model,rank <highlight_ranks + 1),   # only these points get labels
+        ggplot2::aes(poly_mean, ELPD_diff/SE, label = rank),              # the number to display
+        hjust = 2                    # nudge label above the point
+      )+
+      #ggplot2:: geom_point( ggplot2::aes(poly_mean, ELPD_diff/SE, shape = ranked, color = poly_sd, size = 1.2), 
+      #                     data = best_model[best_model$rank <= highlight_ranks,]) +
+      ggplot2::xlab("polynomial degree for mean") +
       ggplot2::theme(text =  ggplot2::element_text(size=13,family = "serif"), 
-            axis.line =  ggplot2::element_line(color='black'),
-            plot.background =  ggplot2::element_blank(),
-            panel.grid.minor =  ggplot2::element_blank(),
-            panel.grid.major =  ggplot2::element_blank()) + 
-      ggplot2::ylab("ELPD difference") 
+                     axis.line =  ggplot2::element_line(color='black'),
+                     plot.background =  ggplot2::element_blank(),
+                     panel.grid.minor =  ggplot2::element_blank(),
+                     panel.grid.major =  ggplot2::element_blank(), 
+                     legend.position = "bottom") + 
+      ggplot2::ylab("ELPD difference/SE") +  ggplot2::guides(size = "none") +
+      ggplot2::labs(color ="degree for sd", shape = "rank"
+      )
     
   }
   if(perspective == "trajectory"){
@@ -619,13 +637,14 @@ visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "t
                           data = trajectory[trajectory$rank  <= highlight_ranks,],linewidth = 1.2) +
       ggplot2::facet_wrap(~moment, scale = "free") +  ggplot2::ylab("value") +
       ggplot2::theme(text =  ggplot2::element_text(size=13,family = "serif"), 
-            axis.line =  ggplot2::element_line(color='black'),
-            plot.background =  ggplot2::element_blank(),
-            panel.grid.minor =  ggplot2::element_blank(),
-            panel.grid.major =  ggplot2::element_blank()) 
+                     axis.line =  ggplot2::element_line(color='black'),
+                     plot.background =  ggplot2::element_blank(),
+                     panel.grid.minor =  ggplot2::element_blank(),
+                     panel.grid.major =  ggplot2::element_blank()) 
   }
   return(p)
 }
+
 
 #' Compare Multiple IRTnorm models via Leave-One-Out Cross-Validation
 #'
@@ -720,7 +739,7 @@ compare_IRTnorm_models <- function(model_specifications, raw_data, age_variable,
                                    seed = NULL, iter_warmup = 500,
                                    iter_sampling = 500,
                                    chains = 2, parallel_chains = NULL){
-  
+
   validate_model_specifications_list(model_specifications)
   check_dimension(model_specifications)
   
