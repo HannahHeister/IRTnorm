@@ -233,29 +233,12 @@ item_person_fit(fit_info =info, parameter = "person")
 
 The observed and model-implied frequencies are in close agreement. A slight systematic pattern is visible, however: for high-performing individuals, the model tends to predict a slightly lower number of correct responses than observed, whereas the opposite is true for low-performing individuals. This phenomenon is commonly observed in IRT models because observed scores are subject to measurement error. As a result, observed scores tend to be slightly more extreme than their corresponding latent trait estimates, which are shrunk toward the population mean. This pattern does not indicate poor model fit, but it is important to be aware of it when interpreting the results.
 
-Another commonly used diagnostic for continuous norming models is a plot of the observed raw sum scores together with the model-implied quantile curves. Because IRT models estimate latent traits from the full pattern of item responses, rather than from the raw sum score alone, individuals with the same raw score may receive different latent trait estimates. Consequently, the interpretation of these plots does not fully align with the underlying IRT model. Nevertheless, they provide a useful summary of how well the fitted model reproduces the observed relationship between raw scores and age.
-
-The `quantile_curves()` function with `perspective = "rawscore"` displays the observed raw sum scores as a function of age together with model-implied quantile curves derived from the age-dependent IRT norming model. The quantile curves are obtained from posterior predictive replicated responses and smoothed over age. As such, they provide an approximation of the model-implied quantiles corresponding to the observed raw scores.
-
-```{r rawsjpw, echo=TRUE, include=TRUE ,eval = FALSE}
-quantile_curves(fit_info = info, perspective = "rawscore", 
-                            probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
-``` 
-
-```{r showfit3_raw, echo=TRUE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center"}
-knitr::include_graphics("figures/plot_rawscore.png")
-
-``` 
-
-In this example, the observed raw score curves align well with the model-implied quantile curves.
-
-A visualization more natural to the interpretation of the norming model can be produced using
-`quantile_curves()` with `perspective = "ability"`. This function plots the estimated latent trait values against 
-the estimated model-implied quantile curves. These quantile curves correspond to the true model-implied
-curves. Because this plot compares different aspects of the model, it provides insight into the model’s internal consistency and into how the latent trait distribution varies with age. For a well-fitting model, the plot should show no signs of inconsistency. However, the absence of inconsistencies does not, by itself, guarantee good overall model fit.
+To explore, whether the model implied norm scores align well with the estimated latent trait 
+distribution in the normative sample, the estimated latent trait estimates across age can be 
+compared to the estimated model-implied quantile curves. Because this plot compares different aspects of the model, it provides insight into the model’s internal consistency and into how the latent trait distribution varies with age. For a well-fitting model, the plot should show no signs of inconsistency. However, the absence of inconsistencies does not, by itself, guarantee good overall model fit.
 
 ```{r showfit5_consist, echo=TRUE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center"}
-quantile_curves(fit_info = info, perspective = "ability", 
+quantile_curves(fit_info = info, 
                             probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
 ``` 
 The model-implied quantile curves closely follow the estimated latent trait values, indicating that the fitted model is internally consistent.
