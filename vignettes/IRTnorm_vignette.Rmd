@@ -21,13 +21,13 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-Norm-referenced psychological tests evaluate an individual’s performance relative to a reference population, typically using standardized scores such as T-, IQ- or z-scores @AERA2014. Many developmental and intelligence tests rely on reference populations that change continuously with age.
+Norm-referenced psychological tests evaluate an individual’s performance relative to a reference population, typically using standardized scores such as T-, IQ- or z-scores (@AERA2014). Many developmental and intelligence tests rely on reference populations that change continuously with age.
 
 In such settings, item response theory (IRT)-based continuous norming models are useful for deriving age-specific norm information. 
-These models explicitly allow the latent trait distribution to depend on age. As a result, each individual’s latent trait estimate can be directly compared to the age-specific reference population using a z-standardized norm score @heister2024item.
+These models explicitly allow the latent trait distribution to depend on age. As a result, each individual’s latent trait estimate can be directly compared to the age-specific reference population using a z-standardized norm score (@heister2024item).
 As in most parametric IRT models, the latent trait distribution is assumed to be normally distributed in the reference population. Further, the latent trait distribution of psychological tests can typically be assumed to change smoothly with age. Therefore, the age-related changes can be captured by modeling the distribution's mean and standard deviation as a smooth function of age, using polynomial regression or penalized splines.
 
-Simulation studies have demonstrated that IRT-based continuous norming models can accurately recover age-specific norms, and empirical evaluation of IDS-2 @grob2018idsNL has shown that these models can fit empirical data well @heister2024item.
+Simulation studies have demonstrated that IRT-based continuous norming models can accurately recover age-specific norms, and empirical evaluation of IDS-2 (@grob2018idsNL) has shown that these models can fit empirical data well (@heister2024item).
 Compared to raw score–based continuous norming methods, which is the default approach in many applications, IRT-based models offer several advantages. These include the use of all available item-level information, the ability to model multiple latent traits and their relationships, and the straightforward integration of adaptive testing procedures.
 
 `IRTnorm` is based on a framework for deriving age-specific norm scores using Bayesian IRT-based continuous norming models. It includes tools for model comparison, model estimation, visual inspection of model fit, and extraction of norm scores.
@@ -41,13 +41,13 @@ The main workflow in `IRTnorm` consists of:
 1. Perform model selection (`compare_IRTnorm_models`,`compare_age_models`, `visual_age_models`);
 2. Fit the selected model and extract all important model information (`estimate_norming_model`);
 3. Evaluate model fit (`raw_score_ppc`, `visual_raw_score_ppc`, `item_person_fit`, `item_residual_cor`,
-`quantile_curves`,`normscore_dist`, `effect_age`) and for hierarchical models `cor_structure`;
+`quantile_curves`,`normscore_dist`, `effect_age`, and for hierarchical models additionally `cor_structure`)
 4. Norm new individuals (`norm_new_individual`).
 
 ---
   
 # Norming a unidimensional test
-We illustrate the modeling process using a small simulated data set(response_data), to keep the example concise. In practical applications, larger data sets may be required.
+We illustrate the modeling process using a small simulated data set (response_data), to keep the example concise. In practical applications, larger data sets may be required.
 
 The following code loads the required package and the example data.
 ```{r loadlibrary, echo=TRUE, include=TRUE, warning=FALSE, message = FALSE}
@@ -98,7 +98,7 @@ approximation was stable by checking Pareto k values.
 ```{r checkparetok1,  echo=TRUE, include= TRUE, eval = TRUE}
 sum(IRTmods[[2]]$pareto_k > 0.7)
 ```
-All Pareto k values are below 0.7, indicating the LOO approximation is stable enough #
+All Pareto k values are below 0.7, indicating the LOO approximation is stable enough 
 to rely on the ELPD difference for model selection. 
 
 ```{r load_modelcomparee2,  echo=FALSE, include= TRUE, eval = TRUE}
@@ -106,7 +106,7 @@ IRTmods[[1]]
 ```
 We recommend selecting the more complex IRT model only if the ratio ELPD_diff / SE is less than -1.96 for the comparison with the less complex model. In this example, this criterion is met, and we therefore select the 2PL norming model for the remainder of the analysis.
 
-Once the IRT model has been selected, the next step is to determine the most appropriate specification for the age effect. The function `compare_age_models()` compares models based on their expected log predictive density (ELPD), either over a user-specified grid of polynomial degrees or by using forward selection. We recommend evaluating using forward selection, as this can be more efficent than a grid search. It is often also informative to compare polynomial regression with penalized splines, which can be done by setting `include_splines = TRUE`. 
+Once the IRT model has been selected, the next step is to determine the most appropriate specification for the age effect. The function `compare_age_models()` compares models based on their expected log predictive density (ELPD), either over a user-specified grid of polynomial degrees or by using forward selection. We recommend using forward selection, as this can be more efficient than a grid search. It is often also informative to compare polynomial regression with penalized splines, which can be done by setting `include_splines = TRUE`. 
 
 ```{r fit_poly, echo=TRUE, include=TRUE, eval = FALSE}
 agemodel_2PL <- compare_age_models(method = "forward", 
@@ -129,9 +129,9 @@ This shows that two of the evaluated models had a pareto k value above the 0.7 t
 
 To check whether these points have an influence on the model selection we rerun the 
 forward selection with omitting the two influential points. 
-To do so, we first identify the influential points as ecxl and then create a new 
+To do so, we first identify the influential points as excl and then create a new 
 dataset response_data_excl which sets the two influential points as missing values. 
-```{r load_modelcompare4,  echo=FALSE, include= TRUE,eval = FALSE}
+```{r load_modelcompare4,  echo=TRUE, include= TRUE,eval = FALSE}
 temp <- data_prep(raw_data = response_data, 
                   age_variable = "age", 
                   item_variables = 1:50,
@@ -167,8 +167,7 @@ are no highly influential points anymore. This however, is not always the case
 therefore our aim here is to check how much the different data sets influence the 
 model selection. 
 
-```{r compare_paretok_age2,  echo=TRUE, include= TRUE}
-
+```{r compare_paretok_age2,  echo=TRUE, include= TRUE,fig.width=6,fig.height=4, fig.align = "center"}
 combi <- cbind(rbind(agemodel_2PL$best_model, agemodel_2PL_excl$best_model), 
                data = c(rep("orginal",nrow(agemodel_2PL$best_model)), 
                         rep("excl",nrow(agemodel_2PL_excl$best_model))))
@@ -178,6 +177,7 @@ combi$poly_sd[is.na(combi$poly_sd)] <- "splines"
 ggplot(combi) + geom_point(aes(poly_mean, ELPD, shape = data, color =poly_sd), size = 2) +
   theme_bw()
 ``` 
+
 This shows that while the magnitude of the ELPD differs slightly between the two 
 data sets, the general pattern remains the same. It seems as if the secound order
 polynomial for the standard deviation is the best. Only for the mean there is a 
@@ -233,7 +233,7 @@ For this the model should have no divergent transitions which can be checked wit
 ```{r divergent, echo=TRUE, include=TRUE ,eval = FALSE}
 sum(info$model_stan_obj$sampler_diagnostics()[,,"divergent__"])
 ```
-```{r divergent2, echo=TRUE, include=TRUE ,eval = TRUE}
+```{r divergent2, echo=TRUE, include=FALSE ,eval = TRUE}
 0
 ```
 Two key diagnostics are the potential scale reduction factor (R-hat) and the effective sample size (ESS). Values of R-hat should be close to 1, indicating convergence across chains, while larger ESS values indicate more precise and reliable parameter estimates.
@@ -242,15 +242,16 @@ Two key diagnostics are the potential scale reduction factor (R-hat) and the eff
 info$conv_info 
 ``` 
 
-In this example, the R-hat values are below 1.01 for all parameter groups, and the effective sample size exceeds 400 for nearly all parameters, indicating good convergence. In addition, the tail and bulk effective sample sizes (`ess_tail` and `ess_bulk`) are similar, providing further evidence of satisfactory MCMC performance. A substantial difference between these quantities may indicate sampling problems, in which case the model should be investigated further. Possible remedies include increasing `adapt_delta` or increasing the number of warm-up and sampling iterations via the `iter_warmup` and `iter_sampling` arguments when fitting the model.
+In this example, the R-hat values are below 1.01 for all parameter groups, and the effective sample size exceeds 400 for all parameters, indicating good convergence. In addition, the tail and bulk effective sample sizes (`ess_tail` and `ess_bulk`) are similar, providing further evidence of satisfactory MCMC performance. A substantial difference between these quantities may indicate sampling problems, in which case the model should be investigated further. Possible remedies include increasing `adapt_delta` or increasing the number of warm-up and sampling iterations via the `iter_warmup` and `iter_sampling` arguments when fitting the model.
 
 In addition to these numerical diagnostics, convergence should be assessed visually for key parameters, such as the regression coefficient for the latent trait mean (`p1_theta`):
 ```{r showfit03, echo=TRUE, include=TRUE ,eval = FALSE}
 library(bayesplot)
 conv_plot <- bayesplot::mcmc_trace(info$model_stan_obj$draws(c("p1_theta")))
+conv_plot
 ``` 
 
-```{r showfit03_show, echo=TRUE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center" ,eval = FALSE}
+```{r showfit03_show, echo=TRUE, include=FALSE, fig.width=6,fig.height=4, fig.align = "center" ,eval = FALSE}
 data("conv_plot")
 conv_plot
 ```
@@ -259,9 +260,10 @@ In this example, the chains have mixed well, as evidenced by the substantial ove
 To inspect convergence in the posterior tails rank plots can be evaluated. 
 ```{r showhist, echo=TRUE, include=TRUE ,eval = FALSE}
 hist_plot <- bayesplot::mcmc_rank(info$model_stan_obj$draws(c("p1_theta")))
+hist_plot
 ``` 
 
-```{r showfit03_showw, echo=TRUE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center" ,eval = FALSE}
+```{r showfit03_showw, echo=TRUE, include=FALSE, fig.width=6,fig.height=4, fig.align = "center" ,eval = FALSE}
 data("hist_plot")
 hist_plot
 ```
@@ -275,18 +277,19 @@ Once convergence has been established, the next step is to evaluate how well the
 
 The evaluation can be performed for the entire sample or separately for different age groups. We begin by assessing model fit for the complete sample.
 
+
 ```{r NC1, echo=TRUE, include=TRUE ,eval = FALSE}
 NC_info <- raw_score_ppc(fit_info = info)
 visual_raw_score_ppc(NC_info)
 ``` 
 
-```{r NC2,  echo=FALSE, include= TRUE, fig.width=6,fig.height=4, fig.align = "center"}
+```{r NC2, echo=FALSE, fig.width=6, out.width="100%",fig.align="center"}
 knitr::include_graphics("figures/plot_NC.png")
 ``` 
 
 The observed raw score distribution appears to be well represented by the fitted model. Most observed raw scores (black dots) lie within the 90% posterior predictive interval (dotted lines), and all observed values fall within the range of the posterior predictive distribution (indicated by the orange points). Together, these results suggest that the fitted model reproduces the observed raw score distribution well.
 
-To assess model fit across the full age range of the target population, the same evaluation should also be performed separately for different age groups. This can be accomplished using the `raw_score_ppc()` and `visual_raw_score_ppc()` functions with the `age_range` argument. The NC statistics are then computed and visualized separately for the specified age groups.
+To assess model fit across the full age range of the target population, the same evaluation should also be performed separately for different age groups. This can be accomplished using the `raw_score_ppc()`  function with the `age_range` argument. The NC statistics are then computed and visualized separately for the specified age groups.
 
 ```{r ageMC, echo=TRUE, include=TRUE ,eval = FALSE}
 NC_info_age <- raw_score_ppc(fit_info = info, 
@@ -294,9 +297,8 @@ NC_info_age <- raw_score_ppc(fit_info = info,
 visual_raw_score_ppc(NC_info_age)
 ``` 
 
-```{r showfit2_NC, echo=FALSE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center"}
+```{r showNC2, echo=FALSE, fig.width=6, out.width="100%",fig.align="center"}
 knitr::include_graphics("figures/plot_NCage.png")
-
 ``` 
 
 The model appears to provide a good fit across all age groups, as the observed raw score distributions are consistent with those implied by the fitted model.
@@ -310,20 +312,22 @@ We first evaluate the item fit.
 item_person_fit(fit_info =info, parameter = "item")
 ``` 
 The observed and model-implied frequencies are in close agreement, indicating that the estimated item parameters adequately describe the observed data. 
+
 Further it is assumed that items are conditionally independent. To check if this assumption
 holds the item residual correlation matrix can be evaluated using 
 ```{r showfit4_ITEM2, echo=TRUE, include=TRUE, fig.show="hold",  fig.width=6,fig.height=4, fig.align = "center"}
 item_residual_cor(fit_info = info)
 ```
 
-This shows that the correlation between the item residuals are low and only few items exceed a correlation above 0.2. 
+This shows that the correlation between the item residuals are low and do not exceed a correlation above 0.2. 
 We therefore conclude that the item independence assumption is met. 
+
 Next, we evaluate the person-level fit.
 ```{r showfit4_2, echo=TRUE, include=TRUE, fig.show="hold", fig.width=6,fig.height=4, fig.align = "center"}
 item_person_fit(fit_info =info, parameter = "person")
 ``` 
 
-The observed and model-implied frequencies are in close agreement. A slight systematic pattern is visible, however: for high-performing individuals, the model tends to predict a slightly lower number of correct responses than observed, whereas the opposite is true for low-performing individuals. This phenomenon is commonly observed in IRT models because observed scores are subject to measurement error. As a result, observed scores tend to be slightly more extreme than their corresponding latent trait estimates, which are shrunk toward the population mean. This pattern does not indicate poor model fit, but it is important to be aware of it when interpreting the results.
+The observed and model-implied frequencies are in close agreement. A slight systematic pattern is visible, however: for high-performing individuals, the model tends to predict a slightly lower number of correct responses than observed, whereas the opposite is true for low-performing individuals. This regression towards the mean is usually observed in Bayesian IRT models because observed scores are slightly shrunk towards the prior mean. The more informative a test, the smaller this effect. This pattern does not indicate poor model fit, but it is important to be aware of it when interpreting the results.
 
 To explore, whether the model implied norm scores align well with the estimated latent trait 
 distribution in the normative sample, the estimated latent trait estimates across age can be 

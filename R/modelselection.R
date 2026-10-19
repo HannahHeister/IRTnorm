@@ -624,8 +624,7 @@ visual_age_models <- function(compare_info, perspective = c("ELPD", "trajectory"
                      panel.grid.major =  ggplot2::element_blank(), 
                      legend.position = "bottom") + 
       ggplot2::ylab("ELPD difference/SE") +  ggplot2::guides(size = "none") +
-      ggplot2::labs(color ="degree for sd", shape = "rank"
-      )
+      ggplot2::labs(color ="degree for sd" )
     
   }
   if(perspective == "trajectory"){
