@@ -215,16 +215,16 @@ fit_info_param <- function(fit, data){
 #' # Single analysis (no age grouping)
 #' result <- raw_score_ppc(fit_info = info)
 #'
-#' raw_score_ppc_visual(N_info = result)
+#' visual_raw_score_ppc(N_info = result)
 #'
 #' # Age-grouped analysis
 #' result_age <- raw_score_ppc(fit_info = info, age_range = seq(-2,2,1))
 #' 
-#' raw_score_ppc_visual(result_age)
+#' visual_raw_score_ppc(result_age)
 #'}
 #'
 #' @seealso
-#' \code{\link{raw_score_ppc_visual}} for visualizing the results
+#' \code{\link{visual_raw_score_ppc}} for visualizing the results
 #'
 #' @references
 #' Sinharay, S., Johnson, M. S., & Stern, H. S. (2006). Posterior predictive assessment
@@ -402,9 +402,9 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #' Visualize IRTnorm model-implied vs Observed raw score distributions
 #'
 #' @title Posterior Predictive IRTnorm model Check for raw score distributions
-#' @name raw_score_ppc_visual
+#' @name visual_raw_score_ppc
 #' @description
-#' The function \code{raw_score_ppc_visual} creates a visualization comparing the IRTnorm model-implied
+#' The function \code{visual_raw_score_ppc} creates a visualization comparing the IRTnorm model-implied
 #' (posterior predictive) raw score distribution against the observed raw score
 #' distribution. This serves as a posterior predictive IRTnorm model check (PPMC) to assess
 #' how well the fitted IRTnorm model reproduces the observed data patterns.
@@ -466,13 +466,13 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #' # Single analysis (no age grouping)
 #' result <- raw_score_ppc(fit_info = info_poly)
 #'
-#' raw_score_ppc_visual(N_info = result)
+#' visual_raw_score_ppc(N_info = result)
 #'
 #' # Age-grouped analysis
 #' result_age <- raw_score_ppc(fit_info = info,
 #'                  age_range = seq(-2,2,1))
 #'
-#' raw_score_ppc_visual(result_age)
+#' visual_raw_score_ppc(result_age)
 #'}
 #' @seealso \code{\link{raw_score_ppc}} for computing the raw score distributions
 #'
@@ -481,7 +481,7 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #' Bayesian Data Analysis (3rd ed.). Chapman and Hall/CRC.
 #'
 #' @export
-raw_score_ppc_visual <- function(raw_score_ppc_info, dim_plot = NULL) {
+visual_raw_score_ppc <- function(raw_score_ppc_info, dim_plot = NULL) {
 ##TODO NEEDS TO BE CHECKED IF THIS IF CASE IS GOOD 
   if (length(raw_score_ppc_info) == 1 && is.list(raw_score_ppc_info[[1]]) && 
       !is.null(raw_score_ppc_info[[1]][[1]]$age)) {
@@ -1251,12 +1251,109 @@ effect_age <- function(fit_info){
   
 }
 
+
+
+#' Calculates the average correlation across and within domains. 
+#'
+#' @param Q3  A \code{matrix} of the item residual correlation
+#' @param itemD A \code{numeric} vector of length equal to the number of items,
+#'   giving the domain each item measures.
+#'
+#' @return A data.frame with the average item residual correlation within 
+#' domains and across domains. 
+#'
+#' @noRd
+compute_domain_averages <- function(Q3, itemD) {
+  
+  J <- nrow(Q3)
+  within_vals <- c()
+  between_vals <- c()
+  
+  for (i in 1:(J - 1)) {
+    for (j in (i + 1):J) {
+      val <- Q3[i, j]
+      if (is.na(val)) next
+      if (itemD[i] == itemD[j]) {
+        within_vals <- c(within_vals, val)
+      } else {
+        between_vals <- c(between_vals, val)
+      }
+    }
+  }
+  data.frame(mean_correlation = c(mean(within_vals, na.rm = TRUE),
+                                  mean(between_vals, na.rm = TRUE)), 
+             domains = c("within", "between"), 
+             n_pairs = c(length(within_vals), length(between_vals)))
+}
+
+#' Visualizes Q3 for hierarchical models, highlighting which items belong to 
+#' which domain by including horizontal and vertical lines. 
+#'
+#' @param Q3  A \code{matrix} of the item residual correlation
+#' @param itemD A \code{numeric} vector of length equal to the number of items,
+#'   giving the domain each item measures.
+#'
+#' @return A a heat map with lines indicating the items measuring the same domain 
+#'
+#' @noRd
+visual_multi <- function(Q3 = Q3, itemD = itemD){
+  breaks <- head(cumsum(rle(itemD)$lengths), -1) + 1
+  n <- ncol(Q3)
+  
+  # Horizontal lines: from the diagonal to the right edge
+  h_seg <- data.frame(
+    x    = breaks - 0.5,
+    xend = n - 0.5,
+    y    = breaks + 0.5,
+    yend = breaks + 0.5
+  )
+  
+  # Vertical lines: from the bottom edge up to the diagonal
+  v_seg <- data.frame(
+    x    = breaks - 0.5,
+    xend = breaks - 0.5,
+    y    = 0.5,
+    yend = breaks + 0.5
+  )
+  
+  p <- ggcorrplot::ggcorrplot(
+    Q3,
+    hc.order = FALSE,
+    type = "lower",
+    outline.color = "white",
+    lab = FALSE,
+    colors = c("#0D0887FF", "white", "#D98F3A")
+  ) +
+    ggplot2::theme(
+      axis.text.x  = ggplot2::element_blank(),
+      axis.text.y  = ggplot2::element_blank(),
+      axis.ticks.x = ggplot2::element_blank(),
+      axis.ticks.y = ggplot2::element_blank(),
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank()
+    ) +
+    ggplot2::geom_segment(
+      data = h_seg,
+      ggplot2::aes(x = x, xend = xend, y = y, yend = yend),
+      inherit.aes = FALSE, color = "black", linewidth = 0.8
+    ) +
+    ggplot2::geom_segment(
+      data = v_seg,
+      ggplot2::aes(x = x, xend = xend, y = y, yend = yend),
+      inherit.aes = FALSE, color = "black", linewidth = 0.8
+    )
+  
+  p
+}
+
+
+
 #'@title compute item residual correlation 
-#'@name compute_Q3
+#'@name item_residual_cor
 #'@description
 #' 
 
-#' The \code{compute_Q3} prints a summaries of the item resdiual correlations.
+#' The \code{item_residual_cor} prints a summaries of the item resdiual correlations.
 #' When visualized is set to true it additionally visualizes the residual correlation matrix form of a heat map.
 #' Returns the item residual correlation matrix when the output is saved. 
 #'
@@ -1283,34 +1380,41 @@ effect_age <- function(fit_info){
 #' poly_mean = 3,
 #' poly_sd = 2)
 #'
-#' compute_Q3(info)
+#' item_residual_cor(info)
 #'}
 #'@export
-compute_Q3 <- function(fit_info, visual = TRUE) {
+item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
   
   data <- fit_info$newdata
   J <- data$J
   I <- data$I
-  
-  theta <- fit_info$model_info$info_sample$theta_est
-  
   raw_data <- fit_info$raw_data
   item_variables <- fit_info$item_variables
   raw_data  <- as.matrix(raw_data[,item_variables])
-  
-  
   irt_mod <- data$irt_mod
-  E <- matrix(NA_real_, nrow = J, ncol = I)
+  
   if(irt_mod != 4){
     a_vec <- colMeans(fit_info$norm_info$alpha)
     b_vec <- colMeans(fit_info$norm_info$beta)
     c_vec <- colMeans(fit_info$norm_info$gamma)
-    if(irt_mod > 4){
-      nu_vec <-  colMeans(fit_info$norm_info$nu)
+  }
+  if(irt_mod < 5){
+    theta <- fit_info$model_info$info_sample$theta_est
+  }
+  if(!is.null(domain)){
+    itemD <- data$itemD
+    if(!(domain %in% itemD)){
+      stop("domain has to be a numerical value indicating which of the 
+           domains of the test are suppost to be inspected.")
     }
+    irt_mod <- 2
+    a_vec <- a_vec[itemD == domain]
+    b_vec <- b_vec[itemD == domain]
+    c_vec <- c_vec[itemD == domain]
+    theta <- samp_info$est_ability[samp_info$trait == paste0("delta", domain)]
   }
   
-  
+  E <- matrix(NA_real_, nrow = J, ncol = I)
   if(irt_mod < 4){
     for (i in 1:I) {
       E[, i]  <- c_vec[i] + (1-c_vec[i])*stats::plogis(a_vec[i] * (theta - b_vec[i] ))
@@ -1327,18 +1431,11 @@ compute_Q3 <- function(fit_info, visual = TRUE) {
     }
   }
   if(irt_mod > 4){
-    itemD <- data$dd
-    if(irt_mod >4 & irt_mod < 9){
-      delta <- mu + nu_vec * sigma * theta + sqrt(1 - nu_vec^2)*sigma *unique
-    }
-    if(irt_mod == 9 | irt_mod == 10){
-      delta <- mu + nu_vec * lambda_vec * sigma * theta + sqrt(1 - (nu_vec *lambda_vec)^2 )*sigma *unique
-    }
-    if(irt_mod == 11 | irt_mod == 12){
-      delta <- mu + sigma * theta + unique_vec *unique
-    }
+    samp_info <-info$model_info$info_sample
+    delta <- matrix(samp_info$est_ability[substr(samp_info$trait,1,5) == "delta"], ncol = D)
+    itemD <- info$newdata$itemD
     for(i in 1:I){
-      E[, i] <- c_vec[i] + (1-c_vec[i])*stats::plogis(a_vec[i] * (delta[,itemD] - b_vec[i]))
+      E[, i] <- c_vec[i] + (1-c_vec[i])*stats::plogis(a_vec[i] * (delta[,itemD[i]] - b_vec[i]))
     }
   }
   
@@ -1348,20 +1445,130 @@ compute_Q3 <- function(fit_info, visual = TRUE) {
   colnames(Q3) <- rownames(Q3) <- colnames( raw_data )
   off_diag <- Q3 [row(Q3 ) != col(Q3 )]
   
-  print(summary(off_diag))
+  summary_info <- summary(off_diag)
+  print(summary_info)
+  
+  if(irt_mod > 4){
+    cat("\n\n")
+    compare_domains <- compute_domain_averages(Q3 = Q3, itemD = itemD)
+    print(compare_domains)
+  }
   if(visual){
-    p1 <- ggcorrplot::ggcorrplot(Q3, hc.order = TRUE, type = "lower",
-                                 lab = F, colors = c( "#0D0887FF", "white", "#D98F3A")) +
-      ggplot2::theme(text = ggplot2::element_text(size=12,family = "serif"),
-                     axis.text.x = ggplot2::element_blank(),
-                     axis.text.y = ggplot2::element_blank(),
-                     axis.title.x = ggplot2::element_blank(),
-                     axis.title.y = ggplot2::element_blank()) 
+    if(irt_mod > 4){
+      p1 <- visual_multi(Q3 = Q3, itemD = itemD)
+    }else{
+      p1 <- ggcorrplot::ggcorrplot(Q3, hc.order = FALSE, type = "lower",
+                                   lab = F, colors = c( "#0D0887FF", "white", "#D98F3A")) +
+        ggplot2::theme(text = ggplot2::element_text(size=12,family = "serif"),
+                       axis.text.x = ggplot2::element_blank(),
+                       axis.text.y = ggplot2::element_blank(),
+                       axis.title.x = ggplot2::element_blank(),
+                       axis.title.y = ggplot2::element_blank()) 
+    }
     print(p1)
   }
-  invisible(Q3)
+  if(irt_mod > 4){
+    invisible(list(Q3 = Q3, itemD = itemD,
+                   compare_domains =compare_domains, summary_info = summary_info))
+    
+  }
+  if(irt_mod > 4){
+    invisible(list(Q3 = Q3, summary_info = summary_info))
+  }
 }
 
 
 
+#'@title Explore model implied correlations across damains
+#'@name cor_structure
+#'@description
+#' 
+
+#' The \code{cor_structure} function helps explore the relationship of the 
+#' domains in a hierarchical IRT model. For IRT-norm models that assume a age 
+#' independent correlation (Testlet1PLnorm, Testlet2PLnorm, HO1PLnorm-C,HO2PLnorm-C)
+#' it calculates the sum score correlation and model-implied correlation across domains. 
+#' For models with age-dependent domain correlations (HO1PLnorm-P,HO2PLnorm-P,
+#' HO1PLnorm-F,HO2PLnorm-F) it calculates the model-implied domain correlation per 
+#' individum. If visual = TRUE it plots the domain correlations against the individuals 
+#' ages. 
+#' 
+#' @param fit_info A named \code{list} as returned by \code{\link{estimate_norming_model}}.
+#'
+#' @param visual A logical indicating if for models with age dependent domain correlation 
+#' if the correlation changes across age should be plotted. 
+#' The default is TRUE. 
+#' 
+#' @return A data.frame with the model-implied domain correlations.  
+#'
+#' @examples
+#' \dontrun{
+#' # Load data
+#' data(response_data)
+#'
+#' # Prepare data for IRTnorm model fit
+#' info <- estimate_norming_model(data = response_data,
+#' age_variable = "age",
+#' item_variables = 1:50,
+#' irt_model  = "HO2PLnorm-C", 
+#' itemD = rep(1:3, each = 17)[-1],
+#' age__model = "polynom",
+#' poly_mean = 3,
+#' poly_sd = 2)
+#'
+#' cor_structure(info)
+#'}
+#'@export
+cor_structure <- function(fit_info, visual = TRUE){
+  normdata <- fit_info$newdata
+  response_data <- fit_info$raw_data
+  if(normdata$irt_mod < 4){
+    stop("this function is only for hierarchical IRTnorm models, you fit object 
+         is from a unidimensional model")
+  }
+  itemD <- normdata$itemD
+  D <- normdata$D
+  i <- rep.int(seq_len(D - 1), (D - 1):1)
+  j <- sequence((D - 1):1, from = 2:D)
+  cor_mod_temp <- fit_info$model_info$info_relation[["nu"]]
+  if(normdata$irt_mod < 9){
+    temp <- as.matrix(response_data[,fit_info$item_variables])
+    sumscore <- as.data.frame(t(rowsum(t(temp), group = itemD, na.rm= TRUE)))
+    cor_sum <- cor(sumscore)
+    cor_mod <- cor_mod_temp[i] * cor_mod_temp[j]
+    info <- data.frame(sumscore_cor = cor_sum[upper.tri(cor_sum)], 
+                       model_cor = cor_mod, 
+                       domains = paste0(i, "&", j))
+    return(info)
+  }
+  
+  if(normdata$irt_mod %in% c(9, 10)){
+    cor_mod_temp <- outer(fit_info$model_info$info_relation[["lambda"]], cor_mod_temp)
+  }
+  if(normdata$irt_mod %in% c(11,12)){
+    unique_sigma <- fit_info$model_info$info_relation[["unique_sigma"]]
+    delta_sigma <- matrix(ncol = D, nrow = normdata$J)
+    for(d in seq_len(D)){
+      delta_sigma[,d] <- fit_info$info_sample$theta_sigma[fit_info$info_sample$trait == paste0("delta",d)]
+    }
+    cor_mod_temp <- delta_sigma * unique_sigma
+  }
+  
+  if(normdata$irt_mod > 8){
+    cor_mod <- data.frame(cor_mod_temp, age = fit_info$raw_data[fit_info$age_variable])
+    colnames(cor_mod) <-  c(paste0("cor(d",i, ",d", j), "age")
+    if(visual){
+      cor_long <- data.frame(combi = rep(paste0("cor(d",i, ",d", j), times = nrow(cor_mod)),
+                             cor_value = as.vector(cor_mod[,paste0("cor(d",i, ",d", j)]),
+                             age = rep(cor_mod$age, length(i)))
+      p <- ggplot2::ggplot(cor_long) + 
+        ggplot2::geom_point(ggplot2::aes(age, cor_value, color = combi)) + 
+        ggplot2::theme_bw()+ 
+        ylab("correlation")
+      print(p)
+    }
+    return(cor_mod)
+  }
+  
+}
 

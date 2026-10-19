@@ -2,32 +2,19 @@
 % Please edit documentation in R/eval_modelfit.R
 \name{quantile_curves}
 \alias{quantile_curves}
-\title{Visualize IRT norming model–implied quantiles (raw score or ability)}
+\title{Visualize IRT norming model–implied latent traits and quantile curves}
 \usage{
-quantile_curves(
-  fit_info,
-  perspective = c("ability", "rawscore"),
-  probs = c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)
-)
+quantile_curves(fit_info, probs = c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95))
 }
 \arguments{
 \item{fit_info}{a named \code{list} as returned by \code{\link{estimate_norming_model}}}
-
-\item{perspective}{character string specifying which diagnostic to plot.
-One of \code{"rawscore"} or \code{"ability"}. With \code{"rawscore"}, the
-function visualizes observed raw sum scores against model-implied raw
-score quantiles across age. With \code{"ability"}, the function visualizes
-the internal consistency of the model by comparing realized latent trait
-estimates with model-implied quantiles across age. Default is "ability".}
 
 \item{probs}{vector indicating which quantiles should be plotted.
 Default is c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95).}
 }
 \value{
 A \pkg{ggplot2} object.
-For \code{perspective = "rawscore"}, observed #'   raw sum scores plotted against age together with smoothed model-implied
-quantile curves (\eqn{5\%}, \eqn{25\%}, \eqn{50\%}, \eqn{75\%}, \eqn{95\%}).
-For \code{perspective = "ability"}, realized latent trait estimates
+Realized latent trait estimates
 plotted against age together with smoothed model-implied latent trait
 quantile curves (\eqn{5\%}, \eqn{25\%}, \eqn{50\%}, \eqn{75\%}, \eqn{95\%}).
 }
@@ -35,49 +22,23 @@ quantile curves (\eqn{5\%}, \eqn{25\%}, \eqn{50\%}, \eqn{75\%}, \eqn{95\%}).
 Visualize observed data and IRT norming model–implied quantile curves.
 }
 \details{
-\code{plot_quantile_curves} visualizes observed data across age together
-with IRTnorm model-implied quantile curves derived from an age-dependent IRT
-norming model. Depending on \code{perspective}, the function either compares
-observed raw sum scores to model-implied raw score quantiles
-(\code{perspective = "rawscore"}), or compares realized latent trait
-estimates to model-implied latent trait quantiles
-(\code{perspective = "ability"}).
+\code{quantile_curves} visualizes realized latent trait
+estimates alongside model-implied latent trait quantiles.
 
-For the raw score perspective, quantile curves are computed from posterior
-predictive replicated responses, which are smoothed as a function of age. It is
-important to note that, based on the IRT-based norming model, the raw score
-does not provide all information on the estimated normed latent trait.
-Therefore the plot can only show the aggregated information of the model,
-which does not completely coincide with the model-implied quantiles, as
-identical raw scores can lead to different quantile positions if the
-answer pattern differs.
+Quantiles of the model-implied latent trait distribution are computed for each
+individual and smoothed as a function of age using local polynomial regression
+(LOESS), while realized latent trait estimates (\code{theta_est}) are displayed as points.
 
-For the ability perspective, quantiles of the model-implied latent trait
-distribution are computed for each individual and smoothed as a function
-of age using local polynomial regression (LOESS), while realized latent
-trait estimates (\code{theta_est}) are displayed as points.
+This provides a diagnostic comparison between estimated latent traits based
+on the observed response pattern and the distribution implied by the fitted
+IRT norming model, allowing assessment of whether the model reproduces
+plausible norm scores across the entire age range.
 
-Both perspectives provide a diagnostic comparison between observed data
-and the distribution implied by the fitted IRT norming model, allowing
-assessment of whether the model reproduces observed patterns
-(raw score or latent trait) across the entire age range.
-
-\strong{Raw score perspective:} Observed raw sum scores are computed as row
-sums across the item response variables specified in \code{item_variables}.
-Model-implied raw score distributions are obtained by summing posterior
-predictive replicated item responses for each individual. Empirical
-quantiles of the replicated raw scores are then smoothed as a function of
-age using LOESS.
-
-\strong{Ability perspective:} For each individual, quantiles of the
+For each individual, quantiles of the
 model-implied latent trait distribution are computed from the
 age-dependent normal distribution of the latent trait, and smoothed as a
 function of age using LOESS. Realized latent trait estimates are overlaid
 as points for comparison.
-
-In both cases, the resulting plot serves as a diagnostic tool for
-evaluating whether the fitted IRT norming model reproduces observed
-patterns across the entire age range.
 }
 \examples{
 \dontrun{
@@ -98,10 +59,7 @@ info <- estimate_norming_model(
   parallel_chains = 2
 )
 
-# Ability perspective
-plot_quantile_curves(fit_info = info, perspective = "ability")
+plot_quantile_curves(fit_info = info)
 
-# Raw score perspective
-plot_quantile_curves(fit_info = info, perspective = "rawscore")
 }
 }

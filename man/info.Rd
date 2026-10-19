@@ -11,7 +11,7 @@ A \code{list} with information of the fitted model.
 output from the estimate_norming_model function.
 }
 \usage{
-data(info)
+data(info_small)
 }
 \description{
 Presaved info for the vignette to run fast.

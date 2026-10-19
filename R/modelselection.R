@@ -586,16 +586,16 @@ compare_age_models <- function(method = c("grid", "forward"),
 #' )
 #'
 #' # ELPD comparison across (mu, sd) combinations
-#' visual_polynomial_selection(res, perspective = "ELPD")
+#' visual_age_models(res, perspective = "ELPD")
 #'
 #' # Estimated age trajectories, with best model(s) highlighted
-#' visual_polynomial_selection(res, perspective = "trajectory")
+#' visual_age_models(res, perspective = "trajectory")
 #' }
 #'
 #' @seealso \code{\link{compare_age_models}}
 #'
 #' @export
-visual_polynomial_selection <- function(compare_info, perspective = c("ELPD", "trajectory"), 
+visual_age_models <- function(compare_info, perspective = c("ELPD", "trajectory"), 
                                         highlight_ranks = 1){
   perspective <-  match.arg(perspective)
   if(perspective == "ELPD"){

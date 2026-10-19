@@ -89,12 +89,12 @@ poly_sd = 2)
 # Single analysis (no age grouping)
 result <- raw_score_ppc(fit_info = info)
 
-raw_score_ppc_visual(N_info = result)
+visual_raw_score_ppc(N_info = result)
 
 # Age-grouped analysis
 result_age <- raw_score_ppc(fit_info = info, age_range = seq(-2,2,1))
 
-raw_score_ppc_visual(result_age)
+visual_raw_score_ppc(result_age)
 }
 
 }
@@ -103,5 +103,5 @@ Sinharay, S., Johnson, M. S., & Stern, H. S. (2006). Posterior predictive assess
 of item response theory models. Applied Psychological Measurement, 30(4), 298-321.
 }
 \seealso{
-\code{\link{raw_score_ppc_visual}} for visualizing the results
+\code{\link{visual_raw_score_ppc}} for visualizing the results
 }

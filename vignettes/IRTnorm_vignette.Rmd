@@ -38,9 +38,10 @@ This vignette introduces the main modeling concepts of `IRTnorm` and demonstrate
   
 The main workflow in `IRTnorm` consists of:
 
-1. Perform model selection (`compare_IRTnorm_models`,`compare_polynomial_degrees`, `visual_polynomial_degrees`);
+1. Perform model selection (`compare_IRTnorm_models`,`compare_age_models`, `visual_age_models`);
 2. Fit the selected model and extract all important model information (`estimate_norming_model`);
-3. Evaluate model fit (`NC`, `NC_visual`, `normscore_dist`, `quantile_curves`, `item_person_fit`, `effect_age`) ;
+3. Evaluate model fit (`raw_score_ppc`, `visual_raw_score_ppc`, `item_person_fit`, `item_residual_cor`,
+`quantile_curves`,`normscore_dist`, `effect_age`) and for hierarchical models `cor_structure`;
 4. Norm new individuals (`norm_new_individual`).
 
 ---
@@ -51,6 +52,7 @@ We illustrate the modeling process using a small simulated data set(response_dat
 The following code loads the required package and the example data.
 ```{r loadlibrary, echo=TRUE, include=TRUE, warning=FALSE, message = FALSE}
 library(IRTnorm)
+library(ggplot2)
 data("response_data")
 ```
 
@@ -82,52 +84,123 @@ Finally, the norming data must be supplied via the data argument as either a `da
                      B = list(irt_model = "2PLnorm", age_model = "poly",
                                         poly_mean = 4, poly_sd = 3))
 
-compare_IRTnorm_models(model_specifications = model_list, 
+IRTmods <- compare_IRTnorm_models(model_specifications = model_list, 
                                               raw_data = response_data, 
                                               age_variable = "age", 
                                               item_variables = 1:50)
 ``` 
 
-```{r load_modelcomparee,  echo=FALSE, include= TRUE, eval = TRUE}
-data("different_IRTmodels")
-different_IRTmodels
+```{r load_modelcomparee,  echo=FALSE, include= TRUE,eval = TRUE}
+data("IRTmods")
 ```
+Before evaluating the ELPD differences between the models, we are going checking whether the LOO 
+approximation was stable by checking Pareto k values. 
+```{r checkparetok1,  echo=TRUE, include= TRUE, eval = TRUE}
+sum(IRTmods[[2]]$pareto_k > 0.7)
+```
+All Pareto k values are below 0.7, indicating the LOO approximation is stable enough #
+to rely on the ELPD difference for model selection. 
 
+```{r load_modelcomparee2,  echo=FALSE, include= TRUE, eval = TRUE}
+IRTmods[[1]]
+```
 We recommend selecting the more complex IRT model only if the ratio ELPD_diff / SE is less than -1.96 for the comparison with the less complex model. In this example, this criterion is met, and we therefore select the 2PL norming model for the remainder of the analysis.
 
-Once the IRT model has been selected, the next step is to determine the most appropriate specification for the age effect. The function `compare_age_models()` compares models based on their expected log predictive density (ELPD), either over a user-specified grid of polynomial degrees or by using forward selection. We recommend evaluating a grid of polynomial degrees, as this provides additional insight into the behavior of the age effects. It is often also informative to compare polynomial regression with penalized splines, which can be done by setting `include_splines = TRUE`.
+Once the IRT model has been selected, the next step is to determine the most appropriate specification for the age effect. The function `compare_age_models()` compares models based on their expected log predictive density (ELPD), either over a user-specified grid of polynomial degrees or by using forward selection. We recommend evaluating using forward selection, as this can be more efficent than a grid search. It is often also informative to compare polynomial regression with penalized splines, which can be done by setting `include_splines = TRUE`. 
 
 ```{r fit_poly, echo=TRUE, include=TRUE, eval = FALSE}
-my_grid <- expand.grid(mu = 1:4, sd = 0:3)
-different_poly_2PL <- compare_age_models(method = "grid", 
-                                         grid = my_grid, 
-                                         irt_model = "2PLnorm",
-                                         raw_data = response_data, 
-                                         age_variable = "age", 
-                                         item_variables = 1:50, 
-                                         include_splines = FALSE)
-
+agemodel_2PL <- compare_age_models(method = "forward", 
+                                   irt_model = "2PLnorm",
+                                   raw_data = response_data, 
+                                   age_variable = "age", 
+                                   item_variables = 1:50, 
+                                   include_splines = TRUE)
 ``` 
 
-```{r load_modelcompare,  echo=FALSE, include= TRUE}
-data("different_poly_2PL")
+```{r load_modelcompare3,  echo=FALSE, include= TRUE}
+data("agemodel_2PL")
 ``` 
 
-Because differences in model complexity across polynomial degrees are typically small, we recommend selecting the specification with the highest ELPD, provided that the resulting trajectory is plausible. To inspect the ELPD differences visually, use the `visual_polynomial_selection()` function with `perspective = "ELPD"`.
+To check it the LOO approximation was stable, we again check pareto k 
+```{r load_paretok_age,  echo=TRUE, include= TRUE}
+colSums(agemodel_2PL$paretok > 0.7)
+``` 
+This shows that two of the evaluated models had a pareto k value above the 0.7 threshold. 
 
-```{r load_modelcompare2,  echo=TRUE, include= TRUE, eval = TRUE,fig.width=6,fig.height=4, fig.align = "center"}
-visual_polynomial_selection(different_poly_2PL, perspective = "ELPD", highlight_ranks = 3)
-```
+To check whether these points have an influence on the model selection we rerun the 
+forward selection with omitting the two influential points. 
+To do so, we first identify the influential points as ecxl and then create a new 
+dataset response_data_excl which sets the two influential points as missing values. 
+```{r load_modelcompare4,  echo=FALSE, include= TRUE,eval = FALSE}
+temp <- data_prep(raw_data = response_data, 
+                  age_variable = "age", 
+                  item_variables = 1:50,
+                  age_model = "splines")
 
-The model with the highest ELPD, highlighted in red, uses second-degree polynomials for both the mean and the standard deviation. The plot further indicates that a second-degree polynomial is required for the standard deviation, as all models with lower-degree polynomials yield considerably lower ELPD values. For the mean, a first-degree polynomial is insufficient, as models using higher-degree polynomials achieve higher ELPD values when the standard deviation is modeled with a sufficiently flexible polynomial.
+excl <- NULL
+for(i in 1:ncol(agemodel_2PL$paretok)){
+  excl <- c(excl, which(agemodel_2PL$paretok[,i] > 0.7))
+}
+excl <- unique(excl)
+
+response_data_excl <- response_data
+for(ex in excl){
+  response_data_excl[ temp$jj[ex],temp$ii[ex] +1] <- NA
+}
+agemodel_2PL_excl <- compare_age_models(method = "forward", 
+                                   irt_model = "2PLnorm",
+                                   raw_data = response_data_excl, 
+                                   age_variable = "age", 
+                                   item_variables = 1:50, 
+                                   include_splines = TRUE)
+``` 
+
+```{r load_modelcompare5,  echo=FALSE, include= TRUE}
+data("agemodel_2PL_excl")
+``` 
+
+```{r load_paretok_age2,  echo=TRUE, include= TRUE}
+colSums(agemodel_2PL_excl$paretok > 0.7)
+``` 
+In this case, when excluding the two influential points for the full data there 
+are no highly influential points anymore. This however, is not always the case 
+therefore our aim here is to check how much the different data sets influence the 
+model selection. 
+
+```{r compare_paretok_age2,  echo=TRUE, include= TRUE}
+
+combi <- cbind(rbind(agemodel_2PL$best_model, agemodel_2PL_excl$best_model), 
+               data = c(rep("orginal",nrow(agemodel_2PL$best_model)), 
+                        rep("excl",nrow(agemodel_2PL_excl$best_model))))
+combi$poly_mean[is.na(combi$poly_mean)] <- "splines"
+combi$poly_sd[is.na(combi$poly_sd)] <- "splines"
+
+ggplot(combi) + geom_point(aes(poly_mean, ELPD, shape = data, color =poly_sd), size = 2) +
+  theme_bw()
+``` 
+This shows that while the magnitude of the ELPD differs slightly between the two 
+data sets, the general pattern remains the same. It seems as if the secound order
+polynomial for the standard deviation is the best. Only for the mean there is a 
+small discrepancies, while the original data favors the third polynomial, the data 
+with excluded points favors the forth. 
+
+However, because these are very small differences in performance, we argue the selection 
+should not only be based on the ELPD, but also on the resulting trajectory. 
 
 To inspect the fitted trajectories, set `perspective = "trajectory"` in `visual_polynomial_selection()`. The number of highlighted top-performing models can be controlled using the `highlight_ranks` argument.
 
-```{r load_modelcompare3,  echo=TRUE, include= TRUE, eval = TRUE,fig.width=6,fig.height=4, fig.align = "center"}
- visual_polynomial_selection(different_poly_2PL, perspective = "trajectory", highlight_ranks = 3)
+```{r load_modelcompare6,  echo=TRUE, include= TRUE, eval = TRUE,fig.width=6,fig.height=4, fig.align = "center"}
+ visual_age_models(agemodel_2PL, perspective = "trajectory", highlight_ranks = 3)
 ```
-
-These results support selecting the 2PL model with second-degree polynomials for both the latent trait mean and the latent trait standard deviation as the final norming model. We therefore use this model for the remainder of the norming procedure. The fitted trajectories are also reassuring, as all models with polynomial degrees that are sufficiently high to capture the underlying trend, produce very similar trajectories.
+Based on this trajectory, we select the model with the the second best ELPD rank. 
+We have strong theoretical believe that the latent trait mean does not decrease
+strongly for older individuals, and therefore select the mean trajectory that keeps the trajectory 
+as stable as possible for these individuals. 
+Looking at the ELPD differences of the full data, this is the model with forth 
+polynomial for the mean and secound for the standard deviation. 
+```{r load_modelcompare7,  echo=TRUE, include= TRUE, eval = TRUE,fig.width=6,fig.height=4, fig.align = "center"}
+visual_age_models(agemodel_2PL, perspective = "ELPD", highlight_ranks = 3)
+```
 
 ## 2. Fit the selected model and extract all important model information 
 
@@ -136,26 +209,34 @@ Once the norming model has been selected, it should be refitted using a sufficie
 
 ```{r data_prep2, echo=TRUE, include=TRUE, eval = FALSE}
 info <- estimate_norming_model(raw_data = response_data, 
-                       age_variable = "age", 
-                       item_variables = 1:50,
-                       irt_model  = "2PLnorm", 
-                       age_model = "poly", 
-                       poly_mean = 2, 
-                       poly_sd = 2, 
-                       seed = 1234,
-                       iter_warmup = 2000,
-                       iter_sampling =2000, 
-                       extract_stan_object = TRUE)
+                               age_variable = "age", 
+                               item_variables = 1:50,
+                               irt_model  = "2PLnorm", 
+                               age_model = "poly", 
+                               poly_mean = 4, 
+                               poly_sd = 2, 
+                               seed = 1234,
+                               iter_warmup = 2000,
+                               iter_sampling =2000, 
+                               extract_stan_object = TRUE)
 
 ```
 
 ```{r load_info,  echo=FALSE, include= TRUE}
-data("info")
+data("info_small")
 ``` 
 
 After fitting the IRT norming model, its convergence and overall fit should be evaluated to assess whether the resulting estimates are trustworthy. The `IRTnorm` package provides several functions for assessing and visualizing model fit from different perspectives.
 
-The first step in evaluating a Bayesian IRT norming model is to verify that the MCMC algorithm has converged, as reliable inference depends on convergence. Two key diagnostics are the potential scale reduction factor (R-hat) and the effective sample size (ESS). Values of R-hat should be close to 1, indicating convergence across chains, while larger ESS values indicate more precise and reliable parameter estimates.
+The first step in evaluating a Bayesian IRT norming model is to verify that the MCMC algorithm has converged, as reliable inference depends on convergence.
+For this the model should have no divergent transitions which can be checked with 
+```{r divergent, echo=TRUE, include=TRUE ,eval = FALSE}
+sum(info$model_stan_obj$sampler_diagnostics()[,,"divergent__"])
+```
+```{r divergent2, echo=TRUE, include=TRUE ,eval = TRUE}
+0
+```
+Two key diagnostics are the potential scale reduction factor (R-hat) and the effective sample size (ESS). Values of R-hat should be close to 1, indicating convergence across chains, while larger ESS values indicate more precise and reliable parameter estimates.
 
 ```{r showfit02, echo=TRUE, include=TRUE,eval = TRUE}
 info$conv_info 
@@ -173,20 +254,30 @@ conv_plot <- bayesplot::mcmc_trace(info$model_stan_obj$draws(c("p1_theta")))
 data("conv_plot")
 conv_plot
 ```
-
 In this example, the chains have mixed well, as evidenced by the substantial overlap between chains and their free movement throughout the same region of the parameter space. There are no visible trends, drifts, or abrupt jumps, suggesting that the sampler has converged.
 
-If the trace plots exhibit systematic patterns, if the R-hat values are high, or if the effective sample sizes are low, the model may require additional sampling. A good first step is to increase the number of warm-up iterations before considering other adjustments.
+To inspect convergence in the posterior tails rank plots can be evaluated. 
+```{r showhist, echo=TRUE, include=TRUE ,eval = FALSE}
+hist_plot <- bayesplot::mcmc_rank(info$model_stan_obj$draws(c("p1_theta")))
+``` 
+
+```{r showfit03_showw, echo=TRUE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center" ,eval = FALSE}
+data("hist_plot")
+hist_plot
+```
+In this example, the rank plots loo relatively uniformly distributed, indicating good convergence
+
+If the trace plots exhibit systematic patterns, if the rank plots do not look uniformly distributed,
+if the R-hat values are high, or if the effective sample sizes are low, the model may require additional sampling. A good first step is to increase the number of warm-up iterations before considering other adjustments.
 
 ## 3. Evaluate model fit 
-
-Once convergence has been established, the next step is to evaluate how well the model fits the observed data. A useful diagnostic is to compare the observed raw score distribution with the posterior predictive (model-implied) raw score distributions generated from the fitted model. This comparison can be obtained using the `NC()` function and visualized with `NC_visual()`.
+Once convergence has been established, the next step is to evaluate how well the model fits the observed data. A useful diagnostic is to compare the observed raw score distribution with the posterior predictive (model-implied) raw score distributions generated from the fitted model. This comparison can be obtained using the `raw_score_ppc`()` function and visualized with `visual_raw_score_ppc()`.
 
 The evaluation can be performed for the entire sample or separately for different age groups. We begin by assessing model fit for the complete sample.
 
 ```{r NC1, echo=TRUE, include=TRUE ,eval = FALSE}
-NC_info <- NC(fit_info = info)
-NC_visual(NC_info = NC_info)
+NC_info <- raw_score_ppc(fit_info = info)
+visual_raw_score_ppc(NC_info)
 ``` 
 
 ```{r NC2,  echo=FALSE, include= TRUE, fig.width=6,fig.height=4, fig.align = "center"}
@@ -195,11 +286,12 @@ knitr::include_graphics("figures/plot_NC.png")
 
 The observed raw score distribution appears to be well represented by the fitted model. Most observed raw scores (black dots) lie within the 90% posterior predictive interval (dotted lines), and all observed values fall within the range of the posterior predictive distribution (indicated by the orange points). Together, these results suggest that the fitted model reproduces the observed raw score distribution well.
 
-To assess model fit across the full age range of the target population, the same evaluation should also be performed separately for different age groups. This can be accomplished using the `NC()` and `NC_visual()` functions with the `age_range` argument. The NC statistics are then computed and visualized separately for the specified age groups.
+To assess model fit across the full age range of the target population, the same evaluation should also be performed separately for different age groups. This can be accomplished using the `raw_score_ppc()` and `visual_raw_score_ppc()` functions with the `age_range` argument. The NC statistics are then computed and visualized separately for the specified age groups.
 
 ```{r ageMC, echo=TRUE, include=TRUE ,eval = FALSE}
-NC_info_age <- NC(fit_info = info, 
+NC_info_age <- raw_score_ppc(fit_info = info, 
                       age_range = seq(-2,2,1))
+visual_raw_score_ppc(NC_info_age)
 ``` 
 
 ```{r showfit2_NC, echo=FALSE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center"}
@@ -220,8 +312,8 @@ item_person_fit(fit_info =info, parameter = "item")
 The observed and model-implied frequencies are in close agreement, indicating that the estimated item parameters adequately describe the observed data. 
 Further it is assumed that items are conditionally independent. To check if this assumption
 holds the item residual correlation matrix can be evaluated using 
-```{r showfit4_ITEM, echo=TRUE, include=TRUE, fig.show="hold",  fig.width=6,fig.height=4, fig.align = "center"}
-compute_Q3(fit_info = info)
+```{r showfit4_ITEM2, echo=TRUE, include=TRUE, fig.show="hold",  fig.width=6,fig.height=4, fig.align = "center"}
+item_residual_cor(fit_info = info)
 ```
 
 This shows that the correlation between the item residuals are low and only few items exceed a correlation above 0.2. 
@@ -239,7 +331,7 @@ compared to the estimated model-implied quantile curves. Because this plot compa
 
 ```{r showfit5_consist, echo=TRUE, include=TRUE, fig.width=6,fig.height=4, fig.align = "center"}
 quantile_curves(fit_info = info, 
-                            probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
+                probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
 ``` 
 The model-implied quantile curves closely follow the estimated latent trait values, indicating that the fitted model is internally consistent.
 
@@ -284,5 +376,5 @@ data("int_info_newperson")
 int_info_newperson
 ``` 
 
-Our best estimate of the individual's latent trait is 0.895, corresponding to a score approximately 0.9 standard deviations above the average for individuals of the same age. The 95% credible interval for the individual's norm score ranges from -0.033 to 1.848. Thus, the individual is likely to perform around the average level or above, but there is limited evidence that the individual's ability is exceptionally high.
+Our best estimate of the individual's latent trait is 0.939, corresponding to a score approximately 0.9 standard deviations above the average for individuals of the same age. The 95% credible interval for the individual's norm score ranges from 0.001 to 1.893. Thus, the individual is likely to perform above the average level, but there is limited evidence that the individual's ability is exceptionally high.
 

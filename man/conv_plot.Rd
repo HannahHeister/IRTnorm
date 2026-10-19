@@ -6,14 +6,22 @@
 \title{Presaved conv_plot in order for the vignette to run fast.}
 \format{
 A \code{ggplot2} object.
+
+A \code{ggplot2} object.
 }
 \source{
 Visual output from the bayesplot::mcmc_trace function.
+
+Visual output from the bayesplot::mcmc_rank_hist function.
 }
 \usage{
 data(conv_plot)
+
+data(hist_plot)
 }
 \description{
 Presaved conv_plot in order for the vignette to run fast.
+
+Presaved hist_plot in order for the vignette to run fast.
 }
 \keyword{datasets}

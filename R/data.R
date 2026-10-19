@@ -23,11 +23,19 @@
 #' @source Visual output from the bayesplot::mcmc_trace function.
 "conv_plot"
 
+#' Presaved hist_plot in order for the vignette to run fast.
+#'
+#' @docType data
+#' @usage data(hist_plot)
+#' @format A \code{ggplot2} object.
+#' @source Visual output from the bayesplot::mcmc_rank_hist function.
+"conv_plot"
+
 
 #' Presaved info for the vignette to run fast.
 #'
 #' @docType data
-#' @usage data(info)
+#' @usage data(info_small)
 #' @format A \code{list} with information of the fitted model.
 #' @source output from the estimate_norming_model function.
 "info"
@@ -43,15 +51,25 @@
 #' Presaved different_poly_2PL for the vignette to run fast.
 #'
 #' @docType data
-#' @usage data(different_poly_2PL)
+#' @usage data(agemodel_2PL)
 #' @format A \code{list} with information for model comparison. 
 #' @source output from the compare_age_models function.
-"different_poly_2PL"
+"agemodel_2PL"
+
+#' Presaved different_poly_2PL for the vignette to run fast.
+#'
+#' @docType data
+#' @usage data(agemodel_2PL_excl)
+#' @format A \code{list} with information for model comparison. 
+#' @source output from the compare_age_models function based on data after 
+#' excluding the two highly influentional item responses.
+"agemodel_2PL_excl"
+
 
 #' Presaved different_IRTmodels for the vignette to run fast.
 #'
 #' @docType data
-#' @usage data(different_IRTmodels)
+#' @usage data(IRTmods)
 #' @format A \code{list} with information for model comparison. 
 #' @source output from the compare_IRTnorm_models function.
-"different_IRTmodels"
+"IRTmods"
