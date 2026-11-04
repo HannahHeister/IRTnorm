@@ -244,6 +244,9 @@ data_prep <- function(raw_data, age_variable, item_variables,
   age_scale <- (age - m_age)/s_age
   age_df <- data.frame(age = age_scale)
   if(age_model == "poly"){
+    if(is.null(poly_sd) | is.null(poly_mean)){
+      stop("If age_model = poly is selected poly_mean and poly_sd have to be provided.")
+    }
     if(poly_sd == 0){
       age_sd <- matrix(rep(1, length(age_scale)), ncol = 1)
     }else{
@@ -408,7 +411,7 @@ data_prep <- function(raw_data, age_variable, item_variables,
   if(!is.null(prior_knowledge)){
     for(j in seq_len(length(prior_knowledge))){
       if(any(prior_names[j] == c("alpha","beta","gamma")) &
-         length(prior_knowledge[[j]]) != 2 &
+         #length(prior_knowledge[[j]]) != 2 &
          any(lengths(prior_knowledge[[j]]) != nitem)){
         stop(paste0("When you choose to incoperate prior knowledge for ", prior_names[j],
                     " you have to indicate the distribution mean and standard deviation for all items.
@@ -478,8 +481,8 @@ data_prep <- function(raw_data, age_variable, item_variables,
            item in item_variables.")
     }
     if(min(normingdata_IRT$y) < 1){
-      normingdata_IRT$y <- normingdata_IRT$y + abs(min(normingdata_IRT$y))
-      print("The smallest item response value was below 1. For the GRMnorm model item responses need to be coded positivly. Therefore responses been recoded by adding the smallest value to all responses.")
+      normingdata_IRT$y <- normingdata_IRT$y + abs(min(normingdata_IRT$y)) +1
+      warning("The smallest item response value was below 1. For the GRMnorm model item responses need to be coded positivly. Therefore responses been recoded by adding the smallest value to all responses.")
     }
     normingdata_IRT[["K_max"]] <- max(K_item)
     normingdata_IRT[["K_item"]] <- K_item

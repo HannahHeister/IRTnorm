@@ -9,14 +9,14 @@ item_residual_cor(fit_info, visual = TRUE, domain = NULL)
 \arguments{
 \item{fit_info}{A named \code{list} as returned by \code{\link{estimate_norming_model}}.}
 
-\item{visual}{A logical indicating if the heat map should be visuallized.
+\item{visual}{A logical indicating if the heat map should be visualized.
 The default is TRUE.}
 }
 \value{
 A list with the first residual correlation matrix.
 }
 \description{
-The \code{item_residual_cor} prints a summaries of the item resdiual correlations.
+The \code{item_residual_cor} prints a summaries of the item residual correlations.
 When visualized is set to true it additionally visualizes the residual correlation matrix form of a heat map.
 Returns the item residual correlation matrix when the output is saved.
 }

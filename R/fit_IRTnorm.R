@@ -105,16 +105,16 @@ fit_IRTnorm <- function(data, seed = NULL,
                       "beta_prior_mu","beta_prior_sd",
                       "gamma_prior_mu","gamma_prior_sd",
                       "b_prior_mu","b_prior_sd",
-                      "nu_prior_mu","nu_prior_sd",
-                      "lambda_prior_mu","lambda_prior_sd",
-                      "unique_sigma_prior_mu", "unique_sigma_prior_sd")))){
+                      "nu_prior_mu","nu_prior_sd")))){#,
+                      #"lambda_prior_mu","lambda_prior_sd",
+                      #"unique_sigma_prior_mu", "unique_sigma_prior_sd")))){
     prior_known_temp <-intersect(names(data), c("alpha_prior_mu","alpha_prior_sd",
                                            "beta_prior_mu","beta_prior_sd",
                                            "gamma_prior_mu","gamma_prior_sd",
                                            "b_prior_mu","b_prior_sd",
-                                           "nu_prior_mu","nu_prior_sd",
-                                           "lambda_prior_mu","lambda_prior_sd",
-                                           "unique_sigma_prior_mu", "unique_sigma_prior_sd"))
+                                           "nu_prior_mu","nu_prior_sd"))#,
+                                           #"lambda_prior_mu","lambda_prior_sd",
+                                           #"unique_sigma_prior_mu", "unique_sigma_prior_sd"))
     prior_known <- NULL
     if(any(substr(prior_known_temp,1,5) == "alpha")){
       prior_known <- c(prior_known,"alpha")
@@ -151,48 +151,46 @@ fit_IRTnorm <- function(data, seed = NULL,
 
   # Capture extra arguments
   #  dots <- list(...)
-  if(data$irt_mod != 4){
-    fit <- mod$sample(
-      data = data,
-      seed = seed,
-      chains = chains,
-      parallel_chains = parallel_chains,
-      refresh = (iter_sampling + iter_warmup)/10 ,
-      iter_warmup = iter_warmup,
-      iter_sampling = iter_sampling, ...)
-  }
-  if(data$irt_mod == 4){
-    fit <- mod$sample(
-      data = data,
-      seed = seed,
-      chains = chains,
-      parallel_chains = parallel_chains,
-      refresh = (iter_sampling + iter_warmup)/10 ,
-      iter_warmup = iter_warmup,
-      iter_sampling = iter_sampling,init = 1, ...)
-  }
-  # Base arguments shared by both cases
-  #base_args <- list(
-  #  data             = data,
-  #  seed             = seed,
-  #  chains           = chains,
-  #  parallel_chains  = parallel_chains,
-  #  refresh          = (iter_sampling + iter_warmup) / 10,
-  # iter_warmup      = iter_warmup,
-  #  iter_sampling    = iter_sampling
-  #)
-
-  #if(data$irt_mod == 8){
-  # Use init = 1 as default, but allow user to override via ...
-  #  if(!"init" %in% names(dots)){
-  #  base_args$init <- 1
-  # }
+ # if(data$irt_mod != 4){
+ #   fit <- mod$sample(
+  #    data = data,
+  #    seed = seed,
+  #    chains = chains,
+  #    parallel_chains = parallel_chains,
+  #    refresh = (iter_sampling + iter_warmup)/10 ,
+  #    iter_warmup = iter_warmup,
+  #    iter_sampling = iter_sampling, ...)
   #}
+ # if(data$irt_mod == 4){
+  #  fit <- mod$sample(
+  #    data = data,
+  #    seed = seed,
+  #    chains = chains,
+  #    parallel_chains = parallel_chains,
+  #    refresh = (iter_sampling + iter_warmup)/10 ,
+   #   iter_warmup = iter_warmup,
+   #   iter_sampling = iter_sampling, init = 1, ...)
+ # }
+  # Base arguments shared by both cases
+  base_args <- list(
+    data             = data,
+    seed             = seed,
+    chains           = chains,
+    parallel_chains  = parallel_chains,
+    refresh          = (iter_sampling + iter_warmup) / 10,
+   iter_warmup      = iter_warmup,
+    iter_sampling    = iter_sampling
+  )
+  dots <- list(...)
+  if(data$irt_mod == 4 && !"init" %in% names(dots)){
+    base_args$init <- 1
+   }
+  
 
   # Merge base args with dots — dots override base_args if names clash
-  #final_args <- c(base_args, dots)
-
-  #fit <- do.call(mod$sample, final_args)
+  final_args <- c(base_args, dots)
+  final_args[names(dots)] <- dots 
+  fit <- do.call(mod$sample, final_args)
 
   return(fit)
 }
@@ -214,7 +212,7 @@ extract_iteminfo <- function(fit, data,
         assign(var, data[[var]])
       }
       if(type == "draws"){
-        assign(var, rep(data[[var]], each = ndraws))
+        assign(var, matrix(rep(data[[var]], each = ndraws), nrow = ndraws))
       }
     }
   }
@@ -337,16 +335,16 @@ extract_personinfo <- function(fit, data){
     
     delta_normed <- (delta_est - mu_est)/(sd_est)
     
-    q_delta <- apply(delta_est, 2, stats::quantile, probs = c(0.05, 0.95))
-    q_deltanorm <- apply(delta_normed, 2, stats::quantile, probs = c(0.05, 0.95))
+    q_delta <- unname(apply(delta_est, 2, stats::quantile, probs = c(0.05, 0.95)))
+    q_deltanorm <- unname(apply(delta_normed, 2, stats::quantile, probs = c(0.05, 0.95)))
     
-    m_mu_est <- colMeans(mu_est)
-    m_sd_est <- colMeans(sd_est)
+    m_mu_est <- unname(colMeans(mu_est))
+    m_sd_est <- unname(colMeans(sd_est))
+    m_delta  <- unname(colMeans(delta_est))
+    m_normed <- unname(colMeans(delta_normed))
     
     
-    info_sample <- data.frame(est_ability = c(colMeans(delta_est),
-                                              colMeans(delta_normed),
-                                              theta_est$mean),
+    info_sample <- data.frame(est_ability = c(m_delta, m_normed, theta_est$mean),
                               ability_est_upper = c(q_delta[2,], q_deltanorm[2,], theta_est$q95),
                               ability_est_lower = c(q_delta[1,], q_deltanorm[1,], theta_est$q5),
                               trait = c(rep(paste0("delta",1:D), each = nperson),
@@ -365,10 +363,6 @@ extract_relationinfo <- function(fit, irt_mod,
                                  type = c("mean", "draws")) {
   
   type <- match.arg(type)
-  
- #if (irt_mod <= 4) {
-  #  return(NULL)
-  #}
   
   relation <- list(
     nu = NULL,

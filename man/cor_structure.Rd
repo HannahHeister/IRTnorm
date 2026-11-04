@@ -2,7 +2,7 @@
 % Please edit documentation in R/eval_modelfit.R
 \name{cor_structure}
 \alias{cor_structure}
-\title{Explore model implied correlations across damains}
+\title{Explore model implied correlations across domains}
 \usage{
 cor_structure(fit_info, visual = TRUE)
 }

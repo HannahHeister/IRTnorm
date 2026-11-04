@@ -13,9 +13,14 @@ loo_comp <- function(loo_info){
   loo_order <- loo_info[[1]][best_list,]
   loo_order$ELPD_diff <- loo_order$ELPD - best 
   
-  d <- loo_info[[2]][,reference] - loo_info[[2]][,best_list]
+  d <- loo_info[[2]][,reference[1]] - loo_info[[2]][,best_list]
   loo_order$SE <- sqrt(nrow(d) * apply(d, 2, stats::var))
   loo_order$rank <- seq_len(nrow(loo_order))
+  n_ref <- length(reference)
+  if(n_ref > 1){
+    loo_order$rank <- c(rep(1,n_ref), 
+                        2:(nrow(loo_order) - n_ref +1))
+  }
   return(loo_order)
 }
 
@@ -151,24 +156,33 @@ validate_model_specifications_list <- function(model_specifications_list){
   
   # each sub-list must have non-NULL irt_model and age_model
   required <- c("irt_model", "age_model")
+  required_poly <- c("poly_mean", "poly_sd")
   
   problems <- lapply(seq_along(model_specifications_list), function(i){
     mi <- model_specifications_list[[i]]
     nm <- names(model_specifications_list)[i]
     if (is.null(nm) || nm == "") nm <- paste0("[", i, "]")
-    
     missing_fields <- required[vapply(required, function(f) is.null(mi[[f]]), logical(1))]
+    
+    if (identical(mi$age_model, "poly")){
+      missing_fields <- c(
+        missing_fields,
+        required_poly[vapply(required_poly, function(f) is.null(mi[[f]]), logical(1))]
+      )
+    }
+    
     if (length(missing_fields) > 0){
       paste0(nm, ": missing ", paste(missing_fields, collapse = ", "))
     } else {
       NULL
     }
   })
+
   
   problems <- unlist(problems)
   if (length(problems) > 0){
     stop("model_specifications_list has invalid entries:\n",
-         paste(problems, collapse = "\n"))
+         paste(problems, collapse = "\n"),call. = FALSE)
   }
   
   invisible(TRUE)
@@ -179,10 +193,10 @@ check_dimension <- function(model_specifications){
   nmodels <- length(model_specifications)
   unidim <- vector(length = nmodels)
   for(n in seq_len(nmodels)){
-    unidim <- model_specifications[[n]]$irt_model %in% c("1PLnorm", "2PLnorm","3PLnorm", "GRMnorm")
+    unidim[n] <- model_specifications[[n]]$irt_model %in% c("1PLnorm", "2PLnorm","3PLnorm", "GRMnorm")
   }
   if(any(unidim == TRUE) & any(unidim == FALSE)){
-    stop("models in model_specifications do not imply the same dimensionallity and can therefore not be compared.")
+    stop("models in model_specifications do not imply the same dimensionality and can therefore not be compared.",call. = FALSE)
   }
     invisible(TRUE)
 }
@@ -352,7 +366,11 @@ check_dimension <- function(model_specifications){
 #' @export
 compare_age_models <- function(method = c("grid", "forward"),
                                        grid = NULL,
-                                       raw_data, irt_model,
+                                       raw_data, irt_model = c("1PLnorm","2PLnorm","3PLnorm","GRMnorm",
+                                                               "Testlet1PLnorm","Testlet2PLnorm",
+                                                               "HO1PLnorm-C", "HO2PLnorm-C",
+                                                               "HO1PLnorm-P", "HO2PLnorm-P",
+                                                               "HO1PLnorm-F", "HO2PLnorm-F"),
                                        age_variable, item_variables,
                                        maxeval = 10,
                                        prior_knowledge = NULL, parameter_fixed = NULL,
@@ -362,6 +380,10 @@ compare_age_models <- function(method = c("grid", "forward"),
                                        include_splines = TRUE){
   
   method <- match.arg(method)
+  if (is.null(irt_model)) {
+    stop("`irt_model` must be a single model name.")
+  }
+  irt_model <- match.arg(irt_model)
   
   if(any(irt_model == c("Testlet1PLnorm","Testlet2PLnorm",
                    "HO1PLnorm-C", "HO2PLnorm-C",
@@ -409,7 +431,8 @@ compare_age_models <- function(method = c("grid", "forward"),
   }
   
   # --- shared helper: finalize results (loo comparison, ranks, best flag) ---
-  finalize <- function(loo_ELPD, elpd_value, trajectory, paretok, best_configuration = NULL, irt_model,include_splines){
+  finalize <- function(loo_ELPD, elpd_value, trajectory, paretok, #best_configuration = NULL, 
+                       irt_model,include_splines){
     if(include_splines){
       temp <- fit_one_model(
         model_specifications = list(
@@ -446,9 +469,15 @@ compare_age_models <- function(method = c("grid", "forward"),
     )
     trajectory$best <- trajectory$rank == 1
     
-    if (is.null(best_configuration)){
+    #if (is.null(best_configuration)){
       best_row <- best_model[1, ]
       
+     # if(best_row$modelcombi == "splines"){
+    #    best_agemod <- "splines"
+    #  }
+     # else{
+    #    best_agemod <- "poly"
+     # }
       best_configuration <- list(
         irt_model       = irt_model,
         age_model       = "poly",
@@ -460,11 +489,10 @@ compare_age_models <- function(method = c("grid", "forward"),
       if(include_splines){
         best_configuration$age_model[is.na(best_configuration$poly_mean)] <- "splines"
       }
-    }
+    #}
     
-    
-    list(best_model = best_model, trajectory = trajectory,  paretok = paretok,
-         best_configuration =  best_configuration)
+      structure(list(best_model = best_model, trajectory = trajectory,  paretok = paretok,
+         best_configuration =  best_configuration),class = "compare_info")
   }
   
   # ============================================================
@@ -497,7 +525,7 @@ compare_age_models <- function(method = c("grid", "forward"),
   n_eval   <- 1
   improved <- TRUE
   
-  while (improved && n_eval < maxeval){
+  while (improved && n_eval + 2 < maxeval){
     
     candidates <- data.frame(mu = c(best_mu + 1, best_mu),
                              sd = c(best_sd,     best_sd + 1))
@@ -523,14 +551,14 @@ compare_age_models <- function(method = c("grid", "forward"),
     }
   }
   
-  best_configuration <- list(irt_model       = irt_model,
-                             age_model       = "poly",
-                             poly_mean       = best_mu ,
-                             poly_sd         = best_sd,
-                             prior_knowledge = prior_knowledge,
-                             parameter_fixed = parameter_fixed)
+  #best_configuration <- list(irt_model       = irt_model,
+  #                           age_model       = "poly",
+  #                           poly_mean       = best_mu ,
+  #                           poly_sd         = best_sd,
+  #                           prior_knowledge = prior_knowledge,
+  #                           parameter_fixed = parameter_fixed)
   
-  finalize(loo_ELPD, elpd_value, trajectory,paretok, best_configuration,
+  finalize(loo_ELPD, elpd_value, trajectory,paretok, #best_configuration,
            include_splines = include_splines, irt_model = irt_model)
 }
 
@@ -598,6 +626,14 @@ compare_age_models <- function(method = c("grid", "forward"),
 visual_age_models <- function(compare_info, perspective = c("ELPD", "trajectory"), 
                                         highlight_ranks = 1){
   perspective <-  match.arg(perspective)
+  if(!is.numeric(highlight_ranks) | length(highlight_ranks) != 1){
+    warning("highlight_ranks has to be a numeric value of length 1. The default 
+            of 1 was used instead.")
+    highlight_ranks <- 1
+  }
+  if (!inherits(compare_info, "compare_info")) {
+    rlang::abort("`compare_info` must be created by `compare_age_models()`.")
+  }
   if(perspective == "ELPD"){
     best_model <- compare_info$best_model
     best_model$ranked <- as.factor(best_model$rank)
@@ -734,43 +770,90 @@ visual_age_models <- function(compare_info, perspective = c("ELPD", "trajectory"
 #' @seealso \code{\link{compare_age_models}}
 #'
 #' @export
-compare_IRTnorm_models <- function(model_specifications, raw_data, age_variable, item_variables, 
-                                   seed = NULL, iter_warmup = 500,
-                                   iter_sampling = 500,
-                                   chains = 2, parallel_chains = NULL){
-
+compare_IRTnorm_models <- function(model_specifications, raw_data, age_variable,
+                                   item_variables, seed = NULL,
+                                   iter_warmup = 500, iter_sampling = 500,
+                                   chains = 2, parallel_chains = NULL) {
+  
   validate_model_specifications_list(model_specifications)
   check_dimension(model_specifications)
   
-  if (length(parallel_chains) == 0){
-    parallel_chains <- parallel::detectCores()
+  # Input checks
+  missing_cols <- setdiff(c(age_variable, item_variables), names(raw_data))
+  if (length(missing_cols) > 0) {
+    stop("Columns not found in raw_data: ", paste(missing_cols, collapse = ", "))
   }
-  if (is.null(seed)){
+  
+  if (is.null(parallel_chains)) {
+    parallel_chains <- min(chains, parallel::detectCores())
+  }
+  if (is.null(seed)) {
     seed <- sample.int(.Machine$integer.max, 1)
   }
   
-  loo_ELPD <- NULL
-  elpd_value <- NULL
-  diagn <- NULL
-  for(n in seq_len(length(model_specifications))){
-    info_model <- fit_one_model(model_specifications = model_specifications[[n]], 
-                                raw_data = raw_data, age_variable =age_variable, item_variables =item_variables,
-                                seed = seed, iter_warmup = iter_warmup, 
-                                iter_sampling = iter_sampling, 
-                                chains = chains, parallel_chains = parallel_chains)
-    loo_ELPD <- cbind(loo_ELPD, info_model$elpd_pointwise)
-    elpd_value <- rbind(elpd_value,info_model$elpd_summary)
-    diagn <- rbind(diagn, data.frame(pareto_k = info_model$paretok, 
-                                     neff = info_model$neff, 
-                                     reff = info_model$reff, 
-                                     irt_model = model_specifications[[n]]$irt_model))
-  } 
-  loo_info   <- list(elpd_value = elpd_value, loo_ELPD = loo_ELPD)
-  best_model <- loo_comp(loo_info = loo_info)
+  # Unique, informative model labels
+  model_ids <- vapply(seq_along(model_specifications), function(n) {
+    paste0(n, "_", model_specifications[[n]]$irt_model)
+  }, character(1))
   
-  info <- list(best_model, diagn)
-  return(info)
+  # Fit all models; a failed fit returns NULL instead of aborting everything
+  fits <- lapply(seq_along(model_specifications), function(n) {
+    tryCatch(
+      fit_one_model(
+        model_specifications = model_specifications[[n]],
+        raw_data = raw_data, age_variable = age_variable,
+        item_variables = item_variables, seed = seed,
+        iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+        chains = chains, parallel_chains = parallel_chains
+      ),
+      error = function(e) {
+        warning("Model ", model_ids[n], " failed: ", conditionMessage(e),
+                call. = FALSE)
+        NULL
+      }
+    )
+  })
+  
+  # Keep only successful fits, with specs and labels aligned
+  ok       <- !vapply(fits, is.null, logical(1))
+  if (sum(ok) < 2) stop("Fewer than two models fitted successfully; cannot compare.")
+  fits     <- fits[ok]
+  specs_ok <- model_specifications[ok]
+  ids_ok   <- model_ids[ok]
+  names(fits) <- ids_ok
+  
+  # Pointwise ELPD matrix (one named column per model)
+  loo_ELPD <- do.call(cbind, lapply(fits, `[[`, "elpd_pointwise"))
+  colnames(loo_ELPD) <- ids_ok
+  
+  # ELPD summaries (one named row per model)
+  elpd_value <- do.call(rbind, lapply(fits, `[[`, "elpd_summary"))
+  rownames(elpd_value) <- ids_ok
+  
+  # Diagnostics, including age-model information
+  diagn <- do.call(rbind, lapply(seq_along(fits), function(n) {
+    spec <- specs_ok[[n]]
+    
+    if (identical(spec$age_model, "poly")) {
+      poly_mean_temp <- spec$poly_mean
+      poly_sd_temp   <- spec$poly_sd
+    } else {
+      poly_mean_temp <- NA
+      poly_sd_temp   <- NA
+    }
+    
+    data.frame(model     = ids_ok[n],
+               irt_model = spec$irt_model,
+               age_model = spec$age_model,
+               poly_mean = poly_mean_temp,
+               poly_sd   = poly_sd_temp,
+               pareto_k  = fits[[n]]$paretok,
+               neff      = fits[[n]]$neff,
+               reff      = fits[[n]]$reff)
+  }))
+  
+  best_model <- loo_comp(loo_info = list(elpd_value = elpd_value,
+                                         loo_ELPD = loo_ELPD))
+  
+  list(best_model = best_model, diagnostics = diagn)
 }
-
-
-

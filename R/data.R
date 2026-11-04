@@ -15,6 +15,14 @@
 #' @source Simulated data.
 "response_data"
 
+#' A dataset containing item responses and age information based on the GRM.
+#' @docType data
+#' @usage data(data_GRM)
+#' @source Simulated data.
+"data_GRM"
+
+
+
 #' Presaved conv_plot in order for the vignette to run fast.
 #'
 #' @docType data
@@ -73,3 +81,51 @@
 #' @format A \code{list} with information for model comparison. 
 #' @source output from the compare_IRTnorm_models function.
 "IRTmods"
+
+
+#' Presaved testdata .
+#'
+#' @docType data
+#' @usage data(test)
+#' @format A \code{list} with information for model comparison. 
+#' @source output from the compare_IRTnorm_models function.
+"test"
+
+#' Presaved testdata .
+#'
+#' @docType data
+#' @usage data(HOex_cor_info)
+#' @format A \code{list} with information for model comparison. 
+#' @source output from the compare_IRTnorm_models function.
+"cor_info"
+
+
+#' A dataset containing item responses and age information based on the HO1PLnorm-C model.
+#' @docType data
+#' @usage data(HOdata)
+#' @source Simulated data.
+"HOdata"
+
+#' Presaved HOex_res_info_all in order for the vignette to run fast.
+#'
+#' @docType data
+#' @usage data(HOex_res_info_all)
+#' @format A \code{list} with information returned from item_residual_cor.
+#' @source based on data from the HO example 
+"HOex_res_info_all"
+
+#' Presaved HOex_res_info1 in order for the vignette to run fast.
+#'
+#' @docType data
+#' @usage data(HOex_res_info1)
+#' @format A \code{list} with information returned from item_residual_cor.
+#' @source based on data from the HO example  for the first domain
+"HOex_res_info1"
+
+#' Presaved norm new individual based on HO model in order for the vignette to run fast.
+#'
+#' @docType data
+#' @usage data(HOex_info_newperson)
+#' @format A \code{list} with information returned from norm_new_individual.
+#' @source based on data from the HO example
+"info_newperson"

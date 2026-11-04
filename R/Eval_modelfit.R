@@ -1,136 +1,3 @@
-#'@title Convergence check of IRTnorm model parameters
-#'@name fit_info_param
-#'@description Computes the convergence diagnostics \strong{R-hat},
-#' \strong{Effective Sample Size (bulk)} and \strong{Effective Sample Size (tail)}
-#' for selected groups of IRTnorm model parameters from a fitted Bayesian IRTnorm model.
-#' For each parameter group, the function summarizes the distribution of
-#' convergence measures across all indexed parameters (e.g., all estimated
-#' beta parameters \code{beta[i]}).
-#'@details
-#' The function operates on posterior draws extracted via
-#' \code{fit$draws()}, and uses the \pkg{posterior} package to compute
-#' convergence diagnostics. Parameters are first grouped by name
-#' (e.g., all \code{beta[*]} parameters), then diagnostics are computed
-#' for each element, and finally summary statistics are taken across elements
-#' within each group.
-#'
-#' The output is ordered by diagnostic, with all parameter groups reported
-#' first for \code{rhat}, followed by \code{ess_bulk}, and then \code{ess_tail}.
-#'
-#' This function is intended for IRTnorm model diagnostics and quality control.
-#' Interpretation guidelines commonly used in practice include:
-#' \itemize{
-#'   \item R-hat values close to 1 (e.g., < 1.01) indicate good mixing,
-#'   \item larger ESS values indicate more reliable posterior summaries.
-#' }
-#'@param fit  the data output from `fit_IRTnorm()`.
-#'@param data named list as returned by \code{\link{data_prep}} containing
-#'   all data and indexing information required for fitting the IRT norming
-#'   model and evaluating its fit.
-#'@seealso
-#' \code{\link[posterior]{summarise_draws}},
-#' \code{\link[posterior]{rhat}},
-#' \code{\link[posterior]{ess_bulk}},
-#' \code{\link[posterior]{ess_tail}}
-#'@return A data.frame summarizing Rhat, Ess bulk and ess tail per variable group.
-#'@examples
-#' \dontrun{
-#' # Fit an IRTnorm model
-#' data(response_data)
-#' mod_poly <- fit_IRTnorm(data = response_data)
-#'
-#' # Compute convergence diagnostics
-#' converg_tab <- fit_info_param(mod_poly)
-#' converg_tab
-#' # Inspect R-hat summaries
-#' subset(converg_tab, diagnostic == "rhat")
-#'
-#' # Check for low effective sample sizes
-#' subset(converg_tab, diagnostic == "ess_bulk" & Mean < 100)}
-#'@export
-#'@keywords internal
-
-fit_info_param <- function(fit, data){
-  if (!requireNamespace("cmdstanr", quietly = TRUE)) {
-    stop(
-      "Package 'cmdstanr' is required but not installed.\n",
-      "Install it with: install.packages('cmdstanr', repos = c('https://stan-dev.r-universe.dev', getOption('repos')))",
-      call. = FALSE
-    )
-  }
-  #fixed irt_mod parameters
-  no_fit <- intersect(names(data), c("alpha","beta","gamma","b"))
-
-  if(data$age_mod == 1){
-    param1 <- c("p1_theta","p2_theta")
-    if(data$irt_mod > 8){
-      param1 <- c(param1, "p3_theta")
-    }
-  }
-  if(data$age_mod == 2){
-    param1 <- c("l1","l2","u1","u2")
-    if(data$irt_mod > 8){
-      param1 <- c(param1, c("l3","u3"))
-    }
-  }
-  draws <- fit$draws()
-
-  irt_mod_params <- list(
-    "1"  = c("z_theta", param1, "beta"),
-    "2"  = c("z_theta", param1, "alpha", "beta"),
-    "3"  = c("z_theta", param1, "alpha", "beta", "gamma"),
-    "4"  = c("z_theta", param1, "alpha", "b"),
-    "5"  = c("z_theta", "unique", "nu", param1, "beta"),
-    "6"  = c("z_theta", "unique", "nu", param1, "alpha", "beta"),
-    "7"  = c("z_theta", "unique", "nu", param1, "beta"),
-    "8"  = c("z_theta", "unique", "nu", param1, "alpha", "beta"),
-    "9"  = c("z_theta", "unique", "nu", "lambda", param1, "alpha", "beta"),
-    "10" = c("z_theta", "unique", "nu", "lambda", param1, "alpha", "beta"),
-    "11" = c("z_theta", "unique", "unique_sigma", param1, "alpha", "beta"),
-    "12" = c("z_theta", "unique", "unique_sigma", param1, "alpha", "beta")
-  )
-
-  param <- irt_mod_params[[as.character(data$irt_mod)]]
-  param <- setdiff(param, no_fit)
-
-  diag_funs <- list(
-    rhat     = posterior::rhat,
-    ess_bulk = posterior::ess_bulk,
-    ess_tail = posterior::ess_tail
-  )
-
-  out <- vector("list", length(diag_funs))
-  d <- 1
-
-  for(diag in names(diag_funs)){
-
-    res_param <- vector("list", length(param))
-
-    for(i in seq_along(param)){
-
-      info <- draws |>
-        posterior::subset_draws(variable = param[i]) |>
-        posterior::summarise_draws(diag_funs[[diag]])
-
-      stats <- as.data.frame(
-        t(vapply(info[,-1], summary, numeric(6)))
-      )
-
-      res_param[[i]] <- cbind(
-        diagnostic = rep(diag, nrow(stats)),
-        variable   = rep(param[i], nrow(stats)),
-        stats
-      )
-    }
-
-    out[[d]] <- do.call(rbind, res_param)
-    d <- d + 1
-  }
-
-  final_info <- do.call(rbind, out)
-  rownames(final_info) <- NULL
-  return(final_info)
-}
 
 
 #' Compute Observed and IRTnorm model-implied Raw Score Distributions
@@ -233,18 +100,30 @@ fit_info_param <- function(fit, data){
 #' @export
 raw_score_ppc <- function(fit_info,
                age_range = NULL) {
-
+  if(!inherits(fit_info, "IRTnorm")){
+    stop("fit_info has to be generated from estimate_norming_model()")
+  }
   data <- fit_info$newdata
   model_info <- fit_info$model_info
   raw_data <- fit_info$raw_data
   item_variables <- fit_info$item_variables
   age_variable <- fit_info$age_variable
-  
-  # Validate inputs
-  if (!is.null(age_range) && is.null(raw_data)) {
-    stop("'raw_data' must be provided when 'age_range' is specified")
-  }
 
+  if (!is.null(age_range)) {
+    if(!is.numeric(age_range) | length(age_range) == 1){
+      stop("age_range has to consit of a at least two numeric values.")
+    }
+    ages <- raw_data[[age_variable]]
+    lower <- min(age_range)
+    upper <- max(age_range)
+    n_out <- sum(!is.na(ages) & (ages < lower | ages > upper))
+    if (n_out > 0) {
+      warning(n_out, " individual(s) fall outside 'age_range' [", lower, ",", upper,
+              "] and are excluded from the age-group results.", call. = FALSE)
+    }
+  }
+  
+  
   int_data <- raw_data[, item_variables, drop = FALSE]
   
   if(all(data$itemD == 1)){
@@ -276,11 +155,11 @@ if(data$irt_mod !=  4){
     for(d in seq_len(data$D)){
       nitem <- sum(data$itemD == d)
       # Compute replicated raw score distributions (shared computation)
-      score_rep <- apply(model_info$y_rep[,data$dd == d], 1, function(x) tapply(x, data$jj[data$dd == d], sum))
+      score_rep <- apply(model_info$y_rep[,data$dd == d, drop = FALSE], 1, function(x) tapply(x, data$jj[data$dd == d], sum))
       draws <- ncol(score_rep)
 
       # Compute observed scores
-      observed_scores <- rowSums(int_data[,data$itemD == d ], na.rm = T)
+      observed_scores <- rowSums(int_data[,data$itemD == d , drop = FALSE], na.rm = T)
       if (is.null(age_range)) {
         info_all[[d +1]] <- compute_nc_overall(observed_scores, score_rep, nitem, draws, dim = d)
       } else {
@@ -289,28 +168,36 @@ if(data$irt_mod !=  4){
       }
     }
   }
-
+  class(info_all) <- "IRTnorm_ppc"
   return(info_all)
 }
 
 
 # Helper: Create full observed distribution with zeros for missing scores
+#create_full_distribution <- function(score_obs, nitem) {
+#  if (length(score_obs) == 0) {
+#    return(data.frame(score = 0:nitem, obs = 0))
+#  }
+#  observed <- as.data.frame(table(score_obs))
+#  colnames(observed) <- c("score", "obs")
+#  observed$score <- as.numeric(as.character(observed$score))
+#
+#  # Fill in missing scores with zero counts
+#  if (nrow(observed) != nitem + 1) {
+#    full_dist <- data.frame(score = 0:nitem, obs = 0)
+#    full_dist$obs[match(observed$score, full_dist$score)] <- observed$obs
+#    return(full_dist)
+#  }
+#
+#  return(observed)
+#}
+
+
 create_full_distribution <- function(score_obs, nitem) {
-  if (length(score_obs) == 0) {
-    return(data.frame(score = 0:nitem, obs = 0))
-  }
-  observed <- as.data.frame(table(score_obs))
-  colnames(observed) <- c("score", "obs")
-  observed$score <- as.numeric(as.character(observed$score))
-
-  # Fill in missing scores with zero counts
-  if (nrow(observed) != nitem + 1) {
-    full_dist <- data.frame(score = 0:nitem, obs = 0)
-    full_dist$obs[match(observed$score, full_dist$score)] <- observed$obs
-    return(full_dist)
-  }
-
-  return(observed)
+  data.frame(
+    score = 0:nitem,
+    obs   = as.vector(table(factor(score_obs, levels = 0:nitem)))
+  )
 }
 
 # Helper: Compute replicated score distributions
@@ -318,7 +205,7 @@ compute_replicated_distributions <- function(score_rep, age_filter = NULL,
                                              nitem, draws) {
   replicated <- matrix(nrow = draws, ncol = nitem + 1)
 
-  for (i in 1:draws) {
+  for (i in seq_len(draws)) {
     score_data <- if (is.null(age_filter)) {
       score_rep[, i]
     } else {
@@ -351,11 +238,8 @@ process_group <- function(score_obs, score_rep, nitem, draws, age_filter = NULL)
   # Quantiles
   rep_quantiles <- compute_quantiles(replicated)
 
-  # Combine results
-  df <- cbind(observed_full, rep_quantiles)
-
   return(list(
-    df = df,
+    df = cbind(observed_full, rep_quantiles),
     replicated = replicated,
     nitem = nitem
   ))
@@ -375,9 +259,9 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
   age_groups <- length(age_range) - 1
   results <- vector("list", age_groups)
 
-  ages <- raw_data[, age_variable]
+  ages <- raw_data[[age_variable]]
 
-  for (i in 1:age_groups) {
+  for (i in seq_len(age_groups)) {
     # Define age filter
     age_filter <- ages > age_range[i] & ages <= age_range[i + 1]
 
@@ -391,7 +275,7 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
     )
 
     # Add age label
-    result$age <- sprintf("age: (%s,%s]", age_range[i], age_range[i + 1])
+    result$age <- sprintf("age: [%s,%s]", age_range[i], age_range[i + 1])
     result$dim <- dim
     results[[i]] <- result
   }
@@ -483,11 +367,14 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #' @export
 visual_raw_score_ppc <- function(raw_score_ppc_info, dim_plot = NULL) {
 ##TODO NEEDS TO BE CHECKED IF THIS IF CASE IS GOOD 
+  if(!inherits(raw_score_ppc_info, "IRTnorm_ppc")){
+    stop("raw_score_ppc_info has to be generated from raw_score_ppc()")
+  }
+
   if (length(raw_score_ppc_info) == 1 && is.list(raw_score_ppc_info[[1]]) && 
       !is.null(raw_score_ppc_info[[1]][[1]]$age)) {
     raw_score_ppc_info <- raw_score_ppc_info[[1]]
   }
-  
   
 process_single_result <- function(result, age_label = NULL, dim_label = NULL) {
   # Extract data
@@ -508,12 +395,15 @@ process_single_result <- function(result, age_label = NULL, dim_label = NULL) {
   }
   # Add domain label if provided
   if (!is.null(dim_label)) {
-    df$domian <- dim_label
-    rep.long$domian <- dim_label
+    df$domain <- dim_label
+    rep.long$domain <- dim_label
   }
   return(list(df = df, rep.long = rep.long))
 }
 
+if(length(raw_score_ppc_info) == 1 & !is.null(dim_plot)){
+  warning("Your model is unidimensional, therefore your input for dim_plot is ignored.")
+}
 
 # Helper
 remove_substr <- function(text, start, end) {
@@ -526,15 +416,20 @@ if(length(raw_score_ppc_info) > 1 & !is.null(raw_score_ppc_info[[1]][[1]]$age)){
     stop("'dim_plot' missing. Please provide which latent trait dimension  should be visualized. Due to
         the different age groups the latent trait dimensions have to be plotted individually.")
   }else{
+    possible_dim <- c("general", paste0("domain", seq_len(length(raw_score_ppc_info) -1)))
+    if(!dim_plot %in% possible_dim){
+      dim_ok <- paste0(possible_dim, collapse = ", ")
+      stop(paste0("dim_plot has to be one of the following values ",dim_ok ))
+    }
     if(dim_plot == "general"){
       raw_score_ppc_info <- raw_score_ppc_info[[1]]
     }else{
-      int_NC <- as.numeric(remove_substr(dim_plot, 1,6))
-      if(!is.na(int_NC)){
-        raw_score_ppc_info <- raw_score_ppc_info[[as.numeric(substr(dim_plot, 7,7))]] # +1
-      }else{
-        stop("'dim_plot' has the wrong format. ")
-      }
+      #int_NC <- as.numeric(remove_substr(dim_plot, 1,6))
+      #if(!is.na(int_NC)){
+        raw_score_ppc_info <- raw_score_ppc_info[[as.numeric(substr(dim_plot, 7,7)) +1]] # +1
+      #}else{
+      #  stop("'dim_plot' has the wrong format. ")
+      #}
 
     }
   }
@@ -548,7 +443,7 @@ if (n_group > 1) {
   df_all <- NULL
   rep.long_all <- NULL
 
-  for (g in 1:n_group) {
+  for (g in seq_len(n_group)) {
     processed <- process_single_result(result = raw_score_ppc_info[[g]],
                                        age_label =raw_score_ppc_info[[g]]$age,
                                        dim_label =raw_score_ppc_info[[g]]$dim)
@@ -558,55 +453,57 @@ if (n_group > 1) {
   }
 }else {
   # Process single result (no age grouping)
-  processed <- process_single_result(raw_score_ppc_info[[1]], age_label = "one", dim_label = "none")
+  processed <- process_single_result(raw_score_ppc_info[[1]], 
+                                     age_label = raw_score_ppc_info[[1]]$age,
+                                     dim_label = "none")
   df_all <- processed$df
   rep.long_all <- processed$rep.long
 
 }
-n_domains <- length(unique(rep.long_all$domian)) > 1
+n_domains <- length(unique(rep.long_all$domain)) > 1
 if(n_domains){
-  rep.long_all$domian <- factor(rep.long_all$domian,
-                                labels = c("general", paste0("domain", seq_len(max(rep.long_all$domian)))))
-  df_all$domian <- factor(df_all$domian,
-                          labels = c("general", paste0("domain", seq_len(max(df_all$domian)))))
+  rep.long_all$domain <- factor(rep.long_all$domain,
+                                labels = c("general", paste0("domain", seq_len(max(rep.long_all$domain)))))
+  df_all$domain <- factor(df_all$domain,
+                          labels = c("general", paste0("domain", seq_len(max(df_all$domain)))))
 }
 # Create plot
 p <- ggplot2::ggplot() +
   ggplot2::theme_bw() +
   ggplot2::geom_jitter(
     data = rep.long_all,
-    ggplot2::aes(x = score, y = frequency),
+    ggplot2::aes(x = .data$score, y = .data$frequency),
     color = "#fdb863",
     position = ggplot2::position_jitter(width = 0.12),
     alpha = 0.15
   ) +
   ggplot2::geom_line(
     data = df_all,
-    ggplot2::aes(x = score, y = Q50), #+1 and other quantiles
+    ggplot2::aes(x = .data$score, y = .data$Q50), #+1 and other quantiles
     linewidth = 1,
     linetype = "dashed"
   ) +
   ggplot2::geom_line(
     data = df_all,
-    ggplot2::aes(x = score , y = Q5),
+    ggplot2::aes(x = .data$score , y = .data$Q5),
     linewidth = 1,
     linetype = "dotted"
   ) +
   ggplot2::geom_line(
     data = df_all,
-    ggplot2::aes(x = score , y = Q95),
+    ggplot2::aes(x = .data$score , y = .data$Q95),
     linewidth = 1,
     linetype = "dotted"
   ) +
   ggplot2::geom_point(
     data = df_all,
-    ggplot2::aes(x = score , y = obs),
+    ggplot2::aes(x = .data$score , y = .data$obs),
     size = 4
   ) +
   ggplot2::xlab("raw score") +
   ggplot2::ylab("frequency of individuals") +
   ggplot2::theme(
-    text = ggplot2::element_text(size = 13, family = "serif"),
+    text = ggplot2::element_text(size = 13),
     axis.line = ggplot2::element_line(color = 'black'),
     plot.background = ggplot2::element_blank(),
     panel.grid.minor = ggplot2::element_blank(),
@@ -619,8 +516,8 @@ if(n_age > 1){
   p <- p + ggplot2::facet_wrap(~ age_group, scale = "free", ncol = round(sqrt(n_age)))
 }
 if(n_domains){
-  n_domain <- length(unique(rep.long_all$domian))
-  p <-  p + ggplot2::facet_wrap(~ domian, scale = "free", ncol = round(sqrt(n_domain)))
+  n_domain <- length(unique(rep.long_all$domain))
+  p <-  p + ggplot2::facet_wrap(~ domain, scale = "free", ncol = round(sqrt(n_domain)))
 }
 if(!is.null(dim_plot)){
   p <- p + ggplot2::ggtitle(dim_plot)
@@ -688,7 +585,9 @@ return(invisible(p))
 #' normscore_dist(fit_info = info, age_range = seq(-2,2,1))}
 #' @export
 normscore_dist <- function(fit_info, age_range, binwidth = 0.5, dim_plot = NULL){
-  
+  if(!inherits(fit_info, "IRTnorm")){
+    stop("fit_info has to be generated from estimate_norming_model()")
+  }
   
   model_info <- fit_info$model_info 
   if(model_info$info_sample$irt_mod[1] <= 4){
@@ -749,7 +648,7 @@ normscore_dist <- function(fit_info, age_range, binwidth = 0.5, dim_plot = NULL)
 # shared plotting theme, defined once
 irt_plot_theme <- function(){
   ggplot2::theme(
-    text             = ggplot2::element_text(size = 13, family = "serif"),
+    text             = ggplot2::element_text(size = 13),
     legend.position  = "bottom",
     axis.line        = ggplot2::element_line(color = "black"),
     plot.background  = ggplot2::element_blank(),
@@ -823,9 +722,11 @@ is_multidim <- function(irt_mod) irt_mod >= 5
 #' @export
 quantile_curves <- function(fit_info, 
                             probs = c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)){
-  
+  if(!inherits(fit_info, "IRTnorm")){
+    stop("fit_info has to be generated from estimate_norming_model()")
+  }
   if(any(probs >= 1| probs <= 0)){
-    stop("probs have to be between in (0,1)")
+    stop("probs have to be in (0,1)")
   }
   
   model_info  <- fit_info$model_info
@@ -843,10 +744,9 @@ quantile_curves <- function(fit_info,
     new_data <- data.frame(
       age   = rep(person_data$age, each = length(probs)),
       quan  = quan,
-      qname = rep(paste0("p", probs), nperson)
+      qname = factor(rep(paste0("p", probs), nperson), levels = paste0("p", probs))
     )
-  } 
-  else {
+  } else {
     person_data <- model_info$info_sample[substr(model_info$info_sample$trait, 1, 1) == "d", ]
     dims        <- unique(person_data$trait)
     nperson     <- fit_info$newdata$J
@@ -864,15 +764,25 @@ quantile_curves <- function(fit_info,
         domain = d
       )
     }))
-    
-    person_data$theta_est <- person_data$est_ability
-  }
+   # person_data$theta_est <- person_data$est_ability
+      }
+  
   
   p <- ggplot2::ggplot() +
-    ggplot2::geom_point(ggplot2::aes(age, theta_est), data = person_data) +
-    ggplot2::geom_smooth(ggplot2::aes(age, quan, color = qname), data = new_data, formula = 'y ~ x', method = 'loess') +
+    ggplot2::geom_point(ggplot2::aes(.data$age, .data$est_ability), data = person_data) +
     ggplot2::ylab("latent trait") + ggplot2::theme_bw() + irt_plot_theme()
   
+  # check if enough data to use lm with loess
+  n_per_group <- tapply(new_data$age, new_data[c("qname", if (is_multidim(irt_mod)) "domain")],
+                        function(a) length(unique(a)))
+  span <- 0.75; degree <- 2
+  min_n <- ceiling((degree + 1) / span) + 1 
+  if (min(n_per_group) > min_n){
+    p <- p + ggplot2::geom_smooth(ggplot2::aes(.data$age, .data$quan, color = qname), data = new_data, formula = 'y ~ x', method = 'loess')
+  }else{
+   p <- p + ggplot2::geom_line(ggplot2::aes(.data$age, .data$quan, color = qname), data = new_data) 
+  }
+
   if (is_multidim(irt_mod)) p <- p + ggplot2::facet_grid(~domain)
   print(p)
   invisible(new_data)
@@ -891,17 +801,23 @@ quantile_curves <- function(fit_info,
 #' @return A \code{numeric} vector or \code{matrix} of category probabilities.
 #'
 #' @noRd
-grm_probs <- function(theta, a,b){
+#grm_probs <- function(theta, a,b){
 
-  cum_prob <- stats::plogis(a * (theta- b))
-if(length(theta) == 1){
-  p <- c(1, cum_prob) - c(cum_prob, 0)
-}else{
-  p <- cbind(1, cum_prob) - cbind(cum_prob, 0)
+#  cum_prob <- stats::plogis(a * (theta- b))
+#if(length(theta) == 1){
+#  p <- c(1, cum_prob) - c(cum_prob, 0)
+#}else{
+#  p <- cbind(1, cum_prob) - cbind(cum_prob, 0)
+#}
+#  return(p)
+#}
 
+grm_probs <- function(theta, a, b) {
+  theta <- as.vector(theta)                         # also accepts a J x 1 matrix
+  cum   <- stats::plogis(a * outer(theta, b, "-"))  # J x (K-1): P(Y >= k)
+  cbind(1, cum) - cbind(cum, 0)                     # J x K:     P(Y = k)
 }
-  return(p)
-}
+
 #' Create a dummy coded response matrix
 #'
 #' Converts a matrix of polytomous item responses into a dummy coded matrix
@@ -934,12 +850,12 @@ make_dummy_matrix <- function(info, K_item) {
 
   col_index <- 1
 
-  for(i in 1:I){
+  for(i in seq_len(I)){
 
     Ki <- K_item[i]
     responses <- info[, i]
 
-    for(k in 1:Ki){
+    for(k in seq_len(Ki)){
       dummy[, col_index] <- as.integer(responses == k)
       col_names <- c(col_names, paste0("Item", i, "_Cat", k))
       col_index <- col_index + 1
@@ -1006,7 +922,10 @@ make_dummy_matrix <- function(info, K_item) {
 #' \code{\link{extract_info}}
 #'@export
 item_person_fit <- function(fit_info,  parameter){
-  
+  if(!inherits(fit_info, "IRTnorm")){
+    stop("fit_info has to be generated from estimate_norming_model()")
+  }
+  parameter <- match.arg(parameter, c("item", "person"))
   model_info <- fit_info$model_info
   answer_pattern <- fit_info$raw_data[, fit_info$item_variables]
   data <- fit_info$newdata
@@ -1053,13 +972,20 @@ item_person_fit <- function(fit_info,  parameter){
     expected <- matrix(
       0,
       nrow =nperson,
-      ncol = nitem*(max(data$K_item))
+      ncol = sum(data$K_item) # nitem*(max(data$K_item))
     )
-    int_threshold <- seq(1,nitem*data$K_max, nitem)[1:(data$K_item[1] -1)]
-    expected[, 1:(sum(data$K_item[1]))] <- grm_probs(theta = info_person, a = info_item$alpha[1], b = info_item$threshold[int_threshold])
-    for(i in seq_len(nitem)[-1]){
-      int_threshold <- seq(i,nitem*data$K_max, nitem)[1:(data$K_item[i] -1)]
-      expected[, (1+ sum(data$K_item[1:(i-1)])):(sum(data$K_item[1:i]))] <- grm_probs(theta = info_person, a = info_item$alpha[i], b = info_item$threshold[int_threshold])
+    if(is.list(info_item$threshold)){
+      expected[, 1:(sum(data$K_item[1]))] <- grm_probs(theta = info_person, a = info_item$alpha[1], b = info_item$threshold[[1]])
+      for(i in seq_len(nitem)[-1]){
+        expected[, (1+ sum(data$K_item[1:(i-1)])):(sum(data$K_item[1:i]))] <- grm_probs(theta = info_person, a = info_item$alpha[i], b = info_item$threshold[[i]])
+      }
+    }else{
+      int_threshold <- seq(1,nitem*data$K_max, nitem)[1:(data$K_item[1] -1)]
+      expected[, 1:(sum(data$K_item[1]))] <- grm_probs(theta = info_person, a = info_item$alpha[1], b = info_item$threshold[int_threshold])
+      for(i in seq_len(nitem)[-1]){
+        int_threshold <- seq(i,nitem*data$K_max, nitem)[1:(data$K_item[i] -1)]
+        expected[, (1+ sum(data$K_item[1:(i-1)])):(sum(data$K_item[1:i]))] <- grm_probs(theta = info_person, a = info_item$alpha[i], b = info_item$threshold[int_threshold])
+      }
     }
     answer_pattern_new <- make_dummy_matrix(info = answer_pattern, K_item = data$K_item)
   }
@@ -1087,9 +1013,11 @@ item_person_fit <- function(fit_info,  parameter){
         irt_mod    = colSums(expected, na.rm = TRUE) / colSums(!is.na(expected)),
         domain = paste0("domain ",data$itemD))
     }
-    if(any(is.nan(df$observed)) || any(is.nan(df$irt_mod))){
+    value_cols <- if (data$irt_mod == 4) "value" else c("observed", "irt_mod")
+    bad <- Reduce(`|`, lapply(df[value_cols], is.nan))
+    if(any(bad)){
       warning("One or more items have no valid responses. These items are excluded from the plot.")
-      df <- df[!is.nan(df$observed) & !is.nan(df$irt_mod), ]
+      df <- df[!bad, ]
     }
     
     xname <- "observed"
@@ -1111,8 +1039,8 @@ item_person_fit <- function(fit_info,  parameter){
       df <- NULL
       for(d in seq_len(data$D)){
         df <- rbind(df, data.frame(
-          observed = rowSums(answer_pattern[data$itemD == d, ], na.rm = TRUE),
-          irt_mod    = rowSums(expected[data$itemD == d, ], na.rm = TRUE),
+          observed = rowSums(answer_pattern[,data$itemD == d ], na.rm = TRUE),
+          irt_mod    = rowSums(expected[,data$itemD == d ], na.rm = TRUE),
           domain = paste0("domain ", d)))
       }
     }
@@ -1149,8 +1077,9 @@ item_person_fit <- function(fit_info,  parameter){
     p <- p +  ggplot2::facet_grid(~domain)
     
   }
-  return(p)
-  invisible(df)
+  print(p)
+  invisible(list(plot = p, data = df))
+  #invisible(df)
 }
 
 
@@ -1188,7 +1117,11 @@ item_person_fit <- function(fit_info,  parameter){
 #'}
 #'@export
 effect_age <- function(fit_info){
+  if(!inherits(fit_info, "IRTnorm")){
+    stop("fit_info has to be generated from estimate_norming_model()")
+  }
   info_person <- fit_info$model_info$info_sample
+  info_relation<- fit_info$model_info$info_relation
   
   if(info_person$irt_mod[1] <= 4){
     df_long <- data.frame(
@@ -1199,8 +1132,7 @@ effect_age <- function(fit_info){
         levels = c("mean", "standard deviation")
       )
     )
-  }
-  if(info_person$irt_mod[1] > 4){
+  }else{
     if(!any(substr(info_person$trait, 1, 1) == "d")){
       stop("No traits starting with 'd' found in 'fit_info$info_sample$trait'. ",
            "Expected trait names like 'delta1', 'delta2' for multidimensional irt_mods. ",
@@ -1212,15 +1144,15 @@ effect_age <- function(fit_info){
     delta_mean <- data_temp$theta_mu
     if(info_person$irt_mod[1] %in% c(5,6,7,8)){
       delta_sd <-  data_temp$theta_sigma
-      correlation <- rep(fit_info$info_relation[["nu"]], each = nperson )
+      correlation <- rep(info_relation[["nu"]], each = nperson )
     }
     if(info_person$irt_mod[1] %in% c(9,10)){
       delta_sd <-  data_temp$theta_sigma
-      correlation <- rep(fit_info$info_relation[["nu"]], each = nperson ) * rep(fit_info$info_relation[["lambda"]], D)
+      correlation <- rep(info_relation[["nu"]], each = nperson ) * rep(info_relation[["lambda"]], D)
     }
     if(info_person$irt_mod[1] %in% c(11,12)){
-      delta_sd <-  sqrt(data_temp$theta_sigma^2 + data_temp$info_relation[["unique_sigma"]]^2)
-      correlation <- data_temp$theta_sigma /delta_sd
+      delta_sd <-  sqrt(matrix(data_temp$theta_sigma^2, ncol =D) + matrix(info_relation[["unique_sigma"]]^2, ncol =D))
+      correlation <- matrix(data_temp$theta_sigma,ncol =D) /delta_sd
     }
     df_long <- data.frame(
       age = rep(data_temp$age, 3),
@@ -1231,9 +1163,9 @@ effect_age <- function(fit_info){
       trait = rep(data_temp$trait,3))
   }
   p <- ggplot2::ggplot(df_long) +
-    ggplot2::geom_line(ggplot2::aes(age, value), linewidth = 1.2) +
+    ggplot2::geom_line(ggplot2::aes(.data$age, .data$value), linewidth = 1.2) +
     ggplot2::theme_bw() +
-    ggplot2::theme(text = ggplot2::element_text(size=13,family = "serif"),
+    ggplot2::theme(text = ggplot2::element_text(size=13),
                    axis.line = ggplot2::element_line(color='black'),
                    plot.background = ggplot2::element_blank(),
                    panel.grid.minor = ggplot2::element_blank(),
@@ -1265,21 +1197,26 @@ effect_age <- function(fit_info){
 #' @noRd
 compute_domain_averages <- function(Q3, itemD) {
   
-  J <- nrow(Q3)
-  within_vals <- c()
-  between_vals <- c()
+  #J <- nrow(Q3)
+  #within_vals <- c()
+  #between_vals <- c()
   
-  for (i in 1:(J - 1)) {
-    for (j in (i + 1):J) {
-      val <- Q3[i, j]
-      if (is.na(val)) next
-      if (itemD[i] == itemD[j]) {
-        within_vals <- c(within_vals, val)
-      } else {
-        between_vals <- c(between_vals, val)
-      }
-    }
-  }
+  #for (i in seq_len(J - 1)) {
+  #  for (j in (i + 1):J) {
+   #   val <- Q3[i, j]
+   #   if (is.na(val)) next
+   #   if (itemD[i] == itemD[j]) {
+   ##     within_vals <- c(within_vals, val)
+   #   } else {
+   #     between_vals <- c(between_vals, val)
+    #  }
+   # }
+ # }
+  
+  ut <- upper.tri(Q3) & !is.na(Q3)
+  same <- outer(itemD, itemD, "==")
+  within_vals  <- Q3[ut & same]
+  between_vals <- Q3[ut & !same]
   data.frame(mean_correlation = c(mean(within_vals, na.rm = TRUE),
                                   mean(between_vals, na.rm = TRUE)), 
              domains = c("within", "between"), 
@@ -1334,12 +1271,12 @@ visual_multi <- function(Q3 = Q3, itemD = itemD){
     ) +
     ggplot2::geom_segment(
       data = h_seg,
-      ggplot2::aes(x = x, xend = xend, y = y, yend = yend),
+      ggplot2::aes(x = .data$x, xend = .data$xend, y =.data$ y, yend = .data$yend),
       inherit.aes = FALSE, color = "black", linewidth = 0.8
     ) +
     ggplot2::geom_segment(
       data = v_seg,
-      ggplot2::aes(x = x, xend = xend, y = y, yend = yend),
+      ggplot2::aes(x = .data$x, xend = .data$xend, y = .data$y, yend = .data$yend),
       inherit.aes = FALSE, color = "black", linewidth = 0.8
     )
   
@@ -1353,13 +1290,13 @@ visual_multi <- function(Q3 = Q3, itemD = itemD){
 #'@description
 #' 
 
-#' The \code{item_residual_cor} prints a summaries of the item resdiual correlations.
+#' The \code{item_residual_cor} prints a summaries of the item residual correlations.
 #' When visualized is set to true it additionally visualizes the residual correlation matrix form of a heat map.
 #' Returns the item residual correlation matrix when the output is saved. 
 #'
 #' @param fit_info A named \code{list} as returned by \code{\link{estimate_norming_model}}.
 #'
-#' @param visual A logical indicating if the heat map should be visuallized. 
+#' @param visual A logical indicating if the heat map should be visualized. 
 #' The default is TRUE. 
 #' 
 #' @return A list with the first residual correlation matrix. 
@@ -1384,7 +1321,9 @@ visual_multi <- function(Q3 = Q3, itemD = itemD){
 #'}
 #'@export
 item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
-  
+  if(!inherits(fit_info, "IRTnorm")){
+    stop("fit_info has to be generated from estimate_norming_model()")
+  }
   data <- fit_info$newdata
   J <- data$J
   I <- data$I
@@ -1401,7 +1340,11 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
   if(irt_mod < 5){
     theta <- fit_info$model_info$info_sample$theta_est
   }
-  if(!is.null(domain)){
+  if(!is.null(domain) & irt_mod <= 4){
+    warning("The domain argument is only for hierarchical norming models. 
+            You indicated a unidimensional model, therefore domain is ignored.")
+  }
+  if(!is.null(domain) & irt_mod > 4){
     itemD <- data$itemD
     if(!(domain %in% itemD)){
       stop("domain has to be a numerical value indicating which of the 
@@ -1411,7 +1354,10 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
     a_vec <- a_vec[itemD == domain]
     b_vec <- b_vec[itemD == domain]
     c_vec <- c_vec[itemD == domain]
+    samp_info <-fit_info$model_info$info_sample
     theta <- samp_info$est_ability[samp_info$trait == paste0("delta", domain)]
+    I <- sum(itemD == domain)
+    raw_data <- raw_data[,itemD == domain]
   }
   
   E <- matrix(NA_real_, nrow = J, ncol = I)
@@ -1421,25 +1367,50 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
     }
   }
   if(irt_mod == 4){
-    a_vec <- colMeans(fit_info$norm_info$alpha)
-    b_vec <- colMeans(fit_info$norm_info$threshold)
+    a_vec <- fit_info$model_info$info_item$alpha
+    b_vec <- fit_info$model_info$info_item$threshold
     #p <- NULL
-    for (i in seq_len(I)) {
-      #int_threshold <-((1 + (data$K_max -1)*(i-1)):((data$K_max -1)*(i)))[seq_len(data$K_item[i] -1)]
-      E[, i] <- grm_probs(theta = theta, a = a_vec[i], b = b_vec[[i]][seq_len(data$K_item[i] -1)]) # b_vec[int_threshold])
-      #p <- c(p, p_temp)
+    if(is.list(b_vec)){
+      for (i in seq_len(I)) {
+        k_i <- seq_len(data$K_item[i] - 1)
+        bi <- b_vec[[i]]
+        cum <- stats::plogis(a_vec[i] * outer(theta, bi, "-"))   # N x (K-1): P(Y >= k)
+        p   <- cbind(1, cum) - cbind(cum, 0)                 # N x K:     P(Y = k)
+        E[, i] <- drop(p %*% (seq_len(ncol(p)) - 1))
+      }
+    }else{
+      for (i in seq_len(I)) {
+        #k_i <- seq_len(data$K_item[i] - 1)
+        #bi <- b_vec[paste0("b[", i, ",", k_i, "]")]
+        bi <- (b_vec[seq(i,length(b_vec),I)])[data$K_item[i] -1]
+        cum <- stats::plogis(a_vec[i] * outer(theta, bi, "-"))   # N x (K-1): P(Y >= k)
+        p   <- cbind(1, cum) - cbind(cum, 0)                 # N x K:     P(Y = k)
+        E[, i] <- drop(p %*% (seq_len(ncol(p)) - 1))
+      }
     }
+    
+    
+    
+    #for (i in seq_len(I)) {
+    #  k_i <- seq_len(data$K_item[i] - 1)
+    #  b_i <- b_vec[paste0("b[", i, ",", k_i, "]")]
+    #int_threshold <-((1 + (data$K_max -1)*(i-1)):((data$K_max -1)*(i)))[seq_len(data$K_item[i] -1)]
+    #  temp_grm <- grm_probs(theta = theta, a = a_vec[i], b = unname(b_i)) # b_vec[int_threshold])
+    #  E[, i] <- temp_grm %*% matrix(rep(0:(data$K_item[i] - 1)))
+    #p <- c(p, p_temp)
+    #}
   }
   if(irt_mod > 4){
-    samp_info <-info$model_info$info_sample
+    D <- fit_info$newdata$D
+    samp_info <-fit_info$model_info$info_sample
     delta <- matrix(samp_info$est_ability[substr(samp_info$trait,1,5) == "delta"], ncol = D)
-    itemD <- info$newdata$itemD
+    itemD <- fit_info$newdata$itemD
     for(i in 1:I){
       E[, i] <- c_vec[i] + (1-c_vec[i])*stats::plogis(a_vec[i] * (delta[,itemD[i]] - b_vec[i]))
     }
   }
   
-  D <-  raw_data  - E  
+  D <-  raw_data  - E   
   
   Q3 <- cor(D, use = "pairwise.complete.obs")
   colnames(Q3) <- rownames(Q3) <- colnames( raw_data )
@@ -1459,7 +1430,7 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
     }else{
       p1 <- ggcorrplot::ggcorrplot(Q3, hc.order = FALSE, type = "lower",
                                    lab = F, colors = c( "#0D0887FF", "white", "#D98F3A")) +
-        ggplot2::theme(text = ggplot2::element_text(size=12,family = "serif"),
+        ggplot2::theme(text = ggplot2::element_text(size=12),
                        axis.text.x = ggplot2::element_blank(),
                        axis.text.y = ggplot2::element_blank(),
                        axis.title.x = ggplot2::element_blank(),
@@ -1471,15 +1442,13 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
     invisible(list(Q3 = Q3, itemD = itemD,
                    compare_domains =compare_domains, summary_info = summary_info))
     
-  }
-  if(irt_mod > 4){
+  }else{
     invisible(list(Q3 = Q3, summary_info = summary_info))
   }
 }
 
 
-
-#'@title Explore model implied correlations across damains
+#'@title Explore model implied correlations across domains
 #'@name cor_structure
 #'@description
 #' 
@@ -1520,6 +1489,10 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
 #'}
 #'@export
 cor_structure <- function(fit_info, visual = TRUE){
+  if(!inherits(fit_info, "IRTnorm")){
+    stop("fit_info has to be generated from estimate_norming_model()")
+  }
+  
   normdata <- fit_info$newdata
   response_data <- fit_info$raw_data
   if(normdata$irt_mod < 4){
@@ -1536,7 +1509,7 @@ cor_structure <- function(fit_info, visual = TRUE){
     sumscore <- as.data.frame(t(rowsum(t(temp), group = itemD, na.rm= TRUE)))
     cor_sum <- cor(sumscore)
     cor_mod <- cor_mod_temp[i] * cor_mod_temp[j]
-    info <- data.frame(sumscore_cor = cor_sum[upper.tri(cor_sum)], 
+    info <- data.frame(sumscore_cor = cor_sum[cbind(i, j)], 
                        model_cor = cor_mod, 
                        domains = paste0(i, "&", j))
     return(info)
@@ -1553,18 +1526,22 @@ cor_structure <- function(fit_info, visual = TRUE){
     }
     cor_mod_temp <- delta_sigma * unique_sigma
   }
+  cor_mod_temp2 <- matrix(NA, nrow = nrow(cor_mod_temp), ncol = length(i))
+  for(ti in seq_along(i)){
+    cor_mod_temp2[,ti] <- cor_mod_temp[,i[ti]] *cor_mod_temp[,j[ti]]
+  }
   
   if(normdata$irt_mod > 8){
-    cor_mod <- data.frame(cor_mod_temp, age = fit_info$raw_data[fit_info$age_variable])
-    colnames(cor_mod) <-  c(paste0("cor(d",i, ",d", j), "age")
+    cor_mod <- data.frame(cor_mod_temp2, age = fit_info$raw_data[fit_info$age_variable])
+    colnames(cor_mod) <-  c(paste0("cor(d",i, ",d", j, ")"), "age")
     if(visual){
-      cor_long <- data.frame(combi = rep(paste0("cor(d",i, ",d", j), times = nrow(cor_mod)),
-                             cor_value = as.vector(cor_mod[,paste0("cor(d",i, ",d", j)]),
+      cor_long <- data.frame(combi = rep(paste0("cor(d",i, ",d", j,")"), each = nrow(cor_mod)),
+                             cor_value = as.vector(as.matrix(cor_mod[,paste0("cor(d",i, ",d", j,")")])),
                              age = rep(cor_mod$age, length(i)))
       p <- ggplot2::ggplot(cor_long) + 
         ggplot2::geom_point(ggplot2::aes(age, cor_value, color = combi)) + 
         ggplot2::theme_bw()+ 
-        ylab("correlation")
+        ggplot2::ylab("correlation")
       print(p)
     }
     return(cor_mod)

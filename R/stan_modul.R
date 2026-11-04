@@ -28,7 +28,7 @@ array[N] int JD_loadings;")
     for(j in prior_knowledge){
       if(j == "b"){
         general_data <- paste(general_data, paste0("array[I] ordered[K_max - 1] ", j,"_prior_mu;
-                                                   array[I] ordered[K_max - 1] ", j,"_prior_sd;"))
+                                                   array[I] vector<lower=0>[K_max - 1] ", j,"_prior_sd;"))
       }
       else if (j %in% dim_tab$param) {
         d <- dim_tab$dim[dim_tab$param == j]
@@ -286,11 +286,11 @@ create_block_transparam <- function(irt_model, age_model = "poly", is_2pl, is_mu
     if(age_model == "splines"){
       if(irt_model == "HO1PLnorm-F" | irt_model == "HO2PLnorm-F"){
         block_transparam <- paste(block_transparam,
-                                  "unique_sigma[start_idx:end_idx] = exp(X3 * l3[d] + Z3 * u3[d]);")
+                                  "unique_sigma[start_idx:end_idx] = log1p_exp(X3 * l3[d] + Z3 * u3[d]);")
       }
       block_transparam <- paste(block_transparam,
                                 "theta_mean[start_idx:end_idx] = X1 * l1[d] + Z1 * u1[d];
-                                theta_sigma[start_idx:end_idx] = exp(X2 * l2[d] + Z2 * u2[d]);}")
+                                theta_sigma[start_idx:end_idx] = log1p_exp(X2 * l2[d] + Z2 * u2[d]);}")
 
       if(irt_model ==  "HO1PLnorm-P" |irt_model ==  "HO2PLnorm-P"){
         block_transparam <- paste(block_transparam, "lambda = inv_logit(X3 * l3 + Z3 * u3);")
@@ -321,9 +321,24 @@ create_block_transparam <- function(irt_model, age_model = "poly", is_2pl, is_mu
 
 }
 
-create_block_model <- function(irt_model, age_model = "poly", is_2pl, is_multi, is_flex_multi, prior_knowledge = NULL,parameter_fixed  = FALSE){
-
-  if(!is_flex_multi & irt_model !=  "HO1PLnorm-C" &irt_model !=  "HO2PLnorm-C"){
+create_block_model <- function(irt_model, age_model = "poly", is_2pl, is_multi,
+                               is_flex_multi, prior_knowledge = NULL,
+                               parameter_fixed = NULL){
+  
+  # ---- helpers: work for NULL or a character vector ---------------------------
+  has_prior <- function(p) p %in% prior_knowledge
+  is_fixed  <- function(p) p %in% parameter_fixed
+  add       <- function(txt) block_model <<- paste(block_model, txt)
+  
+  HO_C <- irt_model %in% c("HO1PLnorm-C", "HO2PLnorm-C")
+  HO_P <- irt_model %in% c("HO1PLnorm-P", "HO2PLnorm-P")
+  HO_F <- irt_model %in% c("HO1PLnorm-F", "HO2PLnorm-F")
+  
+  block_model <- NULL
+  
+  # ---- age effect priors ------------------------------------------------------
+  # Univariate and testlet models
+  if(!is_flex_multi && !HO_C){
     if(age_model == "poly"){
       block_model <- "}model {
     p1_theta ~ normal(0,3);
@@ -339,7 +354,9 @@ create_block_model <- function(irt_model, age_model = "poly", is_2pl, is_multi, 
     u2 ~ normal(0, tau2);"
     }
   }
-  if( irt_model ==  "HO1PLnorm-C" |irt_model ==  "HO2PLnorm-C"| irt_model ==  "HO1PLnorm-P" |irt_model ==  "HO2PLnorm-P"){
+  
+  # HO-C and HO-P: age effects per domain
+  if(HO_C || HO_P){
     if(age_model == "poly"){
       block_model <- "}model {
       for (d in 1:D) {
@@ -357,19 +374,21 @@ create_block_model <- function(irt_model, age_model = "poly", is_2pl, is_multi, 
     u2[d] ~ normal(0, tau2[d]);}"
     }
   }
-  if( irt_model ==  "HO1PLnorm-P" |irt_model ==  "HO2PLnorm-P"){
+  
+  # HO-P: additional shared age effect for lambda
+  if(HO_P){
     if(age_model == "poly"){
-      block_model <- paste(block_model, "p3_theta ~ normal(0, 1);")
+      add("p3_theta ~ normal(0, 1);")
     }
     if(age_model == "splines"){
-      block_model <- paste(block_model,
-                           "l3 ~ normal(0, 5);
-                           tau3 ~ inv_gamma(2, 1);
-                           u3 ~ normal(0, tau3);")
+      add("l3 ~ normal(0, 5);
+          tau3 ~ inv_gamma(2, 1);
+          u3 ~ normal(0, tau3);")
     }
-    }
-
-  if( irt_model ==  "HO1PLnorm-F" |irt_model ==  "HO2PLnorm-F"){
+  }
+  
+  # HO-F: additional per-domain age effect for unique_sigma
+  if(HO_F){
     if(age_model == "poly"){
       block_model <- "}model {
       for (d in 1:D) {
@@ -387,92 +406,52 @@ create_block_model <- function(irt_model, age_model = "poly", is_2pl, is_multi, 
     l2[d] ~ normal(0, 10);
     l3[d] ~ normal(0, 10);
     u1[d] ~ normal(0, tau1[d]);
-    u2[d] ~ normal(0, tau1[d]);
-    u3[d] ~ normal(0, tau2[d]);}"
+    u2[d] ~ normal(0, tau2[d]);
+    u3[d] ~ normal(0, tau3[d]);}"
     }
   }
-
-  block_model <- paste(block_model,"z_theta ~ std_normal();")
-
-  if(is.null(prior_knowledge) & is.null(parameter_fixed)){
-    if(irt_model != "GRMnorm"){
-      block_model <- paste(block_model, "beta ~ normal(0, 2);")
-    }
-    if(is_2pl){
-      block_model <- paste(block_model,"alpha ~ lognormal(0, 0.5);")
-    }
-    if(irt_model == "3PLnorm"){
-      block_model <- paste(block_model,"gamma ~ beta(1,10);
-                             for (n in 1:N) {
+  
+  #if(is.null(block_model)){
+  #  stop("Unsupported combination of `irt_model` and `age_model`.")
+  #}
+  
+  add("z_theta ~ std_normal();")
+  
+  # ---- item parameter priors: every non-fixed parameter gets exactly one ------
+  if(irt_model != "GRMnorm" && !is_fixed("beta")){
+    add(if(has_prior("beta")) "beta ~ normal(beta_prior_mu, beta_prior_sd);"
+        else "beta ~ normal(0, 2);")
+  }
+  
+  if((is_2pl || irt_model == "GRMnorm") && !is_fixed("alpha")){
+    add(if(has_prior("alpha")) "alpha ~ normal(alpha_prior_mu, alpha_prior_sd);"
+        else "alpha ~ lognormal(0, 0.5);")
+  }
+  
+  if(irt_model == "3PLnorm" && !is_fixed("gamma")){
+    add(if(has_prior("gamma")) "gamma ~ normal(gamma_prior_mu, gamma_prior_sd);"
+        else "gamma ~ beta(1, 10);")
+  }
+  
+  if(irt_model == "GRMnorm" && !is_fixed("b")){
+    add(if(has_prior("b")) "for (i in 1:I) b[i] ~ normal(b_prior_mu[i], b_prior_sd[i]);"
+        else "for (i in 1:I) b[i] ~ normal(0, 1);")
+  }
+  
+  # ---- likelihoods (independent of priors / fixed parameters) -----------------
+  if(irt_model == "3PLnorm"){
+    add("for (n in 1:N) {
       y[n] ~ logit_3pl(theta[jj[n]], alpha[ii[n]], beta[ii[n]], gamma[ii[n]]);
     }")
-    }
   }
-
-  if(!is.null(prior_knowledge)){
-    if(irt_model != "GRMnorm"){
-      if(any(prior_knowledge == "beta")){
-        block_model <- paste(block_model, "beta ~ normal(beta_prior_mu, beta_prior_sd);")
-      }
-      else{
-        if(!any(parameter_fixed == "beta")){
-          block_model <- paste(block_model, "beta ~ normal(0, 2);")
-        }
-      }
-    }
-    if(is_2pl){
-      if(any(prior_knowledge == "alpha")){
-        block_model <- paste(block_model,"alpha ~ normal(alpha_prior_mu, alpha_prior_sd);")
-
-      }else{
-        if(!any(parameter_fixed == "alpha")){
-        block_model <- paste(block_model,"alpha ~ lognormal(0, 0.5);")
-}
-      }
-    }
-    if(irt_model == "3PLnorm"){
-      if(!any(parameter_fixed == "gamma")){
-        if(any(prior_knowledge == "gamma")){
-          block_model <- paste(block_model,"gamma ~ normal(gamma_prior_mu, gamma_prior_sd);")
-        }else{
-          block_model <- paste(block_model,"gamma ~ beta(1,10);")
-        }
-      }
-      block_model <- paste(block_model,"for (n in 1:N) {
-      y[n] ~ logit_3pl(theta[jj[n]], alpha[ii[n]], beta[ii[n]], gamma[ii[n]]);
-                             }")
-    }
-  }
-
-
-
-
   if(irt_model == "2PLnorm"){
-    block_model <- paste(block_model," y   ~ bernoulli_logit(alpha[ii] .* (theta[jj] - beta[ii]));")
+    add("y ~ bernoulli_logit(alpha[ii] .* (theta[jj] - beta[ii]));")
   }
   if(irt_model == "1PLnorm"){
-    block_model <- paste(block_model," y   ~ bernoulli_logit((theta[jj] - beta[ii]));")
+    add("y ~ bernoulli_logit((theta[jj] - beta[ii]));")
   }
   if(irt_model == "GRMnorm"){
-    if(!any(parameter_fixed == "alpha")){
-      if(any(names(prior_knowledge) == "alpha")){
-        block_model <- paste(block_model,"alpha ~ normal(alpha_prior_mu, alpha_prior_sd);
-                             for (i in 1:I)")
-      }else{
-        block_model <- paste(block_model,
-                             "alpha ~ lognormal(0, 0.5);")
-      }
-    }
-   if(!any(parameter_fixed == "b")){
-     block_model <- paste(block_model, "for (i in 1:I)")
-      if(any(names(prior_knowledge) == "b")){
-        block_model <- paste(block_model,"b[i] ~ normal(b_prior_mu[i], b_prior_sd[i]);")
-      }else{
-        block_model <- paste(block_model,"b[i] ~ normal(0, 1);")
-      }
-   }
-    block_model <- paste(block_model,
-                         "for (n in 1:N) {
+    add("for (n in 1:N) {
       int Ki = K_item[ii[n]];
 
         if (y[n] == 1) {
@@ -494,28 +473,24 @@ create_block_model <- function(irt_model, age_model = "poly", is_2pl, is_multi, 
             inv_logit(alpha[ii[n]] * (theta[jj[n]] - b[ii[n]][y[n]])));
         }
       }")
-
-
   }
+  
+  # ---- multidimensional models ------------------------------------------------
   if(is_multi){
-    block_model <- paste(block_model,"unique ~ normal(0,1);")
-    if(irt_model !=  "HO1PLnorm-F" & irt_model !=  "HO2PLnorm-F"){
-      if(any(names(prior_knowledge) == "nu")){
-        block_model <- paste(block_model,"nu ~ rnorm(nu_prior_mu,nu_prior_sd);")
-      }else{
-        block_model <- paste(block_model,"nu ~ beta(2,2);")
-      }
+    add("unique ~ normal(0,1);")
+    
+    if(!HO_F){
+      add(if(has_prior("nu")) "nu ~ normal(nu_prior_mu, nu_prior_sd);"
+          else "nu ~ beta(2,2);")
     }
-
-    if(!is_2pl){
-      block_model <- paste(block_model,"y ~ bernoulli_logit((substraits - beta[ii]));")
-    }
-
+    
     if(is_2pl){
-      block_model <- paste(block_model,"y ~ bernoulli_logit(alpha[ii].*(substraits - beta[ii]));")
-
+      add("y ~ bernoulli_logit(alpha[ii].*(substraits - beta[ii]));")
+    } else {
+      add("y ~ bernoulli_logit((substraits - beta[ii]));")
     }
   }
+  
   return(block_model)
 }
 
@@ -752,23 +727,34 @@ get_compiled_model <- function(age_model, irt_model,prior_knowledge = NULL,param
   key <- paste(age_model, irt_model, sep = "_")
 
   if(!is.null(prior_knowledge)){
-    key <- paste(key,paste0("P_",paste(prior_knowledge,collapse = "")), sep = "_")
+    key <- paste(key,paste0("P_",paste(sort(unique(prior_knowledge)),collapse = "")), sep = "_")
   }
   if(!is.null(parameter_fixed)){
-    key <- paste(key, paste0("F_",paste(parameter_fixed,collapse = "")) , sep = "_")
+    key <- paste(key, paste0("F_",paste(sort(unique(parameter_fixed)),collapse = "")) , sep = "_")
   }
+  cache_dir <- get_cache_dir()
+  rds_path  <- file.path(cache_dir, paste0(key, ".rds"))
+  
+  # a cached model is only usable if its executable still exists
+  usable <- function(model) {
+    exe <- tryCatch(model$exe_file(), error = function(e) NULL)
+    length(exe) == 1 && !is.na(exe) && nzchar(exe) && file.exists(exe)
+  }
+  
   # 1. Check in-memory cache first (fastest, within-session)
-  if (exists(key, envir = .model_cache)) {
-    return(.model_cache[[key]])
+  if (exists(key, envir = .model_cache,inherits = FALSE)) {
+   model <- .model_cache[[key]]
+    if (usable(model)) return(model)
   }
 
   # 2. Check disk cache (persists across sessions)
-  rds_path <- file.path(get_cache_dir(), paste0(key, ".rds"))
   if (file.exists(rds_path)) {
-    message("Loading cached model from disk: ", key)
     model <- readRDS(rds_path)
-    .model_cache[[key]] <- model   # populate in-memory cache too
-    return(model)
+    if (usable(model)) {
+      message("Loading cached model from disk: ", key)
+      .model_cache[[key]] <- model
+      return(model)
+    }
   }
 
   # 3. Compile fresh, then save to both caches
@@ -776,13 +762,11 @@ get_compiled_model <- function(age_model, irt_model,prior_knowledge = NULL,param
   stan_code <- create_stan_data(age_model = age_model, irt_model = irt_model,
                                 prior_knowledge = prior_knowledge,
                                 parameter_fixed = parameter_fixed)
-  tmp <- tempfile(fileext = ".stan")
-  writeLines(stan_code, tmp)
-
-  # --- your compilation step here ---
-  model <- cmdstanr::cmdstan_model(tmp,quiet = TRUE)
-
-
+  
+  stan_file <- file.path(cache_dir, paste0(key, ".stan"))
+  writeLines(stan_code, stan_file)
+  
+  model <- cmdstanr::cmdstan_model(stan_file, dir = cache_dir, quiet = TRUE)
   saveRDS(model, rds_path)           # persist to disk
   .model_cache[[key]] <- model       # store in memory
   return(model)

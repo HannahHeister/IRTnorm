@@ -44,7 +44,7 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
           p3_theta_post <- post_draw$p3_theta
         }
         if(irt_mod == 9 | irt_mod == 10){
-          lambda_post <- p3_theta_post %*% t(age3)
+          lambda_post <- plogis(p3_theta_post %*% t(age3))
         }
         if(irt_mod == 11 | irt_mod == 12){
           unique_post <- array(dim = c(nrow(p3_theta_post), nperson, D))
@@ -91,8 +91,8 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
       }
       if(irt_mod >=7){
         for(d in seq_len(D)){
-          mu_post[,,d] <- l1_post[,seq(d,D*data$S,D)] %*% t(X1_new) + u1_post[,seq(d,D*data$S,D)]%*% t(Z1_new)
-          sigma_post[,,d] <- exp(l2_post[,seq(d,D*data$W,D)] %*% t(X2_new)+ u2_post[,seq(d,D*data$W,D)]) %*% t(Z2_new)
+          mu_post[,,d] <- l1_post[,seq(d,D*data$S,D)] %*% t(X1_new) + u1_post[,seq(d,D*data$K1,D)]%*% t(Z1_new)
+          sigma_post[,,d] <- exp(l2_post[,seq(d,D*data$W,D)] %*% t(X2_new)+ u2_post[,seq(d,D*data$K2,D)] %*% t(Z2_new))
         }
         if(irt_mod >= 9){
           l3_post <- post_draw$l3
@@ -105,7 +105,7 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
           Z3_new    <- Xraw3_new %*% R3_Z          # correct penalized
         }
         if(irt_mod == 9 | irt_mod == 10){
-          lambda_post <- l3_post %*% t(X3_new) + u3_post %*% t(Z3_new)
+          lambda_post <- plogis(l3_post %*% t(X3_new) + u3_post %*% t(Z3_new))
         }
         if(irt_mod == 11 | irt_mod == 12){
           unique_post <- array(dim = c(nrow(l3_post), nperson, D))
@@ -132,7 +132,7 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
 # log posterior for one MH evaluation
 # Extract the existing log_post_draw_theta inner function to the top level
 # Helper: log post_draw for theta given one draw of params (vectorized theta)
-log_post_draw_theta <- function(data, theta, a_vec, b_vec, c_vec,  y_vec, mu, sigma,
+log_post_draw_theta <- function(data, theta, a_vec, b_vec, c_vec, obs_K_item = NULL, y_vec, mu, sigma,
                                 unique =NULL, nu_vec = NULL, lambda_vec = NULL,
                                 unique_vec = NULL, irt_mod, itemD = NULL) {
   nitem <- length(y_vec)
@@ -157,11 +157,11 @@ log_post_draw_theta <- function(data, theta, a_vec, b_vec, c_vec,  y_vec, mu, si
       ll <- sum( stats::dbinom(as.numeric(y_vec), size = 1, prob = p, log = TRUE))
     }
     if(irt_mod == 4){
-      y_mat <- make_dummy_matrix(info = y_vec, K_item = data$K_item)
+      y_mat <- make_dummy_matrix(info = as.matrix(t(y_vec)), K_item = obs_K_item)
       all_p <- NULL
       for (i in seq_len(nitem)) {
-        #int_threshold <-((1 + (data$K_max -1)*(i-1)):((data$K_max -1)*(i)))[seq_len(data$K_item[i] -1)]
-        p <- grm_probs(theta = theta, a = a_vec[i], b = b_vec[[i]][seq_len(data$K_item[i] -1)]) # b_vec[int_threshold])
+        int_threshold <-((1 + (data$K_max -1)*(i-1)):((data$K_max -1)*(i)))[seq_len(obs_K_item[i] -1)]
+        p <- grm_probs(theta = theta, a = a_vec[i], b =  b_vec[int_threshold]) #b_vec[[i]][seq_len(data$K_item[i] -1)])
         all_p <- c(all_p, p)
       }
       ll<- sum(y_mat * log(all_p))
@@ -177,7 +177,7 @@ log_post_draw_theta <- function(data, theta, a_vec, b_vec, c_vec,  y_vec, mu, si
       delta <- mu + nu_vec * sigma * theta + sqrt(1 - nu_vec^2)*sigma *unique
     }
     if(irt_mod == 9 | irt_mod == 10){
-      delta <- mu + nu_vec * lambda_vec * sigma * theta + sqrt(1 - (nu_vec *lambda_vec)^2 )*sigma *unique
+      delta <- mu + nu_vec * lambda_vec * sigma * theta + sqrt(1 - (lambda_vec*nu_vec)^2 )*sigma *unique
     }
     if(irt_mod == 11 | irt_mod == 12){
       delta <- mu + sigma * theta + unique_vec *unique
@@ -274,7 +274,8 @@ log_post_draw_theta <- function(data, theta, a_vec, b_vec, c_vec,  y_vec, mu, si
 #' summary(result$acceptance_rates)
 #' }
 #' @export
-norm_new_individual <- function(new_y, new_age,fit_info, mh_args = list(n_iter=250, burnin=125, thin=1, proposal_sd=0.6)) {
+norm_new_individual <- function(new_y, new_age,fit_info, 
+                                mh_args = list(n_iter=250, burnin=125, thin=1, proposal_sd=0.6)) {
   
   data <- fit_info$newdata
   post_draw <- fit_info$norm_info
@@ -316,7 +317,7 @@ norm_new_individual <- function(new_y, new_age,fit_info, mh_args = list(n_iter=2
   # Handle NAs in y: only use observed items
   obs_idx <- which(!is.na(new_y))
   y_obs <- new_y[obs_idx]
-  
+  obs_K_item <- data$K_item[obs_idx]
   if(is.data.frame(y_obs)){
     y_obs <- as.matrix(y_obs)
   }
@@ -351,7 +352,11 @@ norm_new_individual <- function(new_y, new_age,fit_info, mh_args = list(n_iter=2
   # Loop over post_draw draws
   for (m in seq_len(M)) {
     a_m <- a_post[m, obs_idx]
-    b_m <- b_post[m, obs_idx_GRM]
+    if(is.list(b_post[m])){
+      b_m <-  unlist(b_post[2,])[obs_idx_GRM]
+    }else{
+      b_m <- b_post[m, obs_idx_GRM]
+    }
     c_m <- c_post[m, obs_idx]
     
     # init
@@ -364,13 +369,13 @@ norm_new_individual <- function(new_y, new_age,fit_info, mh_args = list(n_iter=2
       
       theta_curr <- mu_m  # start at population mean
       lp_curr <- log_post_draw_theta(data = data, theta = theta_curr, a_vec = a_m, b_vec = b_m,
-                                     c_vec = c_m,
+                                     c_vec = c_m,obs_K_item = obs_K_item,
                                      y_vec = y_obs, mu = mu_m, sigma = sigma_m, 
                                      irt_mod = irt_mod)
       
       for (it in seq_len(n_iter)) {
         theta_prop <- stats::rnorm(1, mean = theta_curr, sd = proposal_sd)
-        lp_prop <- log_post_draw_theta(data = data, theta_prop, a_m, b_m, c_m,
+        lp_prop <- log_post_draw_theta(data = data, theta_prop, a_m, b_m, c_m,obs_K_item ,
                                        y_obs, mu_m, sigma_m,irt_mod = irt_mod)
         log_accept_ratio <- lp_prop - lp_curr
         if (is.finite(log_accept_ratio) && log(stats::runif(1)) < log_accept_ratio) {
@@ -419,7 +424,8 @@ norm_new_individual <- function(new_y, new_age,fit_info, mh_args = list(n_iter=2
             unique_temp[d -1] <- unique_prop[d-1]
           }
           lp_prop <- log_post_draw_theta(data = data, theta = theta_temp,unique = unique_temp, 
-                                         a_m, b_m, c_m, y_obs, mu_m, sigma_m,
+                                         a_vec = a_m, b_vec = b_m, c_vec = c_m,
+                                         y_vec = y_obs, mu = mu_m, sigma = sigma_m,
                                          nu_vec = nu_m, lambda_vec = lambda_m,
                                          unique_vec = unique_m, irt_mod = irt_mod,
                                          itemD =  itemD_obs)
@@ -440,7 +446,7 @@ norm_new_individual <- function(new_y, new_age,fit_info, mh_args = list(n_iter=2
         }
         if(irt_mod == 11 | irt_mod == 12){
           delta_curr <- mu_m + sigma_m * theta_curr + unique_m *unique_curr
-          z_delta_curr <- (delta_curr - mu_m)/sqrt(sigma_m^2 + unique_curr^2)
+          z_delta_curr <- (delta_curr - mu_m)/sqrt(sigma_m^2 + unique_m^2)
         }
         chain[it,] <- c(theta_curr, z_delta_curr, delta_curr)
       }
@@ -476,12 +482,12 @@ norm_new_individual <- function(new_y, new_age,fit_info, mh_args = list(n_iter=2
     delta_mean <- colMeans(all_zdelta_samples)
     delta_sd <- apply(all_zdelta_samples, 2, stats::sd)
     delta_med <- apply(all_zdelta_samples, 2, stats::median)
-    ci <- apply(all_zdelta_samples, 2, function(x){return(stats::quantile(x,  probs = c(0.025, 0.975)))})
+    ci <- apply(all_zdelta_samples, 2, function(x){return(stats::quantile(x,  probs = c(0.025, 0.975), na.rm = TRUE))})
     
     theta_mean <- mean(all_theta_samples)
     theta_sd <- stats::sd(all_theta_samples)
     theta_med <- stats::median(all_theta_samples)
-    theta_ci <- stats::quantile(all_theta_samples,  probs = c(0.025, 0.975))
+    theta_ci <- stats::quantile(all_theta_samples,  probs = c(0.025, 0.975), na.rm = TRUE)
     
     res <- list(
       theta_samples = all_theta_samples,

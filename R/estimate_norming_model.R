@@ -1,3 +1,136 @@
+#'@title Convergence check of IRTnorm model parameters
+#'@name fit_info_param
+#'@description Computes the convergence diagnostics \strong{R-hat},
+#' \strong{Effective Sample Size (bulk)} and \strong{Effective Sample Size (tail)}
+#' for selected groups of IRTnorm model parameters from a fitted Bayesian IRTnorm model.
+#' For each parameter group, the function summarizes the distribution of
+#' convergence measures across all indexed parameters (e.g., all estimated
+#' beta parameters \code{beta[i]}).
+#'@details
+#' The function operates on posterior draws extracted via
+#' \code{fit$draws()}, and uses the \pkg{posterior} package to compute
+#' convergence diagnostics. Parameters are first grouped by name
+#' (e.g., all \code{beta[*]} parameters), then diagnostics are computed
+#' for each element, and finally summary statistics are taken across elements
+#' within each group.
+#'
+#' The output is ordered by diagnostic, with all parameter groups reported
+#' first for \code{rhat}, followed by \code{ess_bulk}, and then \code{ess_tail}.
+#'
+#' This function is intended for IRTnorm model diagnostics and quality control.
+#' Interpretation guidelines commonly used in practice include:
+#' \itemize{
+#'   \item R-hat values close to 1 (e.g., < 1.01) indicate good mixing,
+#'   \item larger ESS values indicate more reliable posterior summaries.
+#' }
+#'@param fit  the data output from `fit_IRTnorm()`.
+#'@param data named list as returned by \code{\link{data_prep}} containing
+#'   all data and indexing information required for fitting the IRT norming
+#'   model and evaluating its fit.
+#'@seealso
+#' \code{\link[posterior]{summarise_draws}},
+#' \code{\link[posterior]{rhat}},
+#' \code{\link[posterior]{ess_bulk}},
+#' \code{\link[posterior]{ess_tail}}
+#'@return A data.frame summarizing Rhat, Ess bulk and ess tail per variable group.
+#'@examples
+#' \dontrun{
+#' # Fit an IRTnorm model
+#' data(response_data)
+#' mod_poly <- fit_IRTnorm(data = response_data)
+#'
+#' # Compute convergence diagnostics
+#' converg_tab <- fit_info_param(mod_poly)
+#' converg_tab
+#' # Inspect R-hat summaries
+#' subset(converg_tab, diagnostic == "rhat")
+#'
+#' # Check for low effective sample sizes
+#' subset(converg_tab, diagnostic == "ess_bulk" & Mean < 100)}
+#'@export
+#'@keywords internal
+
+fit_info_param <- function(fit, data){
+  if (!requireNamespace("cmdstanr", quietly = TRUE)) {
+    stop(
+      "Package 'cmdstanr' is required but not installed.\n",
+      "Install it with: install.packages('cmdstanr', repos = c('https://stan-dev.r-universe.dev', getOption('repos')))",
+      call. = FALSE
+    )
+  }
+  #fixed irt_mod parameters
+  no_fit <- intersect(names(data), c("alpha","beta","gamma","b"))
+  
+  if(data$age_mod == 1){
+    param1 <- c("p1_theta","p2_theta")
+    if(data$irt_mod > 8){
+      param1 <- c(param1, "p3_theta")
+    }
+  }
+  if(data$age_mod == 2){
+    param1 <- c("l1","l2","u1","u2")
+    if(data$irt_mod > 8){
+      param1 <- c(param1, c("l3","u3"))
+    }
+  }
+  draws <- fit$draws()
+  
+  irt_mod_params <- list(
+    "1"  = c("z_theta", param1, "beta"),
+    "2"  = c("z_theta", param1, "alpha", "beta"),
+    "3"  = c("z_theta", param1, "alpha", "beta", "gamma"),
+    "4"  = c("z_theta", param1, "alpha", "b"),
+    "5"  = c("z_theta", "unique", "nu", param1, "beta"),
+    "6"  = c("z_theta", "unique", "nu", param1, "alpha", "beta"),
+    "7"  = c("z_theta", "unique", "nu", param1, "beta"),
+    "8"  = c("z_theta", "unique", "nu", param1, "alpha", "beta"),
+    "9"  = c("z_theta", "unique", "nu", "lambda", param1, "beta"),
+    "10" = c("z_theta", "unique", "nu", "lambda", param1, "alpha", "beta"),
+    "11" = c("z_theta", "unique", "unique_sigma", param1, "beta"),
+    "12" = c("z_theta", "unique", "unique_sigma", param1, "alpha", "beta")
+  )
+  
+  param <- irt_mod_params[[as.character(data$irt_mod)]]
+  param <- setdiff(param, no_fit)
+  
+  diag_funs <- list(
+    rhat     = posterior::rhat,
+    ess_bulk = posterior::ess_bulk,
+    ess_tail = posterior::ess_tail
+  )
+  
+  out <- vector("list", length(diag_funs))
+  d <- 1
+  
+  for(diag in names(diag_funs)){
+    
+    res_param <- vector("list", length(param))
+    
+    for(i in seq_along(param)){
+      
+      info <- draws |>
+        posterior::subset_draws(variable = param[i]) |>
+        posterior::summarise_draws(diag_funs[[diag]])
+      
+      stats <- as.data.frame(
+        t(vapply(info[,-1], summary, numeric(6)))
+      )
+      
+      res_param[[i]] <- cbind(
+        diagnostic = rep(diag, nrow(stats)),
+        variable   = rep(param[i], nrow(stats)),
+        stats
+      )
+    }
+    
+    out[[d]] <- do.call(rbind, res_param)
+    d <- d + 1
+  }
+  
+  final_info <- do.call(rbind, out)
+  rownames(final_info) <- NULL
+  return(final_info)
+}
 
 #' Estimate a IRT-based norming model
 #' @name estimate_norming_model
@@ -217,6 +350,9 @@ estimate_norming_model <- function(raw_data, age_variable, item_variables,
                                    chains = 4, parallel_chains = NULL, seed = NULL,
                                    extract_stan_object = TRUE){
   
+  if(!is.logical(extract_stan_object)){
+    stop("extract_stan_object has to be logical, e.g either TRUE or FALSE.")
+  }
 # data preperation 
   newdata <- data_prep(raw_data = raw_data,
                        age_variable = age_variable,
@@ -264,7 +400,8 @@ estimate_norming_model <- function(raw_data, age_variable, item_variables,
   if(extract_stan_object == TRUE){
     all_info[["model_stan_obj"]] <- fit_model
   }
-  return(all_info)
+  class(all_info) <- "IRTnorm"
+    return(all_info)
 }
 
 
