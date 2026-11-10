@@ -2,45 +2,74 @@
 % Please edit documentation in R/eval_modelfit.R
 \name{cor_structure}
 \alias{cor_structure}
-\title{Explore model implied correlations across domains}
+\title{Explore the model-implied correlations between domains}
 \usage{
 cor_structure(fit_info, visual = TRUE)
 }
 \arguments{
-\item{fit_info}{A named \code{list} as returned by \code{\link{estimate_norming_model}}.}
+\item{fit_info}{An object of class \code{"IRTnorm"}, as returned by
+\code{\link{estimate_norming_model}}, fitted with a multidimensional
+model.}
 
-\item{visual}{A logical indicating if for models with age dependent domain correlation
-if the correlation changes across age should be plotted.
-The default is TRUE.}
+\item{visual}{Logical. Only used for models with age-dependent
+correlations. If \code{TRUE} (default), the model-implied correlations
+are plotted against age, with one color per domain pair.}
 }
 \value{
-A data.frame with the model-implied domain correlations.
+A data frame.
+
+For models with constant correlations, it has one row per domain pair and
+the columns \code{sumscore_cor} (correlation of the observed domain sum
+scores), \code{model_cor} (model-implied correlation), and
+\code{domains} (the domain pair).
+
+For models with age-dependent correlations, it has one row per
+individual, one column per domain pair with the model-implied correlation
+(named, e.g., \code{"cor(d1,d2)"}), and the column \code{age}.
 }
 \description{
-The \code{cor_structure} function helps explore the relationship of the
-domains in a hierarchical IRT model. For IRT-norm models that assume a age
-independent correlation (Testlet1PLnorm, Testlet2PLnorm, HO1PLnorm-C,HO2PLnorm-C)
-it calculates the sum score correlation and model-implied correlation across domains.
-For models with age-dependent domain correlations (HO1PLnorm-P,HO2PLnorm-P,
-HO1PLnorm-F,HO2PLnorm-F) it calculates the model-implied domain correlation per
-individum. If visual = TRUE it plots the domain correlations against the individuals
-ages.
+Explores the relationship between the domains of a multidimensional
+IRT norming model by returning the
+model-implied correlations between the domain-specific traits.
+}
+\details{
+How the correlations are reported depends on the model:
+\itemize{
+\item \strong{Constant correlations} (\code{"Testlet1PLnorm"},
+\code{"Testlet2PLnorm"}, \code{"HO1PLnorm-C"}, \code{"HO2PLnorm-C"}):
+the model-implied correlation of each pair of domains is returned
+together with the correlation of the observed domain sum scores, so
+that the two can be compared.
+\item \strong{Age-dependent correlations} (\code{"HO1PLnorm-P"},
+\code{"HO2PLnorm-P"}, \code{"HO1PLnorm-F"}, \code{"HO2PLnorm-F"}):
+the model-implied correlation of each pair of domains is returned for
+every individual, and can be plotted against age.
+}
+
+The model-implied correlations are based on the posterior mean estimates.
+Domain pairs are labeled by their domain numbers (e.g., \code{"1&2"} for
+domains 1 and 2).
 }
 \examples{
 \dontrun{
-# Load data
 data(response_data)
+info <- estimate_norming_model(
+  raw_data = response_data,
+  age_variable = "age",
+  item_variables = 1:50,
+  irt_model = "HO2PLnorm-C",
+  itemD = rep(1:3, each = 17)[-1],
+  age_model = "poly",
+  poly_mean = 3,
+  poly_sd = 2
+)
 
-# Prepare data for IRTnorm model fit
-info <- estimate_norming_model(data = response_data,
-age_variable = "age",
-item_variables = 1:50,
-irt_model  = "HO2PLnorm-C", 
-itemD = rep(1:3, each = 17)[-1],
-age__model = "polynom",
-poly_mean = 3,
-poly_sd = 2)
-
+# Model-implied vs. sum score correlations between the domains
 cor_structure(info)
 }
+
+}
+\seealso{
+\code{\link{estimate_norming_model}},
+\code{\link{effect_age}}
 }

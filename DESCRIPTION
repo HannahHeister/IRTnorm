@@ -1,9 +1,19 @@
 Package: IRTnorm
-Title: What the Package Does (One Line, Title Case)
-Version: 0.1.0
+Title: Continuous norming with Bayesian IRT models
+Version: 0.0.0.1
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    c(
+      person("Hannah M.", "Heister",
+             email = "hannah@heister4.com",
+             role = c("aut", "cre")),
+      person("Casper J.", "Albers",
+             role = "aut"),
+      person("Marieke E.", "Timmerman",
+             role = "aut"),
+      person("Dutch Research Council", "NWO", role = c("fnd"),
+      comment = c(GrantID = " 10.61686/YHUOB23106 "))
+    )
+Description: The package facilitates the continuous norming of tests using Bayesian item response theory (IRT) models. It covers model selection and fitting, as well as evaluating the fit and norming newly observed individuals. 
 License: GPL (>= 3) 
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -14,13 +24,14 @@ Imports:
     ggplot2,
     cmdstanr (>= 0.6.0),
     MASS,
-    Matrix,
     mgcv,
     parallel,
     posterior,
     stats,
     tidyr,
-    ggcorrplot
+    dplyr,
+    ggcorrplot,
+    rlang
 Suggests:
     testthat (>= 3.0.0),
     bayesplot,

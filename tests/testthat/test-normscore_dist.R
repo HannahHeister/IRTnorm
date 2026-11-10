@@ -10,7 +10,8 @@ make_fit_uni <- function(n = 300, seed = 1, irt_mod = 1,
     normscore_est = rnorm(n),
     irt_mod = irt_mod
   )
-  structure(list(model_info = list(info_sample = info_sample)),
+  structure(list(model_info = list(info_sample = info_sample), 
+                 newdata = list(D = 1)),
             class = "IRTnorm")
 }
 
@@ -26,7 +27,8 @@ make_fit_multi <- function(n = 200, seed = 2, irt_mod = 5) {
       irt_mod = irt_mod
     )
   }))
-  structure(list(model_info = list(info_sample = info_sample)),
+  structure(list(model_info = list(info_sample = info_sample),
+                 newdata = list(D = 2)),
             class = "IRTnorm")
 }
 
@@ -133,7 +135,7 @@ test_that("facet order follows age_range", {
   # Fall back: just check the facet columns exist in the expected order
   expect_equal(
     labs,
-    c("age: (2,5]", "age: (5,8]", "age: (8,12]")
+    c("age: [2,5]", "age: [5,8]", "age: [8,12]")
   )
 })
 
@@ -176,7 +178,7 @@ test_that("curve height scales with binwidth and group size", {
   
   s <- fit$model_info$info_sample
   n1 <- sum(s$age > 2 & s$age <= 7)
-  group1 <- curve_data[curve_data$age_group == "age: (2,7]", ]
+  group1 <- curve_data[curve_data$age_group == "age: [2,7]", ]
   expected <- dnorm(group1$x, 0, 1) * bw * n1
   expect_equal(group1$y, expected)
 })
@@ -190,19 +192,19 @@ test_that("curve peak is at x = 0 region (standard normal shape)", {
 
 # ---- Age grouping ----------------------------------------------------------
 
-test_that("age group intervals are left-open and right-closed", {
-  fit <- make_fit_uni(n = 6)
-  fit$model_info$info_sample$age <- c(2, 5, 5.0001, 7, 7.5, 12)
-  fit$model_info$info_sample$normscore_est <- c(-1, -0.5, 0, 0.5, 1, 1.5)
+test_that("age group intervals are left- and right-closed", {
+  fit <- make_fit_uni(n = 7)
+  fit$model_info$info_sample$age <- c(2, 5, 5.0001, 7, 7.5, 12, 12.01)
+  fit$model_info$info_sample$normscore_est <- c(-1, -0.5, 0, 0.5, 1, 1.5, 1)
   # age == 2 is excluded (lower bound open), so a warning is expected
   expect_warning(
     p <- normscore_dist(fit, age_range = c(2, 5, 12), binwidth = 0.5),
     "not within the plotted age groups"
   )
   hist_data <- p$layers[[1]]$data
-  expect_equal(nrow(hist_data), 5)
-  expect_equal(sum(hist_data$age_group == "age: (2,5]"), 1)   # age 5
-  expect_equal(sum(hist_data$age_group == "age: (5,12]"), 4)
+  expect_equal(nrow(hist_data), 6)
+  expect_equal(sum(hist_data$age_group == "age: [2,5]"), 1)   # age 5
+  expect_equal(sum(hist_data$age_group == "age: [5,12]"), 5)
 })
 
 test_that("warns and removes individuals outside age_range", {
@@ -226,7 +228,7 @@ test_that("age group labels match expected format", {
   p <- normscore_dist(fit, age_range = c(2, 7, 12))
   expect_setequal(
     unique(p$layers[[1]]$data$age_group),
-    c("age: (2,7]", "age: (7,12]")
+    c("age: [2,7]", "age: [7,12]")
   )
 })
 
@@ -268,10 +270,12 @@ test_that("multidimensional plot uses est_ability as normscore_est", {
   expect_equal(d$normscore_est, d$est_ability)
 })
 
-test_that("dim_plot is ignored for unidimensional models", {
+test_that("dim_plot is ignored for unidimensional models and warning is printed", {
   fit <- make_fit_uni()
+  expect_warning(normscore_dist(fit, age_range = c(2, 12), dim_plot = "general"), 
+                 "the argument dim_plot is ignored")
   expect_s3_class(
-    normscore_dist(fit, age_range = c(2, 12), dim_plot = "general"),
+    suppressWarnings(normscore_dist(fit, age_range = c(2, 12), dim_plot = "general")),
     "ggplot"
   )
 })

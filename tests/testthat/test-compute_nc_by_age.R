@@ -21,17 +21,16 @@ test_that("returns one result per age group with the expected structure", {
   }
 })
 
-test_that("age labels follow the (lower,upper] format in order", {
+test_that("age labels follow the [lower,upper] format in order", {
   res <- run_by_age(c(2, 6, 12))
   expect_equal(vapply(res, function(r) r$age, character(1)),
                c("age: [2,6]", "age: [6,12]"))
 })
 
-test_that("intervals are open on the left and closed on the right", {
-  # age 5.5 is in (2,5.5] but not in (5.5,12]; age 12 is in (5.5,12]
+test_that("intervals are closed on the left and right", {
   res <- run_by_age(c(2, 5.5, 12))
   expect_equal(sum(res[[1]]$df$obs), 3)   # ages 3, 5, 5.5
-  expect_equal(sum(res[[2]]$df$obs), 3)   # ages 8, 10, 12
+  expect_equal(sum(res[[2]]$df$obs), 4)   # ages 5.5, 8, 10, 12
 })
 
 test_that("observed scores are filtered to the persons of each group", {

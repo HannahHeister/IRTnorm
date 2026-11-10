@@ -2,41 +2,93 @@
 % Please edit documentation in R/eval_modelfit.R
 \name{item_residual_cor}
 \alias{item_residual_cor}
-\title{compute item residual correlation}
+\title{Compute item residual correlations (Q3)}
 \usage{
 item_residual_cor(fit_info, visual = TRUE, domain = NULL)
 }
 \arguments{
-\item{fit_info}{A named \code{list} as returned by \code{\link{estimate_norming_model}}.}
+\item{fit_info}{An object of class \code{"IRTnorm"}, as returned by
+\code{\link{estimate_norming_model}}.}
 
-\item{visual}{A logical indicating if the heat map should be visualized.
-The default is TRUE.}
+\item{visual}{Logical. If \code{TRUE} (default), the residual correlation
+matrix is plotted as a heat map.}
+
+\item{domain}{Optional integer indicating which domain to analyze. Only
+usable for multidimensional models; the analysis is then restricted to the
+items of this domain. If \code{NULL} (default), all items are analyzed.
+For unidimensional models, the argument is ignored with a warning.}
 }
 \value{
-A list with the first residual correlation matrix.
+Invisibly, a list with the components:
+\describe{
+\item{\code{Q3}}{Matrix of residual correlations between all items
+analyzed.}
+\item{\code{summary_info}}{Summary of the correlations between distinct
+items (the off-diagonal elements of \code{Q3}).}
+\item{\code{itemD}}{Domain of each item. Only for multidimensional
+models without a specified \code{domain}.}
+\item{\code{compare_domains}}{Average residual correlations within and
+between domains. Only for multidimensional models without a specified
+\code{domain}.}
+}
 }
 \description{
-The \code{item_residual_cor} prints a summaries of the item residual correlations.
-When visualized is set to true it additionally visualizes the residual correlation matrix form of a heat map.
-Returns the item residual correlation matrix when the output is saved.
+Checks the local independence assumption of the fitted IRT norming model.
+For each person and item, the residual is the observed response minus the
+model-implied expected response. The residual correlations between all item
+pairs (Yen's Q3) should be close to zero if the model captures the
+dependencies in the data. The function prints a summary of the correlations
+between items and, optionally, plots them as a heat map.
+}
+\details{
+The expected responses are computed from the posterior mean item parameters
+and the estimated latent trait of each person (posterior means). Missing
+responses are ignored when computing the correlations (pairwise complete
+observations).
+
+A summary (minimum, quartiles, mean, maximum) of the correlations between
+all distinct item pairs is printed. Correlations far from zero, in
+particular strongly positive ones, indicate pairs of items that are related
+beyond what the model explains.
+
+For multidimensional models without a specified \code{domain}, the
+function additionally prints the average residual correlation within and
+between domains, and the heat map is organized by domain.
+
+The heat map and the printed output are produced when the function is
+called. The numerical results are returned invisibly.
 }
 \examples{
 \dontrun{
-# Load data
 data(response_data)
+info <- estimate_norming_model(
+  raw_data = response_data,
+  age_variable = "age",
+  item_variables = 1:50,
+  irt_model = "2PLnorm",
+  age_model = "poly",
+  poly_mean = 3,
+  poly_sd = 2
+)
 
-# Prepare data for IRTnorm model fit
-info <- estimate_norming_model(data = response_data,
-age_variable = "age",
-item_variables = 1:50,
-irt_model = "2PLnorm",
-age__model = "polynom",
-poly_mean = 3,
-poly_sd = 2)
-
+# Summary and heat map
 item_residual_cor(info)
+
+# Keep the residual correlation matrix, without the plot
+res <- item_residual_cor(info, visual = FALSE)
+res$Q3[1:5, 1:5]
+
+# Multidimensional model: restrict to one domain
+# item_residual_cor(info_multi, domain = 1)
 }
+
+}
+\references{
+Yen, W. M. (1984). Effects of local item dependence on the fit and
+equating performance of the three-parameter logistic model.
+\emph{Applied Psychological Measurement, 8}(2), 125-145.
 }
 \seealso{
-\code{\link[=estimate_norming_model]{estimate_norming_model()}}
+\code{\link{estimate_norming_model}},
+\code{\link{item_person_fit}}
 }

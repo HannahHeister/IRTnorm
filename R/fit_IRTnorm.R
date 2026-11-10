@@ -1,3 +1,18 @@
+#' check if cmdstanr is installed 
+cmdstan_available <- function(){
+    if(!requireNamespace("cmdstanr", quietly = TRUE) ||
+       is.null(tryCatch(cmdstanr::cmdstan_version(error_on_NA = FALSE),
+                        error = function(e) NULL))){
+      stop(
+        "Package 'cmdstanr' is required but not installed.\n",
+        "Install it with: install.packages('cmdstanr', repos = c('https://stan-dev.r-universe.dev', getOption('repos')))",
+        call. = FALSE
+      )
+    }
+}
+
+
+
 #'@title Fit an IRT-based continuous norming model using Stan
 #'@name fit_IRTnorm
 #'@description

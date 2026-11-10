@@ -2,41 +2,66 @@
 % Please edit documentation in R/eval_modelfit.R
 \name{effect_age}
 \alias{effect_age}
-\title{Plot the estimated age effect of IRT-based continuous norming model}
+\title{Plot the estimated age effect of an IRT norming model}
 \usage{
 effect_age(fit_info)
 }
 \arguments{
-\item{fit_info}{A list containing IRTnorm model output from the \code{extract_info()} function.
-It must include the elements \code{info_sample} (person-level information,
-including latent trait estimates) and \code{info_item} (item parameters).}
+\item{fit_info}{An object of class \code{"IRTnorm"}, as returned by
+\code{\link{estimate_norming_model}}.}
 }
 \value{
-A \pkg{ggplot2} object showing the estimated mean and standard deviation of the
-latent trait as functions of age.
+Invisibly, a list with two components: \code{plot}, the
+\code{ggplot} object, and \code{data}, the data frame underlying the
+plot (columns \code{age}, \code{value}, \code{moment} and, for
+multidimensional models, \code{trait}).
+The plot is printed when the function is called.
 }
 \description{
-Visualizes the IRTnorm model-implied relationship between age and the
-latent trait distribution mean and standard deviation.
+Plots how the fitted IRT norming model relates age to the distribution of
+the latent trait. For unidimensional models, the plot shows the
+age-dependent mean and standard deviation of the latent trait. For
+multidimensional models, it shows the age-dependent mean and standard
+deviation of each domain and the correlation between each domain and the
+general trait.
+}
+\details{
+The curves show the model-implied values, based on the posterior mean
+estimates, evaluated at the ages of the individuals in the data. They are
+therefore only drawn over the age range that is observed in the data.
+
+For unidimensional models, the mean and the standard deviation are shown
+in two panels.
+
+For multidimensional models, the plot is a grid with one row per quantity
+(mean, standard deviation, correlation) and one column per domain. The
+y-axis scale is shared across the domains within a row, so the domains can
+be compared directly. The correlation is the correlation between the
+domain-specific trait and the general trait.
 }
 \examples{
 \dontrun{
-# Load data
-data(response_data)
+info <- estimate_norming_model(
+  raw_data = response_data,
+  age_variable = "age",
+  item_variables = 1:50,
+  irt_model = "2PLnorm",
+  age_model = "poly",
+  poly_mean = 3,
+  poly_sd = 2
+)
 
-# Fit IRTnorm model and extract information
-info <- estimate_norming_model(data = response_data,
-age_variable = "age",
-item_variables = 1:50,
-irt_model = "2PLnorm",
-age__model = "polynom",
-poly_mean = 3,
-poly_sd = 2)
-
-# Plot estimated age effect
+# Plot the estimated age effect
 effect_age(fit_info = info)
+
+# Keep the plot and the underlying data
+res <- effect_age(fit_info = info)
+res$plot
+head(res$data)
 }
+
 }
 \seealso{
-\code{\link{extract_info}}
+\code{\link{estimate_norming_model}},
+\code{\link{quantile_curves}}
 }

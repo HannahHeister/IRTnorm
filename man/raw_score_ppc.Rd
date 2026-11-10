@@ -2,106 +2,91 @@
 % Please edit documentation in R/eval_modelfit.R
 \name{raw_score_ppc}
 \alias{raw_score_ppc}
-\title{Posterior Predictive Raw Score Distribution Analysis}
+\title{Observed and model-implied raw score distributions}
 \usage{
 raw_score_ppc(fit_info, age_range = NULL)
 }
 \arguments{
-\item{fit_info}{a named \code{list} as returned by \code{\link{estimate_norming_model}}.}
+\item{fit_info}{An object of class \code{"IRTnorm"}, as returned by
+\code{\link{estimate_norming_model}}.}
 
-\item{age_range}{Numeric \code{vector} defining age group boundaries. If \code{NULL}
-(default), no age grouping is performed. If specified, it must contain at least
-two values defining the boundaries of age groups (e.g., \code{c(0, 30, 60, 90)}
-creates three groups: (0,30], (30,60], (60,90]).}
+\item{age_range}{Optional numeric vector with at least two values giving the
+boundaries of the age groups, on the same scale as the age variable in the
+data (e.g., \code{c(5, 7, 9, 11)} creates the groups [5,7], [7,9], and
+[9,11]). If \code{NULL} (default), the whole sample is analyzed. Persons
+outside the range of \code{age_range} are excluded from the age-group
+results, and a warning reports how many.}
 }
 \value{
-If \code{age_range = NULL}, returns a list containing:
-\itemize{
-\item \code{df}: Data frame with columns:
-\itemize{
-\item \code{score}: Raw scores range from 0 to the maximum possible score
-\item \code{obs}: Observed frequency for each score
-\item \code{Q5}: 5th percentile of posterior predictive frequencies
-\item \code{Q50}: Median (50th percentile) of posterior predictive frequencies
-\item \code{Q95}: 95th percentile of posterior predictive frequencies
-}
-\item \code{replicated}: Matrix of replicated frequencies (draws × scores)
-\item \code{nitem}: Number of items
-}
+An object of class \code{"IRTnorm_ppc"}, a list with one element
+for the total score and, for multidimensional models, one additional
+element per domain (in domain order).
 
-If \code{age_range} is specified, returns a list of lists, one for each age group,
-where each element contains the same structure as above plus:
-\itemize{
-\item \code{age}: Character string describing the age range (e.g., "age: (30,60]")
+If \code{age_range = NULL}, each element is a list with:
+\describe{
+\item{\code{df}}{Data frame with one row per possible raw score and the
+columns \code{score}, \code{obs} (observed frequency), \code{Q5},
+\code{Q50}, and \code{Q95} (5th, 50th, and 95th percentile of the
+model-implied frequencies).}
+\item{\code{replicated}}{Matrix of model-implied frequencies, with one
+row per posterior draw and one column per raw score.}
+\item{\code{nitem}}{Number of items the score is based on.}
 }
+If \code{age_range} is specified, each element is itself a list with one
+entry per age group. Each entry has the same components as above, plus
+\code{age}, a label describing the age group (e.g., \code{"age: [30,60]"}).
 }
 \description{
-The function \code{raw_score_ppc} computes the observed raw score distribution from data
-and the posterior predictive (IRTnorm model-implied) raw score distributions from a fitted
-Bayesian IRT-based norming model. The function can perform the analysis either
-for the entire sample or separately for multiple age groups.
+Compares the observed distribution of raw scores with the distribution
+implied by a fitted IRT norming model (posterior predictive check). This
+shows how well the model reproduces the raw scores in the data, either for
+the whole sample or separately for age groups. Use
+\code{\link{visual_raw_score_ppc}} to plot the result.
 }
 \details{
-Compute Observed and IRTnorm model-implied Raw Score Distributions
+The observed raw score is the sum of a person's item responses. For each
+raw score, the observed frequency is compared with the frequencies in data
+replicated from the fitted model. The 90\\% credible interval (Q5 to Q95) of
+the replicated frequencies gives the range of frequencies that is plausible
+under the model. The model fits well if the observed frequencies lie within
+or close to this interval across the score range. For background on
+posterior predictive checks of IRT models, see Sinharay, Johnson, and
+Stern (2006).
 
-The function performs the following steps:
-\enumerate{
-\item Computes raw scores by summing item responses for each individual.
-\item Calculates the observed frequency distribution of raw scores.
-\item Extracts posterior predictive replications from the fitted IRTnorm model.
-\item Computes the distribution of replicated raw scores for each MCMC draw.
-\item Summarizes the replicated distributions using 5th, 50th, and 95th percentiles.
-}
+For multidimensional models, the analysis is run for the total score over
+all items and, in addition, for the raw score of each domain.
 
-When \code{age_range} is specified, all steps are performed separately for each
-age group, allowing assessment of the IRTnorm model fit across different demographic subgroups.
-
-The \eqn{90\%} credible interval (between Q5 and Q95) provides a range of plausible
-frequencies under the fitted IRTnorm model. Good IRTnorm model fit is indicated when observed
-frequencies fall within or near these credible intervals.
-Further information about posterior predictive assessment of IRT models
-can be found in Sinharay, Johnson, & Stern (2006).
-}
-\note{
-\itemize{
-\item Age ranges use the convention (lower, upper], meaning lower is exclusive
-and upper is inclusive.
-\item Missing scores (scores with zero observations) are included in the output
-with frequency 0.
-\item The function assumes that \code{fit$y_rep} contains posterior
-predictive samples in the correct format.
-}
+Raw scores without any observations are kept in the output with frequency 0.
 }
 \examples{
 \dontrun{
-# Load data
 data(response_data)
+info <- estimate_norming_model(
+  raw_data = response_data,
+  age_variable = "age",
+  item_variables = 1:50,
+  irt_model = "2PLnorm",
+  age_model = "poly",
+  poly_mean = 3,
+  poly_sd = 2
+)
 
-# Prepare data for IRTnorm model fit
-info <- estimate_norming_model(data = response_data,
-age_variable = "age",
-item_variables = 1:50,
-irt_model = "2PLnorm",
-age__model = "polynom",
-poly_mean = 3,
-poly_sd = 2)
-
-# Single analysis (no age grouping)
+# Whole sample
 result <- raw_score_ppc(fit_info = info)
+visual_raw_score_ppc(result)
 
-visual_raw_score_ppc(N_info = result)
-
-# Age-grouped analysis
-result_age <- raw_score_ppc(fit_info = info, age_range = seq(-2,2,1))
-
+# Separately by age group
+result_age <- raw_score_ppc(fit_info = info, age_range = c(5, 7, 9, 11))
 visual_raw_score_ppc(result_age)
 }
 
 }
 \references{
-Sinharay, S., Johnson, M. S., & Stern, H. S. (2006). Posterior predictive assessment
-of item response theory models. Applied Psychological Measurement, 30(4), 298-321.
+Sinharay, S., Johnson, M. S., & Stern, H. S. (2006). Posterior predictive
+assessment of item response theory models. \emph{Applied Psychological
+Measurement, 30}(4), 298-321.
 }
 \seealso{
-\code{\link{visual_raw_score_ppc}} for visualizing the results
+\code{\link{visual_raw_score_ppc}} for plotting the results,
+\code{\link{estimate_norming_model}}
 }

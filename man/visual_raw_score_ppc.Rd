@@ -2,92 +2,91 @@
 % Please edit documentation in R/eval_modelfit.R
 \name{visual_raw_score_ppc}
 \alias{visual_raw_score_ppc}
-\title{Posterior Predictive IRTnorm model Check for raw score distributions}
+\title{Plot observed and model-implied raw score distributions}
 \usage{
 visual_raw_score_ppc(raw_score_ppc_info, dim_plot = NULL)
 }
 \arguments{
-\item{raw_score_ppc_info}{A list object returned by the \code{raw_score_ppc} function. This can be either:
-\itemize{
-\item A single result list (when \code{age_range = NULL} in \code{raw_score_ppc}).
-\item A list of results by age groups (when \code{age_range} is specified in \code{raw_score_ppc}).
-}
-Each result contains:
-\itemize{
-\item \code{df}: Data frame with observed frequencies and quantiles.
-\item \code{replicated}: Matrix of replicated raw score distributions.
-\item \code{nitem}: Number of items.
-\item \code{age}: Age group label (only for age-grouped results).
-}}
+\item{raw_score_ppc_info}{An object of class \code{"IRTnorm_ppc"}, as
+returned by \code{\link{raw_score_ppc}}, either for the whole sample or
+for age groups.}
 
-\item{dim_plot}{\code{character} indicating which latent trait of the HO-2PL-norm
-IRTnorm model should be visualized.
-Can only be of the following characters: "general", "domain1".}
+\item{dim_plot}{Character string indicating which latent trait to plot:
+\code{"general"} or \code{"domainK"}, where \code{K} is the domain number
+(e.g., \code{"domain1"}). Only required for multidimensional models in
+combination with age groups, because then only one trait can be shown at
+a time. It is ignored for all other models.}
 }
 \value{
-Invisibly returns a ggplot2 object. The plot is printed to the current
-graphics device. The returned object can be further customized or saved.
+A \code{ggplot} object, returned invisibly. It can be customized
+with additional \pkg{ggplot2} layers or saved with
+\code{\link[ggplot2]{ggsave}}.
 }
 \description{
-The function \code{visual_raw_score_ppc} creates a visualization comparing the IRTnorm model-implied
-(posterior predictive) raw score distribution against the observed raw score
-distribution. This serves as a posterior predictive IRTnorm model check (PPMC) to assess
-how well the fitted IRTnorm model reproduces the observed data patterns.
-
-The function automatically detects whether the input comes from a single analysis
-or from age-grouped analyses, and creates the appropriate visualization (single
-plot or faceted plot by age groups).
+Plots the observed raw score distribution together with the distribution
+implied by the fitted IRT norming model (posterior predictive check), as
+computed by \code{\link{raw_score_ppc}}. This shows how well the model
+reproduces the raw scores in the data. The plot is printed and also
+returned.
 }
 \details{
-Visualize IRTnorm model-implied vs Observed raw score distributions
-
-The visualization includes:
+The plot shows, for each raw score:
 \itemize{
-\item \strong{Orange jittered points}: Individual posterior predictive draws
-showing the distribution of replicated frequencies across MCMC iterations.
-\item \strong{Dashed line}: Median (50th percentile) of the replicated distributions.
-\item \strong{Dotted lines}: 5th and 95th percentiles of the replicated distributions,
-forming a \eqn{90\%}credible interval.
-\item \strong{Black points}: Observed raw score frequencies from the actual data.
+\item \strong{Black points}: the observed frequencies in the data.
+\item \strong{Orange points}: the model-implied frequencies, one point
+per posterior draw.
+\item \strong{Dashed line}: the median of the model-implied frequencies.
+\item \strong{Dotted lines}: the 5th and 95th percentiles of the
+model-implied frequencies, which together form a 90\\% credible
+interval.
 }
+The model fits well if the observed frequencies lie within or close to the
+credible interval and follow the pattern of the median line.
 
-Good IRTnorm model fit is indicated when observed frequencies (black points) fall within
-or near the credible intervals (between dotted lines) and follow the general pattern
-of the median line.
-
-For age-grouped analyses, the function creates a faceted plot with separate panels
-for each age group, allowing comparison of IRTnorm model fit across different age ranges.
+The layout depends on the input:
+\itemize{
+\item Whole sample, unidimensional model: a single panel.
+\item Age groups: one panel per age group.
+\item Whole sample, multidimensional model: one panel per trait (the
+general trait and each domain).
+\item Age groups, multidimensional model: one panel per age group for the
+trait selected with \code{dim_plot}.
+}
+Each panel has its own axis scales.
 }
 \examples{
 \dontrun{
-# Load data
 data(response_data)
+info <- estimate_norming_model(
+  raw_data = response_data,
+  age_variable = "age",
+  item_variables = 1:50,
+  irt_model = "2PLnorm",
+  age_model = "poly",
+  poly_mean = 3,
+  poly_sd = 2
+)
 
-# Prepare data for IRTnorm model fit
-info <- estimate_norming_model(data = response_data,
-age_variable = "age",
-item_variables = 1:50,
-irt_model = "2PLnorm",
-age__model = "polynom",
-poly_mean = 3,
-poly_sd = 2)
+# Whole sample
+result <- raw_score_ppc(fit_info = info)
+visual_raw_score_ppc(result)
 
-# Single analysis (no age grouping)
-result <- raw_score_ppc(fit_info = info_poly)
-
-visual_raw_score_ppc(N_info = result)
-
-# Age-grouped analysis
-result_age <- raw_score_ppc(fit_info = info,
-                 age_range = seq(-2,2,1))
-
+# Separately by age group
+result_age <- raw_score_ppc(fit_info = info, age_range = c(-2,-1,0,1,2))
 visual_raw_score_ppc(result_age)
+
 }
+
 }
 \references{
 Gelman, A., Carlin, J. B., Stern, H. S., & Rubin, D. B. (2013).
-Bayesian Data Analysis (3rd ed.). Chapman and Hall/CRC.
+\emph{Bayesian Data Analysis} (3rd ed.). Chapman and Hall/CRC.
+
+Sinharay, S., Johnson, M. S., & Stern, H. S. (2006). Posterior predictive
+assessment of item response theory models. \emph{Applied Psychological
+Measurement, 30}(4), 298-321.
 }
 \seealso{
-\code{\link{raw_score_ppc}} for computing the raw score distributions
+\code{\link{raw_score_ppc}} for computing the raw score
+distributions
 }

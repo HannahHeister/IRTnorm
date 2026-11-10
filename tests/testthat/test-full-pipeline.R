@@ -79,8 +79,9 @@ pipeline_check <- function(out, sim, n_draws = 200) {
   vis  <- function(x, ...) if (sim$multi){visual_raw_score_ppc(x, dim_plot = dom1)}else{ visual_raw_score_ppc(x)}
   
   ppc <- raw_score_ppc(fit_info = out)
-  expect_no_error(vis(ppc))
-  expect_no_error(vis(raw_score_ppc(fit_info = out, age_range = c(0, 5, 10))))
+  ppc2 <- raw_score_ppc(fit_info = out,age_range = c(0, 5, 10))
+  expect_no_error(visual_raw_score_ppc(ppc))
+  expect_no_error(vis(ppc2))
   expect_no_error(item_person_fit(fit_info = out, parameter = "item"))
   expect_no_error(item_person_fit(fit_info = out, parameter = "person"))
   expect_no_error(item_residual_cor(fit_info = out))

@@ -208,7 +208,7 @@ test_that("info_relation is read from model_info", {
 
 # ---- Multidimensional: plot ------------------------------------------------
 
-test_that("multi: one panel per moment x trait with free y scales", {
+test_that("multi: one row per moment and column per trait with free y scales", {
   p <- run_effect(make_effect_multi(n = 30, n_dim = 2))$plot
   lay <- layout_of(p)
   expect_equal(nrow(lay), 6)
@@ -217,7 +217,7 @@ test_that("multi: one panel per moment x trait with free y scales", {
   expect_setequal(as.character(facet_col(lay, "trait")), c("delta1", "delta2"))
   expect_true(p$facet$params$free$y)
   expect_false(p$facet$params$free$x)
-  expect_equal(max(lay$ROW), 2)
+  expect_equal(max(lay$ROW), 3)
 })
 
 test_that("multi: panel count scales with dimensions", {

@@ -2,7 +2,7 @@
 % Please edit documentation in R/modelselection.R
 \name{visual_age_models}
 \alias{visual_age_models}
-\title{Visualize Polynomial Model Selection Results}
+\title{Visualize results of an age model comparison}
 \usage{
 visual_age_models(
   compare_info,
@@ -11,60 +11,72 @@ visual_age_models(
 )
 }
 \arguments{
-\item{compare_info}{A list as returned by
-\code{\link{compare_age_models}}}
+\item{compare_info}{An object of class \code{"compare_info"}, as returned by
+\code{\link{compare_age_models}}. Any other input causes an error.}
 
-\item{perspective}{Character string, either \code{"ELPD"} or
-\code{"trajectory"}. \code{"ELPD"} plots ELPD differences for each
-\code{(mu, sd)} combination, faceted by \code{sd}, with the
-top-ranked model(s) highlighted. \code{"trajectory"} plots the
-estimated age trajectories for every fitted model, faceted by moment
-(\code{mean}/\code{sd}), with the top-ranked model(s) highlighted.
-Defaults to \code{"ELPD"}. Partial matching is supported via
-\code{\link[base]{match.arg}}.}
+\item{perspective}{Character string, either \code{"ELPD"} (default) or
+\code{"trajectory"}.
+\itemize{
+\item \code{"ELPD"}: plots the ratio of the ELPD difference to its
+standard error for each fitted model, by polynomial degree of the
+mean. See Details.
+\item \code{"trajectory"}: plots the estimated age trajectories of all
+fitted models, with the top-ranked model(s) highlighted. See Details.
+}}
 
-\item{highlight_ranks}{Numeric value indicating the top highlight_ranks to be
-highlighted in color.}
+\item{highlight_ranks}{Numeric value of length 1. Models with a rank less
+than or equal to this value are highlighted: labeled with their rank
+under \code{perspective = "ELPD"}, and drawn as thick colored lines
+(colored by rank) under \code{perspective = "trajectory"}. Default is
+1, which highlights only the best model. If the value is not a single
+number, a warning is issued and the default is used.}
 }
 \value{
-A \code{ggplot} object, which can be further customized or
-printed directly.
+A \code{ggplot} object, which can be printed directly or further
+customized with additional \pkg{ggplot2} layers.
 }
 \description{
 Creates a diagnostic plot from the output of
-\code{\link{compare_age_models}}, allowing inspection of model
-comparison results either from the perspective of model fit (ELPD
-differences across polynomial degree combinations) or from the
-perspective of the estimated age trajectories themselves.
+\code{\link{compare_age_models}}. The results can be inspected either from
+the perspective of model fit (ELPD differences relative to the best model,
+across polynomial degree combinations) or from the perspective of the
+estimated age trajectories themselves.
 }
 \details{
-Under \code{perspective = "ELPD"}, each point represents one fitted
-model's ELPD difference from the best-performing model, plotted against
-\code{mu} and faceted by \code{sd}. Models within the top
-\code{highlight_ranks} ranks are colored by rank; all other models are
-shown as faint unfilled points for context.
+\strong{perspective = "ELPD".} Each point is one fitted model. The x-axis
+is the polynomial degree for the mean (\code{mu}), the point color encodes
+the polynomial degree for the standard deviation (\code{sd}), and the
+y-axis shows the ELPD difference from the best model divided by its
+standard error (\code{ELPD_diff / SE}).
+Values close to zero indicate models that are hard to distinguish from the
+best model, which is plotted at 0; strongly negative values indicate
+clearly worse fit. Models within the top
+\code{highlight_ranks} ranks are labeled with their rank.
+If the spline model was included in
+\code{\link{compare_age_models}}, it has no polynomial degrees and is
+plotted at the x position and in the color category \code{"splines"}.
 
-Under \code{perspective = "trajectory"}, each line represents one fitted
-model's estimated age trajectory (separately for the mean and SD moments,
-via \code{facet_wrap(~moment)}). All trajectories are drawn faintly in
-the background, with trajectories from models within the top
-\code{highlight_ranks} ranks overlaid in color and at greater line
-thickness, making it easy to see whether top-ranked models agree on the
-shape of the trajectory or diverge.
+\strong{perspective = "trajectory".} Each line is the estimated age
+trajectory of one fitted model, shown separately for the mean and the
+standard deviation of the latent trait. Models within the top
+\code{highlight_ranks} ranks are highlighted in color, while all other
+models are drawn faintly in the background. This shows whether top-ranked
+models agree on the shape of the trajectory or diverge.
 }
 \examples{
 \dontrun{
+data(my_data)
 res <- compare_age_models(
   method = "grid", grid = expand.grid(mu = 1:3, sd = 0:2),
   raw_data = my_data, irt_model = "1PLnorm",
-  age_variable = "age", item_variables = c("sex")
+  age_variable = "age", item_variables = 1:25
 )
 
 # ELPD comparison across (mu, sd) combinations
 visual_age_models(res, perspective = "ELPD")
 
-# Estimated age trajectories, with best model(s) highlighted
-visual_age_models(res, perspective = "trajectory")
+# Estimated age trajectories, highlighting the three best models
+visual_age_models(res, perspective = "trajectory", highlight_ranks = 3)
 }
 
 }

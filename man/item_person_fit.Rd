@@ -2,66 +2,76 @@
 % Please edit documentation in R/eval_modelfit.R
 \name{item_person_fit}
 \alias{item_person_fit}
-\title{Visualization of item and person fit}
+\title{Plot item fit and person fit}
 \usage{
 item_person_fit(fit_info, parameter)
 }
 \arguments{
-\item{fit_info}{A named \code{list} as returned by \code{\link{estimate_norming_model}}.}
+\item{fit_info}{An object of class \code{"IRTnorm"}, as returned by
+\code{\link{estimate_norming_model}}.}
 
-\item{parameter}{A \code{character} indicating whether item fit or person fit
-should be visualized. Must be either \code{"item"} or \code{"person"}.}
+\item{parameter}{Character string, either \code{"item"} or
+\code{"person"}.
+\itemize{
+\item \code{"item"}: compares the observed and model-implied
+proportion of correct responses for each item. See Details.
+\item \code{"person"}: compares the observed and model-implied raw
+score of each person.
+}}
 }
 \value{
-A \pkg{ggplot2} object showing smoothed quantile curves of the
-IRTnorm model-implied latent trait distribution (\eqn{5\%},\eqn{ 25\%},\eqn{ 50\%},
-\eqn{75\%}, and \eqn{95\%}). together with realized latent trait estimates plotted against age.
+Invisibly, a list with two components: \code{plot}, the
+\code{ggplot} object, and \code{data}, the data frame underlying the
+plot. The plot is also printed when the function is called.
 }
 \description{
-Visualizes item-level fit or person-level fit by comparing observed
-response patterns with IRTnorm model-implied response patterns.
+Compares the observed responses with the responses implied by the fitted
+IRT norming model, either per item (item fit) or per person (person fit).
+The closer the points lie to the diagonal reference line, the better the
+model reproduces the data.
 }
 \details{
-For each person–item combination, the function computes the IRTnorm model-implied
-probability of a correct response. Depending on \code{estimate}, responses are
-either dichotomized at 0.5 (\code{"mostlikely"}) or retained as expected probabilities (\code{"expected"}).
+The model-implied values are computed from the item parameter estimates
+and the estimated latent trait of each person (posterior means). Missing
+responses are ignored in both the observed and the model-implied values.
 
-If \code{parameter = "item"}, the plot compares observed and the IRTnorm model-implied
-the amount of correct answers per item.
+\strong{Item fit.} For the 1PL, 2PL, and 3PL models, each point is one
+item, with the observed proportion of correct responses on the x-axis and
+the model-implied proportion on the y-axis. For multidimensional models,
+the items are shown in one panel per domain. Items without any valid
+response are excluded, with a warning. For the graded response model, the
+plot shows, for each item, the observed and model-implied proportion in
+each response category as stacked bars.
 
-If \code{parameter = "person"}, the plot compares observed and the IRTnorm model-implied
-raw score per person.
-
-A diagnonal reference line is added to facilitate visual assessment of fit.
-The closer the observed points are to the diagonal, the better the fit is.
+\strong{Person fit.} Each point is one person, with the observed raw score
+on the x-axis and the model-implied expected raw score on the y-axis. For
+multidimensional models, the raw score is computed separately for each
+domain and shown in one panel per domain.
 }
 \examples{
 \dontrun{
-# Load data
 data(response_data)
+info <- estimate_norming_model(
+  raw_data = response_data,
+  age_variable = "age",
+  item_variables = 1:50,
+  irt_model = "2PLnorm",
+  age_model = "poly",
+  poly_mean = 3,
+  poly_sd = 2
+)
 
-# Fit IRTnorm model and extract information
-info <- estimate_norming_model(data = response_data,
-age_variable = "age",
-item_variables = 1:50,
-irt_model = "2PLnorm",
-age__model = "polynom",
-poly_mean = 3,
-poly_sd = 2)
+# Item fit
+item_person_fit(fit_info = info, parameter = "item")
 
- # Example usage
- item_person_fit(
-   fit_info = info,
-   parameter = "item"
- )
-
- item_person_fit(
-   fit_info = info,
-   parameter = "person"
- )
+# Person fit, keeping the plot and the underlying data
+res <- item_person_fit(fit_info = info, parameter = "person")
+res$plot
+head(res$data)
 }
 
 }
 \seealso{
-\code{\link{extract_info}}
+\code{\link{estimate_norming_model}},
+\code{\link{raw_score_ppc}}
 }

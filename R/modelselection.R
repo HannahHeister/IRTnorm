@@ -201,190 +201,191 @@ check_dimension <- function(model_specifications){
     invisible(TRUE)
 }
 
-#' Compare IRTnorm models modeled with different polynomial degrees 
-#' via Grid Search or via Forward Selection
+#' Compare age trajectory models for IRT norming models
 #'
-#' Fits a series of IRTnorm with polynomial age trajectories (varying the
-#' polynomial degree for the mean, \code{mu}, and standard deviation, \code{sd},
-#' of the trajectory) and compares them using leave-one-out cross-validation
-#' (LOO-ELPD). Models can be evaluated either over a user-supplied grid of
-#' \code{(mu, sd)} combinations, or via a forward-selection search that
-#' starts from the simplest model and incrementally increases polynomial
-#' complexity as long as model fit improves.
+#' Fits a series of unidimensional IRT norming models that differ in how the
+#' age trajectory of the latent trait is modeled, and compares them by their
+#' expected log predictive density (ELPD), estimated with approximate
+#' leave-one-out cross-validation (PSIS-LOO-CV).
 #'
-#' @param method Character string, either \code{"grid"} or \code{"forward"}.
-#'   \code{"grid"} evaluates every \code{(mu, sd)} combination supplied in
-#'   \code{grid}. \code{"forward"} performs greedy forward selection, starting
-#'   from \code{mu = 1, sd = 0} and at each step trying to increase either
-#'   \code{mu} or \code{sd} by one, keeping whichever candidate improves the
-#'   ELPD, and stopping when neither candidate improves on the current best
-#'   model or \code{maxeval} model fits have been reached.
-#' @param grid A data frame with columns \code{mu} and \code{sd} giving the
-#'   polynomial degree combinations to evaluate. Required (and only used) when
-#'   \code{method = "grid"}; ignored otherwise.
-#'@param raw_data A \code{data.frame} or \code{matrix} containing individual-level
-#'   data. Each row represents one individual. The object must contain at least
-#'   an age variable and item response variables. Item responses may
-#'   contain missing values (\code{NA}).
+#' Age trajectories are modeled as polynomials of age, with separate degrees
+#' for the mean (\code{mu}) and the standard deviation (\code{sd}) of the latent
+#' trait. Candidate \code{(mu, sd)} combinations can be supplied as a grid
+#' (\code{method = "grid"}) or found by forward selection
+#' (\code{method = "forward"}). Optionally, a penalized-spline model is fitted
+#' and compared against the polynomial models.
 #'
-#'@param age_variable Either a \code{numeric} index or a \code{character} string specifying
-#'   the column in \code{raw_data} that contains the individuals' age information.
-#'   Age is assumed to be continuous.
-#'
-#'@param item_variables A \code{numeric} or \code{character} vector specifying the columns in
-#'   \code{raw_data} that contain the item response variables.
-#'
-#'@param irt_model A \code{character} scalar indicating for which IRT norming model the
-#'   data should be prepared. The currently supported options are:
-#'   \describe{
-#'     \item{\code{"1PLnorm"}}{One-parameter logistic IRT model / Rasch model with
-#'     age-dependent mean and variance.}
-#'      \item{\code{"2PLnorm"}}{Two-parameter logistic IRT model with
-#'     age-dependent mean and variance.}
-#'      \item{\code{"3PLnorm"}}{Three-parameter logistic IRT model with
-#'     age-dependent mean and variance.}
-#'      \item{\code{"GRMnorm"}}{Graded Response model with
-#'     age-dependent mean and variance.}
-#'      \item{\code{"Testlet1PLnorm"}}{Higher order 1PL IRT model with
-#'     age-dependent mean and variance constant across domains.}
-#'      \item{\code{"Testlet2PLnorm"}}{Higher order 2PL IRT model with
-#'     age-dependent mean and variance constant across domains.}
-#'      \item{\code{"HO1PLnorm-C"}}{Higher order 1PL IRT model with
-#'     age-dependent mean and variance and constant correlation matrix.}
-#'      \item{\code{"HO2PLnorm-C"}}{Higher order 2PL IRT model with
-#'     age-dependent mean and variance and constant correlation matrix.}
-#'    \item{\code{"HO1PLnorm-P"}}{Higher order 1PL IRT model with
-#'     age-dependent mean and variance and proportional correlation matrix across age.}
-#'      \item{\code{"HO2PLnorm-P"}}{Higher order 2PL IRT model with
-#'     age-dependent mean and variance and proportional correlation matrix across age.}
-#'     \item{\code{"HO1PLnorm-F"}}{Higher order 1PL IRT model with
-#'     age-dependent mean and variance and free correlation matrix across age.}
-#'      \item{\code{"HO2PLnorm-F"}}{Higher order 2PL IRT model with
-#'     age-dependent mean and variance and free correlation matrix across age.}
+#' @param method Character string, either \code{"grid"} (default) or
+#'   \code{"forward"}.
+#'   \itemize{
+#'     \item \code{"grid"}: fits every \code{(mu, sd)} combination in
+#'       \code{grid}.
+#'     \item \code{"forward"}: greedy forward selection. See Details.
 #'   }
-#' @param prior_knowledge Only required if prior knowledge should be incorporated
-#' in the model. A list of prior means and prior standard deviations has to be indicated,
-#' for each parameter group for which prior knowledge is to be incorporated. For b in the GRM model
-#' this has to be a list per means and standard deviations.
-#' Below in the example an example list is used.
-#' @param parameter_fixed Only required if model parameters should be fixed.
-#' A list which indicates the parameter groups that should be fixed, with the list names
-#' and the list elements indicating the values to which the parameters should be fixed.
-#' @param maxeval Integer. Maximum number of individual model fits to perform
-#'   during forward selection before stopping, regardless of whether
-#'   improvement has plateaued. Only used when \code{method = "forward"}.
-#'   Defaults to 10.
-
-#' @param seed An optional \code{integer} specifying the random seed for
-#'   reproducibility. If \code{NULL} (default), a random seed is generated
-#'   internally.
+#' @param grid A \code{data.frame} with columns \code{mu} and \code{sd}, giving
+#'   the polynomial degrees to evaluate for the mean and the standard deviation
+#'   of the age trajectory (e.g., \code{expand.grid(mu = 1:3, sd = 0:2)}).
+#'   Required when \code{method = "grid"}; ignored when
+#'   \code{method = "forward"}.
+#'@param maxeval Integer. Upper limit on the number of polynomial models
+#'   fitted during forward selection. Default is 10. Only used when
+#'   \code{method = "forward"}. The initial model counts as one fit and each
+#'   round adds two, and a new round is started only if both of its fits stay
+#'   within the limit. At least \code{maxeval = 4} is therefore needed to
+#'   evaluate any candidate beyond the starting model. The spline model (see
+#'   \code{include_splines}) is not counted.
+#' @param irt_model Character string naming the unidimensional IRT norming
+#'   model to fit. One of:
+#'   \describe{
+#'     \item{\code{"1PLnorm"}}{One-parameter logistic (Rasch) model with
+#'       age-dependent mean and variance. This is the default.}
+#'     \item{\code{"2PLnorm"}}{Two-parameter logistic model with age-dependent
+#'       mean and variance.}
+#'     \item{\code{"3PLnorm"}}{Three-parameter logistic model with
+#'       age-dependent mean and variance.}
+#'     \item{\code{"GRMnorm"}}{Graded response model with age-dependent mean
+#'       and variance.}
+#'   }
+#'   The hierarchical and testlet models (\code{"Testlet1PLnorm"},
+#'   \code{"Testlet2PLnorm"}, \code{"HO1PLnorm-C"}, \code{"HO2PLnorm-C"},
+#'   \code{"HO1PLnorm-P"}, \code{"HO2PLnorm-P"}, \code{"HO1PLnorm-F"},
+#'   \code{"HO2PLnorm-F"}) are not supported by this function and cause an
+#'   error. For these models, select the optimal polynomial degrees separately
+#'   for each domain with a unidimensional model.
+#' @param raw_data A \code{data.frame} or \code{matrix} with individual-level
+#'   data, one row per individual. It must contain the age variable and the
+#'   item response variables. Item responses may contain missing values
+#'   (\code{NA}).
+#' @param age_variable Column of \code{raw_data} containing age, given as a
+#'   numeric index or a column name. Age is treated as continuous.
+#' @param item_variables Columns of \code{raw_data} containing the item
+#'   responses, given as a numeric or character vector of indices or names.
+#' @param prior_knowledge Optional. A named list with prior means and prior
+#'   standard deviations for each parameter group for which prior knowledge
+#'   should be incorporated. For parameter \code{b} in the GRM, means and
+#'   standard deviations must each be supplied as a list. Default is
+#'   \code{NULL} (no prior knowledge). The same priors are used for all
+#'   candidate models.
+#' @param parameter_fixed Optional. A named list in which each name is a
+#'   parameter group to be fixed and each element gives the value(s) to which
+#'   it is fixed. Default is \code{NULL} (no fixed parameters). The same
+#'   constraints are applied to all candidate models.
+#' @param seed Optional integer random seed for reproducibility. If
+#'   \code{NULL} (default), a seed is drawn at random. The same seed is used
+#'   for every model fit.
+#' @param iter_warmup Integer. Number of warm-up iterations per chain.
+#'   Default is 500, which is usually sufficient for well-fitting data but may
+#'   need to be increased for complex models.
+#' @param iter_sampling Integer. Number of post-warm-up (sampling) iterations
+#'   per chain. Default is 500; increase it for complex models or for more
+#'   precise ELPD estimates.
+#' @param chains Integer. Number of Markov chains. Default is 4.
+#' @param parallel_chains Optional integer. Number of chains run in parallel.
+#'   If \code{NULL} (default), as many chains as \code{chains} are run in
+#'   parallel, limited by the number of available cores
+#'   (see \code{\link[parallel]{detectCores}}).
+#' @param include_splines Logical. If \code{TRUE} (default), a penalized-spline
+#'   age model is fitted in addition to the polynomial models and included in
+#'   the comparison.
 #'
-#' @param iter_warmup An \code{integer} specifying the number of warm-up
-#'   iterations per chain used by the MCMC sampler.  The default value of 500 is 
-#'   sufficient for well-fitting data, but it may need to be increased for 
-#'   complex models or to improve precision.  
-#'
-#' @param iter_sampling An \code{integer} specifying the number of post
-#'   warm-up (sampling) iterations per chain.  The default value of 500 is 
-#'   sufficient for well-fitting data, but it may need to be increased for
-#'    complex models or to improve precision.  
-#'    
-#' @param chains An \code{integer} specifying the number of Markov chains to
-#'   run in parallel. The default is 4 chains.
-#'
-#' @param parallel_chains An optional \code{integer} specifying the number of
-#'   CPU cores used for parallel sampling. If \code{NULL} (default), all
-#'   available cores detected by \code{\link[parallel]{detectCores}} are used.
-#'
-#'@param include_splines Logical, if penalized splines should be compared to the 
-#'polynomial selection or not. 
 #' @details
-#' Returns LOO-ELPD values (\code{loo_extr}) along with the
-#' estimated age trajectory (mean and SD of \code{theta} across the age
-#' range).
-#'
-#' Under \code{method = "grid"}, every row of \code{grid} is fit once and all
+#' \strong{Grid search.} Every row of \code{grid} is fitted once, and all
 #' models are compared on equal footing.
 #'
-#' Under \code{method = "forward"}, the search begins at the simplest model
-#' (\code{mu = 1, sd = 0}) and proceeds greedily: at each iteration, the two
-#' neighboring candidates (\code{mu + 1, sd} and \code{mu, sd + 1}) are fit
-#' and compared against the current best ELPD. The search advances to
-#' whichever candidate scores higher, or stops if neither candidate improves
-#' on the current best model. The search also stops once \code{maxeval} total
-#' model fits have been performed, even if improvement has not yet
-#' plateaued. Note that \code{maxeval} counts individual model fits (the
-#' initial model plus two per round), not the number of forward-selection
-#' rounds.
+#' \strong{Forward selection.} The search starts at the simplest model
+#' (\code{mu = 1}, \code{sd = 0}). In each round, the two neighboring models
+#' \code{(mu + 1, sd)} and \code{(mu, sd + 1)} are fitted. If the better of the
+#' two has a strictly higher ELPD than the current best model, it becomes the
+#' new current best and the search continues. Otherwise the search stops, as
+#' it also does when the \code{maxeval} limit is reached. Because the search is
+#' greedy, it can end in a local optimum and may miss combinations that a grid
+#' search would find.
 #'
-#' After fitting, all candidate models are compared based on their ELPD 
-#' differences and ranks. The model with rank 1 is flagged as
-#' \code{best} in the returned \code{trajectory} data frame.
+#' \strong{Model comparison.} All fitted models, including the spline model if
+#' requested, are ranked by ELPD. The model with the highest ELPD receives rank
+#' 1 and is flagged as \code{best} in the returned trajectory data. The ranking
+#' is based on the point estimate of ELPD and does not account for uncertainty
+#' in the differences (\code{ELPD_diff}) or for parsimony. Inspect
+#' \code{ELPD_diff} before choosing the top-ranked model, and check
+#' \code{paretok} for unreliable LOO estimates (commonly, values above 0.7).
 #'
-#' @return A list with the following components:
+#' @return An object of class \code{"compare_info"}, a list with components:
 #' \describe{
-#'   \item{\code{best_model}}{A model comparison
-#'     table including \code{ELPD}, \code{ELPD_diff}, \code{modelcombi}, and
-#'     \code{rank} for every fitted model.}
-#'   \item{\code{trajectory}}{A data frame combining the estimated age
-#'     trajectories (mean and SD) for all fitted models, merged with model
-#'     rank, and with a logical \code{best} column flagging rows belonging to
-#'     the top-ranked (rank 1) model.}
-#'   \item{\code{best_configuration}}{A list describing the winning model
-#'     configuration (\code{irt_model}, \code{age_model}, \code{poly_mean},
-#'     \code{poly_sd}, \code{prior_knowledge}, \code{parameter_fixed}).
-#'     \strong{Only populated when \code{method = "forward"}}; under
-#'     \code{method = "grid"} this element is \code{NULL}, since no single
-#'     configuration is privileged as a search outcome.}
+#'   \item{\code{best_model}}{A model comparison table with one row per fitted
+#'     model, including \code{ELPD}, \code{ELPD_diff}, \code{modelcombi}
+#'     (model label), the polynomial degrees \code{mu} and \code{sd}, and
+#'     \code{rank}.}
+#'   \item{\code{trajectory}}{A data frame with the estimated age trajectories
+#'     (mean and SD of \code{theta} across the age range) for all fitted
+#'     models, merged with each model's \code{rank}. The logical column
+#'     \code{best} is \code{TRUE} for rows of the top-ranked model.}
+#'   \item{\code{paretok}}{A matrix of Pareto-\eqn{\hat{k}} diagnostics from
+#'     the LOO approximation, one column per fitted model.}
+#'   \item{\code{best_configuration}}{A list describing the top-ranked model
+#'     (\code{irt_model}, \code{age_model}, \code{poly_mean}, \code{poly_sd},
+#'     \code{prior_knowledge}, \code{parameter_fixed}). \code{age_model} is
+#'     \code{"poly"}, or \code{"splines"} if the spline model ranks first, in
+#'     which case \code{poly_mean} and \code{poly_sd} are \code{NA}. It can be
+#'     passed on to further model fitting.}
 #' }
 #'
 #' @note
-#' When \code{method = "grid"}, \code{grid} must be supplied or the function
-#' stops with an error. When \code{method = "forward"}, \code{grid} is
-#' ignored if supplied.
+#' \code{grid} must be supplied when \code{method = "grid"}, otherwise the
+#' function stops with an error. Fitting many Bayesian models can be
+#' time-consuming; consider a small grid or \code{method = "forward"} for
+#' initial exploration.
+#'
+#' @seealso \code{\link[loo]{loo}} for the underlying cross-validation method.
 #'
 #' @examples
 #' \dontrun{
+#' data(my_data)
 #' # Grid search over a fixed set of polynomial degrees
 #' my_grid <- expand.grid(mu = 1:3, sd = 0:2)
 #' res_grid <- compare_age_models(
 #'   method = "grid", grid = my_grid,
 #'   raw_data = my_data, irt_model = "1PLnorm",
-#'   age_variable = "age", item_variables = 1:20
+#'   age_variable = "age", item_variables = 1:25
 #' )
+#' res_grid$best_model
 #'
-#' # forward selection
+#' # Forward selection, without the spline comparison
 #' res_fwd <- compare_age_models(
 #'   method = "forward",
 #'   raw_data = my_data, irt_model = "1PLnorm",
-#'   age_variable = "age", item_variables = 1:20,
-#'   maxeval = 12
+#'   age_variable = "age", item_variables = 1:25,
+#'   maxeval = 12, include_splines = FALSE
 #' )
 #' res_fwd$best_configuration
 #' }
 #'
 #' @export
 compare_age_models <- function(method = c("grid", "forward"),
-                                       grid = NULL,
-                                       raw_data, irt_model = c("1PLnorm","2PLnorm","3PLnorm","GRMnorm",
-                                                               "Testlet1PLnorm","Testlet2PLnorm",
-                                                               "HO1PLnorm-C", "HO2PLnorm-C",
-                                                               "HO1PLnorm-P", "HO2PLnorm-P",
-                                                               "HO1PLnorm-F", "HO2PLnorm-F"),
-                                       age_variable, item_variables,
-                                       maxeval = 10,
-                                       prior_knowledge = NULL, parameter_fixed = NULL,
-                                       seed = NULL, iter_warmup = 500,
-                                       iter_sampling = 500,
-                                       chains = 2, parallel_chains = NULL,
-                                       include_splines = TRUE){
+                               grid = NULL,
+                               maxeval = 10,
+                               irt_model = c("1PLnorm","2PLnorm","3PLnorm","GRMnorm"),
+                               raw_data,
+                               age_variable,
+                               item_variables,
+                               prior_knowledge = NULL, 
+                               parameter_fixed = NULL,
+                               seed = NULL, 
+                               iter_warmup = 500,
+                               iter_sampling = 500,
+                               chains = 4,
+                               parallel_chains = NULL,
+                               include_splines = TRUE){
   
   method <- match.arg(method)
   if (is.null(irt_model)) {
     stop("`irt_model` must be a single model name.")
   }
-  irt_model <- match.arg(irt_model)
-  
+  check_rawinput(raw_data = raw_data, item_variables = item_variables, 
+                 age_variable = age_variable)
+  if(any(is.na(irt_model))){
+    stop("The IRT model selected is NA, you have to select one of the 
+         followingirt_model: \"1PLnorm\", \"2PLnorm\", \"3PLnorm\", \"GRMnorm\"")
+  }
   if(any(irt_model == c("Testlet1PLnorm","Testlet2PLnorm",
                    "HO1PLnorm-C", "HO2PLnorm-C",
                    "HO1PLnorm-P", "HO2PLnorm-P",
@@ -393,8 +394,10 @@ compare_age_models <- function(method = c("grid", "forward"),
          hierarchical IRT model, you should search for each domains optimal polynomial degree 
          seperatly.")
   }
+  irt_model <- match.arg(irt_model)
+  
   if (length(parallel_chains) == 0){
-    parallel_chains <- parallel::detectCores()
+    parallel_chains <- min(chains, parallel::detectCores())
   }
   if (is.null(seed)){
     seed <- sample.int(.Machine$integer.max, 1)
@@ -566,58 +569,70 @@ compare_age_models <- function(method = c("grid", "forward"),
 
 
 
-#' Visualize Polynomial Model Selection Results
+#' Visualize results of an age model comparison
 #'
 #' Creates a diagnostic plot from the output of
-#' \code{\link{compare_age_models}}, allowing inspection of model
-#' comparison results either from the perspective of model fit (ELPD
-#' differences across polynomial degree combinations) or from the
-#' perspective of the estimated age trajectories themselves.
+#' \code{\link{compare_age_models}}. The results can be inspected either from
+#' the perspective of model fit (ELPD differences relative to the best model,
+#' across polynomial degree combinations) or from the perspective of the
+#' estimated age trajectories themselves.
 #'
-#' @param compare_info A list as returned by
-#'   \code{\link{compare_age_models}}
-#' @param perspective Character string, either \code{"ELPD"} or
-#'   \code{"trajectory"}. \code{"ELPD"} plots ELPD differences for each
-#'   \code{(mu, sd)} combination, faceted by \code{sd}, with the
-#'   top-ranked model(s) highlighted. \code{"trajectory"} plots the
-#'   estimated age trajectories for every fitted model, faceted by moment
-#'   (\code{mean}/\code{sd}), with the top-ranked model(s) highlighted.
-#'   Defaults to \code{"ELPD"}. Partial matching is supported via
-#'   \code{\link[base]{match.arg}}.
-#'@param  highlight_ranks Numeric value indicating the top highlight_ranks to be 
-#' highlighted in color. 
+#' @param compare_info An object of class \code{"compare_info"}, as returned by
+#'   \code{\link{compare_age_models}}. Any other input causes an error.
+#' @param perspective Character string, either \code{"ELPD"} (default) or
+#'   \code{"trajectory"}.
+#'   \itemize{
+#'     \item \code{"ELPD"}: plots the ratio of the ELPD difference to its
+#'       standard error for each fitted model, by polynomial degree of the
+#'       mean. See Details.
+#'     \item \code{"trajectory"}: plots the estimated age trajectories of all
+#'       fitted models, with the top-ranked model(s) highlighted. See Details.
+#'   }
+#' @param highlight_ranks Numeric value of length 1. Models with a rank less
+#'   than or equal to this value are highlighted: labeled with their rank
+#'   under \code{perspective = "ELPD"}, and drawn as thick colored lines
+#'   (colored by rank) under \code{perspective = "trajectory"}. Default is
+#'   1, which highlights only the best model. If the value is not a single
+#'   number, a warning is issued and the default is used.
+#'
 #' @details
-#' Under \code{perspective = "ELPD"}, each point represents one fitted
-#' model's ELPD difference from the best-performing model, plotted against
-#' \code{mu} and faceted by \code{sd}. Models within the top
-#' \code{highlight_ranks} ranks are colored by rank; all other models are
-#' shown as faint unfilled points for context.
+#' \strong{perspective = "ELPD".} Each point is one fitted model. The x-axis
+#' is the polynomial degree for the mean (\code{mu}), the point color encodes
+#' the polynomial degree for the standard deviation (\code{sd}), and the
+#' y-axis shows the ELPD difference from the best model divided by its
+#' standard error (\code{ELPD_diff / SE}).
+#' Values close to zero indicate models that are hard to distinguish from the
+#' best model, which is plotted at 0; strongly negative values indicate
+#' clearly worse fit. Models within the top
+#' \code{highlight_ranks} ranks are labeled with their rank.
+#' If the spline model was included in
+#' \code{\link{compare_age_models}}, it has no polynomial degrees and is
+#' plotted at the x position and in the color category \code{"splines"}.
 #'
-#' Under \code{perspective = "trajectory"}, each line represents one fitted
-#' model's estimated age trajectory (separately for the mean and SD moments,
-#' via \code{facet_wrap(~moment)}). All trajectories are drawn faintly in
-#' the background, with trajectories from models within the top
-#' \code{highlight_ranks} ranks overlaid in color and at greater line
-#' thickness, making it easy to see whether top-ranked models agree on the
-#' shape of the trajectory or diverge.
-#'
-#' @return A \code{ggplot} object, which can be further customized or
-#'   printed directly.
-#'
+#' \strong{perspective = "trajectory".} Each line is the estimated age
+#' trajectory of one fitted model, shown separately for the mean and the
+#' standard deviation of the latent trait. Models within the top
+#' \code{highlight_ranks} ranks are highlighted in color, while all other
+#' models are drawn faintly in the background. This shows whether top-ranked
+#' models agree on the shape of the trajectory or diverge.
+#' 
+#' @return A \code{ggplot} object, which can be printed directly or further
+#'   customized with additional \pkg{ggplot2} layers.
 #'
 #' @examples
 #' \dontrun{
+#' data(my_data)
 #' res <- compare_age_models(
 #'   method = "grid", grid = expand.grid(mu = 1:3, sd = 0:2),
 #'   raw_data = my_data, irt_model = "1PLnorm",
-#'   age_variable = "age", item_variables = c("sex")
+#'   age_variable = "age", item_variables = 1:25
 #' )
 #'
 #' # ELPD comparison across (mu, sd) combinations
 #' visual_age_models(res, perspective = "ELPD")
 #'
-#' # Estimated age trajectories, with best model(s) highlighted
-#' visual_age_models(res, perspective = "trajectory")
+#' # Estimated age trajectories, highlighting the three best models
+#' visual_age_models(res, perspective = "trajectory", highlight_ranks = 3)
 #' }
 #'
 #' @seealso \code{\link{compare_age_models}}
@@ -632,7 +647,7 @@ visual_age_models <- function(compare_info, perspective = c("ELPD", "trajectory"
     highlight_ranks <- 1
   }
   if (!inherits(compare_info, "compare_info")) {
-    rlang::abort("`compare_info` must be created by `compare_age_models()`.")
+    stop("`compare_info` must be created by `compare_age_models()`.")
   }
   if(perspective == "ELPD"){
     best_model <- compare_info$best_model
@@ -643,15 +658,14 @@ visual_age_models <- function(compare_info, perspective = c("ELPD", "trajectory"
     }
     best_model$poly_sd <- as.factor(best_model$poly_sd)
     best_model$SE[best_model$SE == 0] <- 1
+    best_model$ratio <- best_model$ELPD_diff/best_model$SE
     p <- ggplot2::ggplot(best_model) +  ggplot2::theme_bw() +
-      ggplot2::geom_point( ggplot2::aes(poly_mean, ELPD_diff/SE, color = poly_sd,size =1.2  )) +
+      ggplot2::geom_point( ggplot2::aes(.data$poly_mean, .data$ratio, color = .data$poly_sd,size =1.2  )) +
       ggplot2::geom_text(
         data = subset(best_model,rank <highlight_ranks + 1),   # only these points get labels
-        ggplot2::aes(poly_mean, ELPD_diff/SE, label = rank),              # the number to display
+        ggplot2::aes(.data$poly_mean, .data$ratio, label = .data$rank),              # the number to display
         hjust = 2                    # nudge label above the point
       )+
-      #ggplot2:: geom_point( ggplot2::aes(poly_mean, ELPD_diff/SE, shape = ranked, color = poly_sd, size = 1.2), 
-      #                     data = best_model[best_model$rank <= highlight_ranks,]) +
       ggplot2::xlab("polynomial degree for mean") +
       ggplot2::theme(text =  ggplot2::element_text(size=13,family = "serif"), 
                      axis.line =  ggplot2::element_line(color='black'),
@@ -667,10 +681,10 @@ visual_age_models <- function(compare_info, perspective = c("ELPD", "trajectory"
     trajectory <- compare_info$trajectory
     trajectory$ranked <- as.factor(trajectory$rank)
     p <-  ggplot2::ggplot(trajectory) +  ggplot2::theme_bw()+
-      ggplot2::geom_line( ggplot2::aes(age, est, group = modelcombi), alpha = 0.2) +
-      ggplot2::geom_line( ggplot2::aes(age, est, color = ranked), 
+      ggplot2::geom_line( ggplot2::aes(.data$age, .data$est, group = .data$modelcombi), alpha = 0.2) +
+      ggplot2::geom_line( ggplot2::aes(.data$age, .data$est, color = .data$ranked), 
                           data = trajectory[trajectory$rank  <= highlight_ranks,],linewidth = 1.2) +
-      ggplot2::facet_wrap(~moment, scale = "free") +  ggplot2::ylab("value") +
+      ggplot2::facet_wrap(~.data$moment, scale = "free") +  ggplot2::ylab("value") +
       ggplot2::theme(text =  ggplot2::element_text(size=13,family = "serif"), 
                      axis.line =  ggplot2::element_line(color='black'),
                      plot.background =  ggplot2::element_blank(),
@@ -681,90 +695,94 @@ visual_age_models <- function(compare_info, perspective = c("ELPD", "trajectory"
 }
 
 
-#' Compare Multiple IRTnorm models via Leave-One-Out Cross-Validation
+#' Compare IRT norming models via leave-one-out cross-validation
 #'
-#' Fits a set of user-specified IRTnorm models (e.g. differing in IRT model
-#' type, or age trajectory specification) and
-#' compares them using leave-one-out cross-validation (LOO-ELPD). Unlike
-#' \code{\link{compare_age_models}}, which searches over polynomial
-#' degree combinations for a single model specification,
-#' \code{compare_IRTnorm_models} allows arbitrary, independently specified
-#' model configurations to be compared directly against one another.
+#' Fits a set of user-specified IRT norming models, which may differ in the
+#' IRT model, the age trajectory specification, or both, and compares them by
+#' their expected log predictive density (ELPD), estimated with approximate
+#' leave-one-out cross-validation (LOO-CV). Unlike
+#' \code{\link{compare_age_models}}, which searches over polynomial degrees
+#' for a single IRT model, this function compares arbitrary, independently
+#' specified models directly.
 #'
-#' @param model_specifications A list of model specifications, where each element is
-#'   itself a list describing one model's properties (e.g. \code{irt_model},
-#'   \code{age_model}, \code{poly_mean}, \code{poly_sd}, and any other fields
-#'   accepted by \code{\link{estimate_norming_model}}).
-#'   \strong{All models in \code{model_specifications} must be of the same
-#'   dimensionality} — i.e. all unidimensional or all multidimensional.
-#'   Comparing models of different dimensionality is not supported, since
-#'   LOO-ELPD comparisons assume a common outcome/likelihood structure
-#'   across models.
-#'   
-#'@param raw_data A \code{data.frame} or \code{matrix} containing individual-level
-#'   data. Each row represents one individual. The object must contain at least
-#'   an age variable and item response variables. Item responses may
-#'   contain missing values (\code{NA}).
-#'
-#'@param age_variable Either a \code{numeric} index or a \code{character} string specifying
-#'   the column in \code{raw_data} that contains the individuals' age information.
-#'   Age is assumed to be continuous.
-#'
-#'@param item_variables A \code{numeric} or \code{character} vector specifying the columns in
-#'   \code{raw_data} that contain the item response variables.
-#'
-#' @param seed An optional \code{integer} specifying the random seed for
-#'   reproducibility. If \code{NULL} (default), a random seed is generated
-#'   internally.
-#'
-#' @param iter_warmup An \code{integer} specifying the number of warm-up
-#'   iterations per chain used by the MCMC sampler.  The default value of 500 is 
-#'   sufficient for well-fitting data, but it may need to be increased for 
-#'   complex models or to improve precision.  
-#'
-#' @param iter_sampling An \code{integer} specifying the number of post
-#'   warm-up (sampling) iterations per chain.  The default value of 500 is 
-#'   sufficient for well-fitting data, but it may need to be increased for
-#'    complex models or to improve precision.  
-#'
-#' @param chains An \code{integer} specifying the number of Markov chains to
-#'   run in parallel. The default is 4 chains.
-#'
-#' @param parallel_chains An optional \code{integer} specifying the number of
-#'   CPU cores used for parallel sampling. If \code{NULL} (default), all
-#'   available cores detected by \code{\link[parallel]{detectCores}} are used.
+#' @param model_specifications A list of model specifications. Each element is
+#'   itself a list describing one model, with fields such as \code{irt_model},
+#'   \code{age_model}, \code{poly_mean}, \code{poly_sd},
+#'   \code{prior_knowledge}, and \code{parameter_fixed}. See
+#'   \code{\link{estimate_norming_model}} for all accepted fields. All models
+#'   must have the same dimensionality (all unidimensional or all
+#'   multidimensional), because ELPD values are only comparable across models
+#'   for the same data and outcome structure.
+#' @param raw_data A \code{data.frame} with individual-level data, one row per
+#'   individual. It must contain the age variable and the item response
+#'   variables. Item responses may contain missing values (\code{NA}).
+#' @param age_variable Character string giving the name of the column in
+#'   \code{raw_data} that contains age. Age is treated as continuous.
+#' @param item_variables Character vector giving the names of the columns in
+#'   \code{raw_data} that contain the item responses.
+#' @param seed Optional integer random seed for reproducibility. If
+#'   \code{NULL} (default), a seed is drawn at random. The same seed is used
+#'   for every model.
+#' @param iter_warmup Integer. Number of warm-up iterations per chain. Default
+#'   is 500, which is usually sufficient for well-fitting data but may need to
+#'   be increased for complex models.
+#' @param iter_sampling Integer. Number of post-warm-up (sampling) iterations
+#'   per chain. Default is 500; increase it for complex models or for more
+#'   precise ELPD estimates.
+#' @param chains Integer. Number of Markov chains per model. Default is 2.
+#' @param parallel_chains Optional integer. Number of chains run in parallel.
+#'   If \code{NULL} (default), as many chains as \code{chains} are run in
+#'   parallel, limited by the number of available cores
+#'   (see \code{\link[parallel]{detectCores}}).
 #'
 #' @details
-#' For every model the data is prepared, the model is fitted, 
-#' and LOO-ELPD values are extracted and reported. All fitted models share
-#' the same \code{raw_data}, \code{age_variable}, \code{item_variables}, and
-#' MCMC settings (\code{seed}, \code{iter_warmup}, \code{iter_sampling},
-#' \code{chains}, \code{parallel_chains}); only the model specification
-#' itself varies across entries in \code{model_specifications}.
-#' For direct model comparison the ELPD differences and the resulting ranks
-#' across the full set of compared models are reported.
+#' All models are fitted to the same data with the same \code{seed} and
+#' sampler settings; only the model specification differs. Models are
+#' labeled by their position in \code{model_specifications} and their IRT
+#' model (e.g., \code{"1_1PLnorm"}), so list names are not used.
 #'
-#' @return A data frame giving the LOO-ELPD,
-#'   \code{ELPD_diff}, and \code{rank} for each fitted model, along with
-#'   model-identifying columns (e.g. \code{modelcombi}, \code{irt_model},
-#'   \code{age_model}) carried over from each model's \code{elpd_summary}.
+#' If a model fails to fit, a warning is issued and the model is left out of
+#' the comparison. The function stops with an error if fewer than two models
+#' are fitted successfully.
+#'
+#' Models are ranked by ELPD, with rank 1 given to the model with the highest
+#' ELPD. The ranking is based on the point estimate and does not account for
+#' uncertainty in the differences, so inspect \code{ELPD_diff} and its
+#' standard error before choosing the top-ranked model. Also check the Pareto
+#' \eqn{\hat{k}} diagnostics (values above 0.7 indicate unreliable LOO
+#' estimates).
+#'
+#' @return A list with two components:
+#' \describe{
+#'   \item{\code{best_model}}{A data frame with one row per successfully
+#'     fitted model, containing the ELPD (\code{ELPD}), the difference to the
+#'     best model (\code{ELPD_diff}), and the \code{rank}, along with columns
+#'     identifying the model (e.g., \code{modelcombi}).}
+#'   \item{\code{diagnostics}}{A data frame with the model label
+#'     (\code{model}), \code{irt_model}, \code{age_model}, polynomial degrees
+#'     (\code{poly_mean}, \code{poly_sd}; \code{NA} for non-polynomial age
+#'     models), and the sampling diagnostics \code{pareto_k}, \code{neff},
+#'     and \code{reff}. There is one row per observation and model, because
+#'     \code{pareto_k} is computed for each observation.}
+#' }
 #'
 #' @examples
 #' \dontrun{
+#' data(my_data)
 #' model_specifications <- list(
-#'   A = list(irt_model = "1PLnorm", age_model = "poly",
-#'            poly_mean = 2, poly_sd = 1),
-#'   B = list(irt_model = "1PLnorm", age_model = "splines"),
-#'   C = list(irt_model = "2PLnorm", age_model = "poly",
-#'            poly_mean = 2, poly_sd = 1)
+#'   list(irt_model = "1PLnorm", age_model = "poly",
+#'        poly_mean = 2, poly_sd = 1),
+#'   list(irt_model = "2PLnorm", age_model = "poly",
+#'        poly_mean = 2, poly_sd = 1)
 #' )
 #'
 #' result <- compare_IRTnorm_models(
-#'   model_specifications   = model_specifications,
-#'   raw_data     = my_data,
+#'   model_specifications = model_specifications,
+#'   raw_data = my_data,
 #'   age_variable = "age",
-#'   item_variables = 1:50
+#'   item_variables = paste0("item", 1:25)
 #' )
+#' result$best_model
 #' }
 #'
 #' @seealso \code{\link{compare_age_models}}
@@ -777,13 +795,8 @@ compare_IRTnorm_models <- function(model_specifications, raw_data, age_variable,
   
   validate_model_specifications_list(model_specifications)
   check_dimension(model_specifications)
-  
-  # Input checks
-  missing_cols <- setdiff(c(age_variable, item_variables), names(raw_data))
-  if (length(missing_cols) > 0) {
-    stop("Columns not found in raw_data: ", paste(missing_cols, collapse = ", "))
-  }
-  
+  check_rawinput(raw_data = raw_data, item_variables = item_variables, 
+                 age_variable = age_variable)
   if (is.null(parallel_chains)) {
     parallel_chains <- min(chains, parallel::detectCores())
   }

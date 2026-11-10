@@ -15,30 +15,17 @@
 #' @source Simulated data.
 "response_data"
 
-#' A dataset containing item responses and age information based on the GRM.
+#' A data set containing item responses and age information based on the GRM.
 #' @docType data
 #' @usage data(data_GRM)
 #' @source Simulated data.
 "data_GRM"
 
-
-
-#' Presaved conv_plot in order for the vignette to run fast.
-#'
+#' A data set containing item responses and age information based on the 1PLnorm model.
 #' @docType data
-#' @usage data(conv_plot)
-#' @format A \code{ggplot2} object.
-#' @source Visual output from the bayesplot::mcmc_trace function.
-"conv_plot"
-
-#' Presaved hist_plot in order for the vignette to run fast.
-#'
-#' @docType data
-#' @usage data(hist_plot)
-#' @format A \code{ggplot2} object.
-#' @source Visual output from the bayesplot::mcmc_rank_hist function.
-"conv_plot"
-
+#' @usage data(my_data)
+#' @source Simulated data.
+"my_data"
 
 #' Presaved info for the vignette to run fast.
 #'
@@ -82,6 +69,12 @@
 #' @source output from the compare_IRTnorm_models function.
 "IRTmods"
 
+#' Presaved output of item_residual_cor for the 2PL model. 
+#'
+#' @docType data
+#' @usage data(info_residualcor)
+#' @source output of item_residual_cor for the 2PL model.
+"info_residualcor"
 
 #' Presaved testdata .
 #'
@@ -122,10 +115,11 @@
 #' @source based on data from the HO example  for the first domain
 "HOex_res_info1"
 
-#' Presaved norm new individual based on HO model in order for the vignette to run fast.
+
+#' Presaved GRM model fit in order for the vignette to run fast.
 #'
 #' @docType data
-#' @usage data(HOex_info_newperson)
-#' @format A \code{list} with information returned from norm_new_individual.
-#' @source based on data from the HO example
-"info_newperson"
+#' @usage data(infoGRM)
+#' @format A \code{list} with seleted elements of the information returned from estimate_norming_model.
+#' @source based on data from the GRM example
+"infoGRM"

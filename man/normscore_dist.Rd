@@ -2,67 +2,70 @@
 % Please edit documentation in R/eval_modelfit.R
 \name{normscore_dist}
 \alias{normscore_dist}
-\title{Check the distribution of norm scores across age ranges}
+\title{Visualize the distribution of norm scores across age groups}
 \usage{
 normscore_dist(fit_info, age_range, binwidth = 0.5, dim_plot = NULL)
 }
 \arguments{
-\item{fit_info}{A named \code{list} as returned by \code{\link{estimate_norming_model}}.}
+\item{fit_info}{An object of class \code{"IRTnorm"}, as returned by
+\code{\link{estimate_norming_model}}.}
 
-\item{age_range}{A \code{numeric} vector specifying the cut-off points for
-age groups. Consecutive values define the lower (exclusive) and upper
-(inclusive) bounds of each age group.}
+\item{age_range}{Numeric vector with at least two values giving the
+boundaries of the age groups, on the same scale as the age variable in the
+data (e.g., \code{c(5, 7, 9, 11)} creates the groups [5,7], [7,9], and
+[9,11]). The lower boundary of a group is excluded and the upper boundary
+is included.}
 
-\item{binwidth}{A \code{numeric} value specifying the bin width of the
-histogram. Defaults to \code{0.5}.}
+\item{binwidth}{Numeric. Width of the histogram bins, in norm score units.
+Default is 0.5.}
 
-\item{dim_plot}{Only required for multidimensional IRTnorm models.
-\code{character} indicating which latent trait of the higher-order model
-should be visualized.
-Can only be of the following characters: "general", "domain1".}
+\item{dim_plot}{Only required for multidimensional models. Character string
+indicating which trait to plot: \code{"general"} or \code{"domainK"},
+where \code{K} is the domain number (e.g., \code{"domain1"}). For
+multidimensional models, the domain scores are shown on the standardized
+scale.}
 }
 \value{
-A \pkg{ggplot2} object showing histograms of norm scores by age group,
-overlaid with the scaled density of a standard normal distribution.
+A \code{ggplot} object, which can be printed directly or further
+customized with additional \pkg{ggplot2} layers.
 }
 \description{
-Visualize the distribution of norm scores across age ranges.
+Plots the estimated norm scores of the individuals in the data as a
+histogram for each age group, together with the density of a standard
+normal distribution. This shows whether the norming achieved the intended
+normalization of the latent trait within age groups: if it did, the
+histogram should follow the curve in every age group.
 }
 \details{
-The \code{normscore_dist} function visualizes whether estimated norm scores
-follow an approximately standard normal distribution across different age
-ranges. For each specified age group, a histogram of estimated norm scores is
-plotted together with the corresponding density of a standard normal
-distribution.
+The norm score of each individual is the posterior mean of the
+standardized latent trait. The normal curve is scaled to the number of
+individuals in the age group and to \code{binwidth}, so that it is directly
+comparable to the histogram frequencies. Each age group is shown in its own
+panel.
 
-This diagnostic plot is useful for assessing whether the norming procedure
-achieved the intended normalization of the latent trait within age groups.
-
-Individuals are assigned to age groups defined by \code{age_range} using the
-intervals \eqn{(a_i, a_{i+1}]}. For each age group, the histogram of estimated
-norm scores (\code{normscore_est}) is plotted together with the expected
-density of a standard normal distribution, scaled by the number of
-observations and the histogram bin width.
-
-Faceting is used to display the distributions separately for each age group.
+Individuals outside the range of \code{age_range} are removed from the
+plot, with a warning.
 }
 \examples{
 \dontrun{
-# Load data
-data(response_data)
+load(response_data)
+info <- estimate_norming_model(
+  raw_data = response_data,
+  age_variable = "age",
+  item_variables = 1:50,
+  irt_model = "2PLnorm",
+  age_model = "poly",
+  poly_mean = 3,
+  poly_sd = 2
+)
 
-# Fit IRTnorm model and extract information
-info <- estimate_norming_model(data = response_data,
-age_variable = "age",
-item_variables = 1:50,
-irt_model = "2PLnorm",
-age__model = "polynom",
-poly_mean = 3,
-poly_sd = 2)
+# Norm score distribution in age groups
+normscore_dist(fit_info = info, age_range = c(-2,1,0,1,2))
 
-# Plot the density of the normed latent trait in age-groups
-normscore_dist(fit_info = info, age_range = seq(-2,2,1))}
+}
+
 }
 \seealso{
-\code{\link{extract_info}}, \code{\link{fit_IRTnorm}}
+\code{\link{estimate_norming_model}},
+\code{\link{raw_score_ppc}}
 }

@@ -235,7 +235,7 @@ test_that("multidimensional: output structure and dimensions", {
   
   n_keep <- 100
   expect_named(res, c("theta_samples", "zdelta_sample", "delta_sample",
-                      "by_draw_samples", "summary", "mh_args", "obs_items"),
+                      "acceptance_rates", "by_draw_samples", "summary", "mh_args", "obs_items"),
                ignore.order = TRUE)
   expect_length(res$theta_samples, M * n_keep)
   expect_equal(dim(res$zdelta_sample), c(M * n_keep, D))

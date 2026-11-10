@@ -1,4 +1,4 @@
-make_mock_irtnorm <- function(irt_mod = 4, D = 3, items_per_domain = 4,
+make_mock_irtnorm <- function(irt_mod= 5, D = 3, items_per_domain = 4,
                               n = 50, seed = 1) {
   set.seed(seed)
   itemD   <- rep(seq_len(D), each = items_per_domain)
@@ -18,12 +18,12 @@ make_mock_irtnorm <- function(irt_mod = 4, D = 3, items_per_domain = 4,
         nu           = seq(0.5, 0.9, length.out = D),
         lambda       = runif(n, 0.5, 1),
         unique_sigma = runif(D, 0.1, 0.5)
-      )),
+      ),
       info_sample = data.frame(
         trait       = rep(paste0("delta", seq_len(D)), each = n),
         theta_sigma = runif(n * D)
       )
-    ),
+    )),
     class = "IRTnorm"
   )
 }
@@ -39,14 +39,14 @@ test_that("rejects objects that are not IRTnorm", {
 })
 
 test_that("rejects unidimensional models", {
-  for (m in 1:3) {
+  for (m in 1:4) {
     expect_error(cor_structure(make_mock_irtnorm(irt_mod = m)),
                  "hierarchical")
   }
 })
 
-test_that("models 4-8 return the expected structure", {
-  for (m in 4:8) {
+test_that("models 5-8 return the expected structure", {
+  for (m in 5:8) {
     out <- cor_structure(make_mock_irtnorm(irt_mod = m, D = 3))
     expect_s3_class(out, "data.frame")
     expect_named(out, c("sumscore_cor", "model_cor", "domains"))
@@ -68,7 +68,7 @@ test_that("model_cor is the product of the domain loadings", {
 test_that("sumscore_cor matches the domain label in its own row", {
   # Compares by label, so it is robust to row ordering. Expected to FAIL for D >= 4.
   for (D in 2:5) {
-    fit  <- make_mock_irtnorm(irt_mod = 4, D = D)
+    fit  <- make_mock_irtnorm(irt_mod= 5, D = D)
     out  <- cor_structure(fit)
     
     items <- as.matrix(fit$raw_data[, fit$item_variables])
@@ -85,14 +85,14 @@ test_that("sumscore_cor matches the domain label in its own row", {
 
 test_that("domain labels cover every pair exactly once", {
   for (D in 2:5) {
-    out <- cor_structure(make_mock_irtnorm(irt_mod = 4, D = D))
+    out <- cor_structure(make_mock_irtnorm(irt_mod= 5, D = D))
     expect_setequal(out$domains, pair_labels(D))
     expect_false(anyDuplicated(out$domains) > 0)
   }
 })
 
 test_that("missing item responses are ignored in sum scores", {
-  fit <- make_mock_irtnorm(irt_mod = 4, D = 3)
+  fit <- make_mock_irtnorm(irt_mod= 5, D = 3)
   fit$raw_data[1:5, fit$item_variables[1:2]] <- NA
   out <- cor_structure(fit)
   expect_false(anyNA(out$sumscore_cor))
@@ -117,17 +117,6 @@ test_that("column names use the same pairs as the sum-score output", {
   expect_equal(length(setdiff(colnames(out), "age")), 3)
 })
 
-test_that("models 11/12: delta sigma is scaled per domain, not recycled", {
-  # With J != D, recycling `delta_sigma * unique_sigma` multiplies the wrong
-  # elements. Check one column by hand via the internal step.
-  fit <- make_mock_irtnorm(irt_mod = 11, D = 3, n = 50)
-  us  <- fit$model_info$info_relation$unique_sigma
-  ds  <- sapply(1:3, function(d)
-    fit$info_sample$theta_sigma[fit$info_sample$trait == paste0("delta", d)])
-  correct <- sweep(ds, 2, us, "*")
-  recycled <- ds * us
-  expect_false(isTRUE(all.equal(correct, recycled)))  # documents the hazard
-})
 
 test_that("visual = FALSE does not draw and returns the same data", {
   fit <- make_mock_irtnorm(irt_mod = 9, D = 3)

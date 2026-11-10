@@ -2,7 +2,7 @@
 % Please edit documentation in R/modelselection.R
 \name{compare_IRTnorm_models}
 \alias{compare_IRTnorm_models}
-\title{Compare Multiple IRTnorm models via Leave-One-Out Cross-Validation}
+\title{Compare IRT norming models via leave-one-out cross-validation}
 \usage{
 compare_IRTnorm_models(
   model_specifications,
@@ -17,90 +17,102 @@ compare_IRTnorm_models(
 )
 }
 \arguments{
-\item{model_specifications}{A list of model specifications, where each element is
-itself a list describing one model's properties (e.g. \code{irt_model},
-\code{age_model}, \code{poly_mean}, \code{poly_sd}, and any other fields
-accepted by \code{\link{estimate_norming_model}}).
-\strong{All models in \code{model_specifications} must be of the same
-dimensionality} — i.e. all unidimensional or all multidimensional.
-Comparing models of different dimensionality is not supported, since
-LOO-ELPD comparisons assume a common outcome/likelihood structure
-across models.}
+\item{model_specifications}{A list of model specifications. Each element is
+itself a list describing one model, with fields such as \code{irt_model},
+\code{age_model}, \code{poly_mean}, \code{poly_sd},
+\code{prior_knowledge}, and \code{parameter_fixed}. See
+\code{\link{estimate_norming_model}} for all accepted fields. All models
+must have the same dimensionality (all unidimensional or all
+multidimensional), because ELPD values are only comparable across models
+for the same data and outcome structure.}
 
-\item{raw_data}{A \code{data.frame} or \code{matrix} containing individual-level
-data. Each row represents one individual. The object must contain at least
-an age variable and item response variables. Item responses may
-contain missing values (\code{NA}).}
+\item{raw_data}{A \code{data.frame} with individual-level data, one row per
+individual. It must contain the age variable and the item response
+variables. Item responses may contain missing values (\code{NA}).}
 
-\item{age_variable}{Either a \code{numeric} index or a \code{character} string specifying
-the column in \code{raw_data} that contains the individuals' age information.
-Age is assumed to be continuous.}
+\item{age_variable}{Character string giving the name of the column in
+\code{raw_data} that contains age. Age is treated as continuous.}
 
-\item{item_variables}{A \code{numeric} or \code{character} vector specifying the columns in
-\code{raw_data} that contain the item response variables.}
+\item{item_variables}{Character vector giving the names of the columns in
+\code{raw_data} that contain the item responses.}
 
-\item{seed}{An optional \code{integer} specifying the random seed for
-reproducibility. If \code{NULL} (default), a random seed is generated
-internally.}
+\item{seed}{Optional integer random seed for reproducibility. If
+\code{NULL} (default), a seed is drawn at random. The same seed is used
+for every model.}
 
-\item{iter_warmup}{An \code{integer} specifying the number of warm-up
-iterations per chain used by the MCMC sampler.  The default value of 500 is
-sufficient for well-fitting data, but it may need to be increased for
-complex models or to improve precision.}
+\item{iter_warmup}{Integer. Number of warm-up iterations per chain. Default
+is 500, which is usually sufficient for well-fitting data but may need to
+be increased for complex models.}
 
-\item{iter_sampling}{An \code{integer} specifying the number of post
-warm-up (sampling) iterations per chain.  The default value of 500 is
-sufficient for well-fitting data, but it may need to be increased for
-complex models or to improve precision.}
+\item{iter_sampling}{Integer. Number of post-warm-up (sampling) iterations
+per chain. Default is 500; increase it for complex models or for more
+precise ELPD estimates.}
 
-\item{chains}{An \code{integer} specifying the number of Markov chains to
-run in parallel. The default is 4 chains.}
+\item{chains}{Integer. Number of Markov chains per model. Default is 2.}
 
-\item{parallel_chains}{An optional \code{integer} specifying the number of
-CPU cores used for parallel sampling. If \code{NULL} (default), all
-available cores detected by \code{\link[parallel]{detectCores}} are used.}
+\item{parallel_chains}{Optional integer. Number of chains run in parallel.
+If \code{NULL} (default), as many chains as \code{chains} are run in
+parallel, limited by the number of available cores
+(see \code{\link[parallel]{detectCores}}).}
 }
 \value{
-A data frame giving the LOO-ELPD,
-\code{ELPD_diff}, and \code{rank} for each fitted model, along with
-model-identifying columns (e.g. \code{modelcombi}, \code{irt_model},
-\code{age_model}) carried over from each model's \code{elpd_summary}.
+A list with two components:
+\describe{
+\item{\code{best_model}}{A data frame with one row per successfully
+fitted model, containing the ELPD (\code{ELPD}), the difference to the
+best model (\code{ELPD_diff}), and the \code{rank}, along with columns
+identifying the model (e.g., \code{modelcombi}).}
+\item{\code{diagnostics}}{A data frame with the model label
+(\code{model}), \code{irt_model}, \code{age_model}, polynomial degrees
+(\code{poly_mean}, \code{poly_sd}; \code{NA} for non-polynomial age
+models), and the sampling diagnostics \code{pareto_k}, \code{neff},
+and \code{reff}. There is one row per observation and model, because
+\code{pareto_k} is computed for each observation.}
+}
 }
 \description{
-Fits a set of user-specified IRTnorm models (e.g. differing in IRT model
-type, or age trajectory specification) and
-compares them using leave-one-out cross-validation (LOO-ELPD). Unlike
-\code{\link{compare_age_models}}, which searches over polynomial
-degree combinations for a single model specification,
-\code{compare_IRTnorm_models} allows arbitrary, independently specified
-model configurations to be compared directly against one another.
+Fits a set of user-specified IRT norming models, which may differ in the
+IRT model, the age trajectory specification, or both, and compares them by
+their expected log predictive density (ELPD), estimated with approximate
+leave-one-out cross-validation (LOO-CV). Unlike
+\code{\link{compare_age_models}}, which searches over polynomial degrees
+for a single IRT model, this function compares arbitrary, independently
+specified models directly.
 }
 \details{
-For every model the data is prepared, the model is fitted,
-and LOO-ELPD values are extracted and reported. All fitted models share
-the same \code{raw_data}, \code{age_variable}, \code{item_variables}, and
-MCMC settings (\code{seed}, \code{iter_warmup}, \code{iter_sampling},
-\code{chains}, \code{parallel_chains}); only the model specification
-itself varies across entries in \code{model_specifications}.
-For direct model comparison the ELPD differences and the resulting ranks
-across the full set of compared models are reported.
+All models are fitted to the same data with the same \code{seed} and
+sampler settings; only the model specification differs. Models are
+labeled by their position in \code{model_specifications} and their IRT
+model (e.g., \code{"1_1PLnorm"}), so list names are not used.
+
+If a model fails to fit, a warning is issued and the model is left out of
+the comparison. The function stops with an error if fewer than two models
+are fitted successfully.
+
+Models are ranked by ELPD, with rank 1 given to the model with the highest
+ELPD. The ranking is based on the point estimate and does not account for
+uncertainty in the differences, so inspect \code{ELPD_diff} and its
+standard error before choosing the top-ranked model. Also check the Pareto
+\eqn{\hat{k}} diagnostics (values above 0.7 indicate unreliable LOO
+estimates).
 }
 \examples{
 \dontrun{
+data(my_data)
 model_specifications <- list(
-  A = list(irt_model = "1PLnorm", age_model = "poly",
-           poly_mean = 2, poly_sd = 1),
-  B = list(irt_model = "1PLnorm", age_model = "splines"),
-  C = list(irt_model = "2PLnorm", age_model = "poly",
-           poly_mean = 2, poly_sd = 1)
+  list(irt_model = "1PLnorm", age_model = "poly",
+       poly_mean = 2, poly_sd = 1),
+  list(irt_model = "2PLnorm", age_model = "poly",
+       poly_mean = 2, poly_sd = 1)
 )
 
 result <- compare_IRTnorm_models(
-  model_specifications   = model_specifications,
-  raw_data     = my_data,
+  model_specifications = model_specifications,
+  raw_data = my_data,
   age_variable = "age",
-  item_variables = 1:50
+  item_variables = paste0("item", 1:25)
 )
+result$best_model
 }
 
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/norm_new_individual.R
 \name{norm_new_individual}
 \alias{norm_new_individual}
-\title{Estimate norm score for new observations}
+\title{Estimate the norm score of a new individual}
 \usage{
 norm_new_individual(
   new_y,
@@ -12,88 +12,143 @@ norm_new_individual(
 )
 }
 \arguments{
-\item{new_y}{Numeric vector of binary item responses (0/1) for a single individual.
-Can contain NAs for missing responses.}
+\item{new_y}{Vector of item responses for a single individual, in the same
+item order as the data used to fit the model. Responses are binary (0/1)
+for the 1PL, 2PL, and 3PL models, and ordered categories for the graded
+response model. Missing responses (\code{NA}) are allowed and are
+ignored.}
 
-\item{new_age}{Numeric scalar. The age of the individual for whom theta is being estimated.}
+\item{new_age}{Numeric scalar. Age of the individual, on the same scale as
+the age variable used to fit the model.}
 
-\item{fit_info}{A named \code{list} as returned by \code{\link{estimate_norming_model}}.}
+\item{fit_info}{An object of class \code{"IRTnorm"}, as returned by
+\code{\link{estimate_norming_model}}.}
 
-\item{mh_args}{List of Metropolis-Hastings algorithm tuning parameters:
+\item{mh_args}{Named list with the settings of the sampling algorithm.
+All four elements must be supplied:
 \itemize{
-\item \code{n_iter}: Total number of MCMC iterations (default: 250).
-\item \code{burnin}: Number of initial iterations to discard (default: 125).
-\item \code{thin}: Thinning interval - keep every nth sample (default: 1).
-\item \code{proposal_sd}: Standard deviation of proposal distribution (default: 0.6).
+\item \code{n_iter}: number of iterations per posterior draw
+(default 250).
+\item \code{burnin}: number of initial iterations to discard (default
+125). Must be smaller than \code{n_iter}.
+\item \code{thin}: thinning interval, i.e., every \code{thin}-th
+iteration is kept (default 1).
+\item \code{proposal_sd}: standard deviation of the proposal
+distribution (default 0.6). See the section on tuning.
 }}
 }
 \value{
-A list with the following components:
-\item{theta_samples}{Numeric vector of all posterior samples of theta (post-burnin, post-thinning)}.
-\item{theta_zsample}{Numeric vector of standardized theta samples}.
-\item{by_draw_samples}{List of length M, each element containing theta samples for one posterior draw}.
-\item{acceptance_rates}{Numeric vector of length M with acceptance rates for each posterior draw}.
-\item{summary}{List containing: mean, sd, median, and 95\% credible interval of theta}.
-\item{mh_args}{List of MH arguments used}.
-\item{obs_items}{Integer vector of indices for observed (non-NA) items}.
-\item{mean_mu}{Mean of the posterior distribution for mu (theta population mean)}.
-\item{mean_sigma}{Mean of the posterior distribution for sigma (theta population SD)}.
+A list. For unidimensional models, the components are:
+\describe{
+\item{\code{theta_samples}}{Posterior samples of the latent trait
+\eqn{\theta}, after burn-in and thinning.}
+\item{\code{theta_zsample}}{Posterior samples of the standardized norm
+score (z-score). Its mean is the EAP estimate of the norm score.}
+\item{\code{by_draw_samples}}{List with one element per posterior draw,
+containing the samples of \eqn{\theta} for that draw.}
+\item{\code{acceptance_rates}}{Acceptance rate of the sampler for each
+posterior draw.}
+\item{\code{summary}}{List with the mean, standard deviation
+(\code{sd}), \code{median}, and 95\\% credible interval (\code{ci}) of
+the standardized norm score.}
+\item{\code{mh_args}}{The sampler settings used.}
+\item{\code{obs_items}}{Indices of the items with observed responses.}
+}
+For multidimensional models, the components are:
+\describe{
+\item{\code{theta_samples}}{Posterior samples of the general latent
+trait.}
+\item{\code{zdelta_sample}}{Matrix of posterior samples of the
+standardized domain scores (one column per domain).}
+\item{\code{delta_sample}}{Matrix of posterior samples of the domain
+scores on the latent scale (one column per domain).}
+\item{\code{by_draw_samples}}{List with one element per posterior draw,
+containing the samples for that draw.}
+\item{\code{acceptance_rates}}{Average acceptance rate of the sampler
+for each posterior draw, across the general trait and the
+domain-specific effects.}
+\item{\code{summary}}{Data frame with the mean, standard deviation,
+median, and 95\\% credible interval limits (\code{lower2_5},
+\code{upper97_5}) for the general trait and each domain
+(column \code{domain}). The domain scores are summarized on the
+standardized scale.}
+\item{\code{mh_args}}{The sampler settings used.}
+\item{\code{obs_items}}{Indices of the items with observed responses.}
+}
 }
 \description{
-Performs Bayesian estimates of the norm score for a new individual using
-Metropolis-Hastings sampling. This function integrates over
-posterior uncertainty in item parameters and norming parameters from a
-previously fitted IRT model.
+Estimates the norm score of a single new individual from their item responses and
+age, using a previously fitted norming model. The estimate is fully
+Bayesian: it takes into account the posterior uncertainty in the item
+parameters and in the age-dependent norming parameters, and returns
+posterior samples of the individual's norm score.
 }
 \details{
-This function runs a Metropolis-Hastings algorithm to sample theta conditional on the
-item parameters (a, b) and population parameters (mu, sigma) draws of the fitted model.
+For each posterior draw of the fitted model, a Metropolis-Hastings sampler
+is run for the individual's latent trait. The samples are then pooled across
+all posterior draws. The number of retained samples is therefore the number
+of posterior draws times the number of iterations kept per draw, and the
+run time grows with the number of draws (i.e., with \code{chains} and
+\code{iter_sampling} of the fitted model). Reduce \code{n_iter} for faster,
+but less precise, estimates.
 
-Only observed items (non-NA responses) are used in the likelihood calculation.
+Only observed (non-\code{NA}) items contribute to the estimate.
+
+The sampler uses R's random number generator, so call \code{set.seed()}
+beforehand to obtain reproducible results.
+
+For unidimensional models, the norm score is the latent trait standardized
+by the age-specific mean and standard deviation of the fitted model. For
+multidimensional models, a general score and one score per domain are
+returned.
 }
-\section{Tuning the MH Algorithm}{
+\section{Tuning the sampler}{
 
-The \code{proposal_sd} parameter controls the random-walk step size. Target acceptance
-rates are typically 20-50\%. If acceptance rates are too high (>70\%), increase
-\code{proposal_sd}. If too low (<15\%), decrease it.
+\code{proposal_sd} controls the step size of the sampler. Acceptance rates
+between 20\% and 50\% are typically good. If acceptance rates are above
+about 70\%, increase \code{proposal_sd}; if they are below about 15\%,
+decrease it. The acceptance rate of each posterior draw is returned in
+\code{acceptance_rates}. For multidimensional models, it is averaged over
+the general trait and the domain-specific effects, which are updated one
+at a time.
 }
 
 \examples{
 \dontrun{
-# Load data
+# Fit a norming model
 data(response_data)
-
-# Fit IRTnorm model and extract important information 
 info <- estimate_norming_model(
-  raw_data        = response_data,
-  age_variable    = "age",
-  item_variables   = 1:50,
-  irt_model       = "2PLnorm",
-  poly_mean       = 3,
-  poly_sd         = 2,
-  age_model       = "poly",
-  iter_warmup     = 500,
-  iter_sampling   = 1000,
-  chains          = 2,
+  raw_data = response_data,
+  age_variable = "age",
+  item_variables = 1:50,
+  irt_model = "2PLnorm",
+  age_model = "poly",
+  poly_mean = 3,
+  poly_sd = 2,
+  iter_warmup = 500,
+  iter_sampling = 500,
+  chains = 2,
   parallel_chains = 2
 )
 
-# new individual has same answer pattern as individual 20 in response_data
-y <- unlist(response_data[20,1:50])
+# New individual with the same answer pattern as individual 20
+y <- unlist(response_data[20, 1:50])
 age <- response_data$age[20]
 
-# Estimate theta for the new individual
-result <- estimate_theta_new(new_y = y,
-                             new_age = age,
-                             fit_info = info)
+set.seed(1)
+result <- norm_new_individual(new_y = y, new_age = age, fit_info = info)
 
-EAP estimate of the individuals normscore
+# EAP estimate of the norm score
 mean(result$theta_zsample)
 
-# Check acceptance rates
+# Summary, including the 95\% credible interval
+result$summary
+
+# Check the acceptance rates
 summary(result$acceptance_rates)
 }
+
 }
 \seealso{
-\code{\link{info_new_norming}}
+\code{\link{estimate_norming_model}}
 }

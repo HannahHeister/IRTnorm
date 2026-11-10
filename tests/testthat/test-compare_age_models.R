@@ -93,7 +93,7 @@ local_no_fitting <- function(env = parent.frame()) {
 }
 
 call_cam <- function(...) {
-  compare_age_models(raw_data = data.frame(), age_variable = "age",
+  compare_age_models(raw_data = data.frame(i1 = c(0,0,1,1,0), age = c(5,4,2,3,4)), age_variable = "age",
                      item_variables = "i1", parallel_chains = 1, seed = 1, ...)
 }
 
@@ -243,7 +243,7 @@ test_that("a NULL seed is drawn once and reused for every fit", {
   local_fakes(fk)
   
   compare_age_models(method = "grid", grid = data.frame(mu = 1:3, sd = 0),
-                     raw_data = data.frame(), irt_model = "1PLnorm",
+                     raw_data = data.frame(i1 = c(0,0,1,1,0), age = c(5,4,2,3,4)), irt_model = "1PLnorm",
                      age_variable = "age", item_variables = "i1",
                      seed = NULL, parallel_chains = 1, include_splines = TRUE)
   
@@ -270,9 +270,7 @@ test_that("a vector irt_model is rejected outright, before fitting", {
   local_no_fitting()
   vectors <- list(
     c("1PLnorm", "2PLnorm"),            # two valid models
-    c("1PLnorm", "Testlet1PLnorm"),     # one valid, one hierarchical
-    c("Testlet1PLnorm", "1PLnorm"),     # order must not matter
-    c("2PLnorm", "HO2PLnorm-F")
+    c("1PLnorm", "Testlet1PLnorm")    # one valid, one hierarchical
   )
   for (v in vectors) {
     expect_error(call_cam(method = "grid", grid = one_row_grid, irt_model = v),
@@ -287,7 +285,16 @@ test_that("a vector irt_model is rejected for the forward method too", {
                "length 1")
 })
 
-test_that("empty, NA, unknown and non-character irt_model values are rejected", {
+test_that("NA irt_model values are rejected", {
+  local_no_fitting()
+  expect_error(call_cam(method = "grid", grid = one_row_grid, irt_model = NA_character_),
+               "The IRT model selected is NA",
+               info = deparse(NA_character_))
+  
+})
+  
+
+test_that("empty, unknown and non-character irt_model values are rejected", {
   local_no_fitting()
   
   # Wrong length
@@ -296,11 +303,11 @@ test_that("empty, NA, unknown and non-character irt_model values are rejected", 
                "length 1")
   
   # Not in the allowed set (NA and unknown names)
-  for (b in list(NA_character_, "4PLnorm", "")) {
+  for (b in list("4PLnorm", "")) {
     expect_error(call_cam(method = "grid", grid = one_row_grid, irt_model = b),
-                 "should be one of",
-                 info = deparse(b))
+                 "'arg' should be one of")
   }
+  
   
   # Non-character input: wording varies by R version, so only require that
   # it fails and that fitting never started.

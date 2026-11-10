@@ -28,7 +28,7 @@ make_info_overall <- function(nitem = 3) {
 }
 
 # raw_score_ppc() with age_range: list(general = list(groups), dim1 = list(groups), ...)
-age_labels <- c("age: (2,6]", "age: (6,12]")
+age_labels <- c("age: [2,6]", "age: [6,12]")
 make_info_age <- function(nitem = 3, ages = age_labels) {
   structure(lapply(seq_along(nitem) - 1L, function(d)
     lapply(seq_along(ages), function(i)
@@ -149,7 +149,7 @@ test_that("wrapped and unwrapped age-group input give the same plot data", {
 })
 
 test_that("a single age group is plotted without facets", {
-  p <- run_vis(make_info_age(ages = "age: (2,12]"))
+  p <- run_vis(make_info_age(ages = "age: [2,12]"))
   expect_s3_class(p$facet, "FacetNull")
   expect_equal(nrow(p$layers[[5]]$data), 4)
 })
@@ -228,11 +228,13 @@ test_that("no title when dim_plot is NULL", {
   expect_null(run_vis(make_info_age())$labels$title)
 })
 
-test_that("dim_plot only sets the title when no dimension selection is needed", {
+test_that("dim_plot only sets the title when dimension selection is needed", {
   p <- run_vis(make_info_overall(c(3, 3, 3)), dim_plot = "general")
-  expect_equal(p$labels$title, "general")
-  expect_equal(nrow(panels(p)), 3)        # all dimensions are still shown
-})
+  expect_equal(p$labels$title,NULL)
+  
+  p <- run_vis(make_info_age(c(3, 3, 3)), dim_plot = "general")
+  expect_equal(p$labels$title,"general")
+  })
 
 # ---- Side effects ----------------------------------------------------------
 

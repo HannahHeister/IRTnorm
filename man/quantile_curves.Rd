@@ -2,64 +2,65 @@
 % Please edit documentation in R/eval_modelfit.R
 \name{quantile_curves}
 \alias{quantile_curves}
-\title{Visualize IRT norming model–implied latent traits and quantile curves}
+\title{Plot latent trait estimates and model-implied quantile curves}
 \usage{
 quantile_curves(fit_info, probs = c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95))
 }
 \arguments{
-\item{fit_info}{a named \code{list} as returned by \code{\link{estimate_norming_model}}}
+\item{fit_info}{An object of class \code{"IRTnorm"}, as returned by
+\code{\link{estimate_norming_model}}.}
 
-\item{probs}{vector indicating which quantiles should be plotted.
-Default is c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95).}
+\item{probs}{Numeric vector of probabilities strictly between 0 and 1,
+giving the quantiles to plot. Default is
+\code{c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)}.}
 }
 \value{
-A \pkg{ggplot2} object.
-Realized latent trait estimates
-plotted against age together with smoothed model-implied latent trait
-quantile curves (\eqn{5\%}, \eqn{25\%}, \eqn{50\%}, \eqn{75\%}, \eqn{95\%}).
+Invisibly, a data frame with the model-implied quantiles for each
+individual, with the columns \code{age}, \code{quan} (quantile value),
+\code{qname} (the probability, e.g., \code{"p0.05"}) and, for
+multidimensional models, \code{domain}. It can be used to create custom
+plots.
 }
 \description{
-Visualize observed data and IRT norming model–implied quantile curves.
+Plots the estimated latent trait of each individual against age, together
+with the quantile curves implied by the fitted IRT norming model. This shows
+whether the model-implied distribution of the latent trait matches the
+spread of the estimates across the age range: if it does, the expected
+share of points should fall below each curve (e.g., about 25\\% below the
+25\\% curve).
 }
 \details{
-\code{quantile_curves} visualizes realized latent trait
-estimates alongside model-implied latent trait quantiles.
+The points are the estimated latent trait values of the individuals in the
+data. For multidimensional models, the points are the domain-specific
+traits, and each domain is shown in its own panel.
 
-Quantiles of the model-implied latent trait distribution are computed for each
-individual and smoothed as a function of age using local polynomial regression
-(LOESS), while realized latent trait estimates (\code{theta_est}) are displayed as points.
-
-This provides a diagnostic comparison between estimated latent traits based
-on the observed response pattern and the distribution implied by the fitted
-IRT norming model, allowing assessment of whether the model reproduces
-plausible norm scores across the entire age range.
-
-For each individual, quantiles of the
-model-implied latent trait distribution are computed from the
-age-dependent normal distribution of the latent trait, and smoothed as a
-function of age using LOESS. Realized latent trait estimates are overlaid
-as points for comparison.
+The curves show the quantiles of the age-dependent normal distribution
+of the latent trait implied by the fitted model. They are drawn as smoothed
+curves across age. If there are too few distinct ages for smoothing, the
+unsmoothed quantiles are connected by lines instead.
 }
 \examples{
 \dontrun{
-# Load data
 data(response_data)
-
 info <- estimate_norming_model(
-  raw_data        = response_data,
-  age_variable    = "age",
-  item_variables   = 1:50,
-  irt_model       = "2PLnorm",
-  poly_mean       = 3,
-  poly_sd         = 2,
-  age_model       = "poly",
-  iter_warmup     = 500,
-  iter_sampling   = 1000,
-  chains          = 2,
-  parallel_chains = 2
+  raw_data = response_data,
+  age_variable = "age",
+  item_variables = 1:50,
+  irt_model = "2PLnorm",
+  age_model = "poly",
+  poly_mean = 3,
+  poly_sd = 2
 )
 
-plot_quantile_curves(fit_info = info)
+# Default quantiles
+quantile_curves(fit_info = info)
+
+# Selected quantiles; keep the underlying values
+q <- quantile_curves(fit_info = info, probs = c(0.025, 0.5, 0.975))
+}
 
 }
+\seealso{
+\code{\link{estimate_norming_model}},
+\code{\link{normscore_dist}}
 }

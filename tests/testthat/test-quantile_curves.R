@@ -10,7 +10,7 @@ make_qfit_uni <- function(n = 60, seed = 1, irt_mod = 1) {
     age = age,
     theta_mu = 0.3 * (age - 7),            # trait grows with age
     theta_sigma = runif(n, 0.8, 1.2),
-    est_ability = rnorm(n, 0.3 * (age - 7)),
+    theta_est = rnorm(n, 0.3 * (age - 7)),
     irt_mod = irt_mod
   )
   structure(list(model_info = list(info_sample = info_sample)),
@@ -115,7 +115,7 @@ test_that("qname labels follow the probs and are repeated for each person", {
 })
 
 test_that("default probs are the documented seven quantiles", {
-  res <- run_qc(make_qfit_uni(n = 5))
+  res <- run_qc(make_qfit_uni(n = 10))
   expect_setequal(as.character(unique(res$qname)),
                   paste0("p", c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)))
 })

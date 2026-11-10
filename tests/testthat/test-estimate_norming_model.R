@@ -29,7 +29,10 @@ local_fake_pipeline <- function(.env = parent.frame()) {
 }
 
 run_est <- function(...) {
-  estimate_norming_model(raw_data = raw, age_variable = "age",
+  estimate_norming_model(raw_data = data.frame(age = c(1, 2, 3, 4),
+                                               item1 = c(0, 1, 0, 1),
+                                               item2 = c(1, 1, 0, 0)),
+                         age_variable = "age",
                          item_variables = c("item1", "item2"),
                          irt_model = "2PLnorm", age_model = "poly",
                          poly_mean = 1, poly_sd = 2, ...)
@@ -68,7 +71,9 @@ test_that("each helper's result lands in the right slot", {
   expect_equal(out$conv_info, "CONV_INFO")
   expect_equal(out$newdata, "NEWDATA")
   expect_equal(out$model_stan_obj, "FIT")
-  expect_equal(out$raw_data, raw)
+  expect_equal(out$raw_data,  data.frame(age = c(1, 2, 3, 4),
+                                         item1 = c(0, 1, 0, 1),
+                                         item2 = c(1, 1, 0, 0)))
   expect_equal(out$age_variable, "age")
   expect_equal(out$item_variables, c("item1", "item2"))
 })
@@ -89,7 +94,9 @@ test_that("data_prep receives all model arguments, with defaults filled in", {
   calls <- local_fake_pipeline()
   run_est()
   a <- calls$data_prep
-  expect_equal(a$raw_data, raw)
+  expect_equal(a$raw_data, data.frame(age = c(1, 2, 3, 4),
+                                       item1 = c(0, 1, 0, 1),
+                                       item2 = c(1, 1, 0, 0)))
   expect_equal(a$irt_model, "2PLnorm")
   expect_equal(a$age_model, "poly")
   expect_equal(a$poly_mean, 1)

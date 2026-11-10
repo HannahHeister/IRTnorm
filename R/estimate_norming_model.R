@@ -132,213 +132,169 @@ fit_info_param <- function(fit, data){
   return(final_info)
 }
 
-#' Estimate a IRT-based norming model
-#' @name estimate_norming_model
-#' @description
-#' Fits a Bayesian Item Response Theory (IRT) norming model that jointly estimates
-#' item parameters and age-based regression models for the mean and standard
-#' deviation of the latent trait. The function prepares the data, fits the Stan
-#' model, and extracts all information needed for model evaluation, and 
-#' subsequently norm of new individuals.
-#'
-#'@param raw_data a \code{data.frame} or \code{matrix} containing individual-level
-#'   data. Each row represents one individual. The object must contain at least
-#'   an age variable and item response variables. Item responses may
-#'   contain missing values (\code{NA}).
-#'
-#'@param age_variable either a \code{numeric} index or a \code{character} string specifying
-#'   the column in \code{raw_data} that contains the individuals' age information.
-#'   Age is assumed to be continuous.
-#'
-#'@param item_variables a \code{numeric} or \code{character} vector specifying the columns in
-#'   \code{raw_data} that contain the item response variables.
-#'
-#'@param irt_model a \code{character} scalar indicating for which IRT norming model the
-#'   data should be prepared. The supported options are:
-#'   \describe{
-#'     \item{\code{"1PLnorm"}}{One-parameter logistic IRT model / Rasch model with
-#'     age-dependent mean and variance.}
-#'      \item{\code{"2PLnorm"}}{Two-parameter logistic IRT model with
-#'     age-dependent mean and variance.}
-#'      \item{\code{"3PLnorm"}}{Three-parameter logistic IRT model with
-#'     age-dependent mean and variance.}
-#'      \item{\code{"GRMnorm"}}{Graded Response model with
-#'     age-dependent mean and variance.}
-#'      \item{\code{"Testlet1PLnorm"}}{Higher order 1PL IRT model with
-#'     age-dependent mean and variance constant across domains.}
-#'      \item{\code{"Testlet2PLnorm"}}{Higher order 2PL IRT model with
-#'     age-dependent mean and variance constant across domains.}
-#'      \item{\code{"HO1PLnorm-C"}}{Higher order 1PL IRT model with
-#'     age-dependent mean and variance and constant correlation matrix.}
-#'      \item{\code{"HO2PLnorm-C"}}{Higher order 2PL IRT model with
-#'     age-dependent mean and variance and constant correlation matrix.}
-#'    \item{\code{"HO1PLnorm-P"}}{Higher order 1PL IRT model with
-#'     age-dependent mean and variance and proportional correlation matrix across age.}
-#'      \item{\code{"HO2PLnorm-P"}}{Higher order 2PL IRT model with
-#'     age-dependent mean and variance and proportional correlation matrix across age.}
-#'     \item{\code{"HO1PLnorm-F"}}{Higher order 1PL IRT model with
-#'     age-dependent mean and variance and free correlation matrix across age.}
-#'      \item{\code{"HO2PLnorm-F"}}{Higher order 2PL IRT model with
-#'     age-dependent mean and variance and free correlation matrix across age.}
-#'   }
-#'
-#' @param age_model a \code{character} scalar indicating how the effect of age on the
-#'   latent trait should be modeled. Available options are:
-#'   \describe{
-#'     \item{\code{"polynom"}}{Polynomial functions of standardized age are used
-#'     to model the mean and standard deviation of the latent trait.}
-#'     \item{\code{"spline"}}{Penalized B-spline basis functions of standardized age are
-#'     used to model the mean and standard deviation of the latent trait.}
-#'   }
 
-#' @param poly_mean only required if \code{age_model = "polynom"}.
-#'   For all models except HO2PLnorm an \code{integer} specifying the degree of the polynomial used to model the
-#'   age-dependent mean of the latent trait. For HO2PLnorm
-#'   either a \code{vector} indicating the polynomial degree per domain or a \code{integer}
-#'   then the same polynomial degree is used for all dimensions.
+#' Estimate an IRT-based norming model
 #'
-#' @param poly_sd only required if \code{age_model = "polynom"}.
-#'   For all models except HO2PLnorm an \code{integer} specifying the degree of the polynomial used to model the
-#'   age-dependent standard deviation of the latent trait. For HO2PLnorm
-#'   either a \code{vector} indicating the polynomial degree per domain or a \code{integer}
-#'   then the same polynomial degree is used for all dimensions.
+#' Fits a Bayesian item response theory (IRT) norming model that jointly
+#' estimates the item parameters and the age-dependent mean and standard
+#' deviation of the latent trait. The returned object contains everything
+#' needed to evaluate the model and to norm new individuals.
 #'
-#' @param poly_sd_unique only required if \code{age_model = "polynom"} and \code{irt_model} a HO-P or HO-C model.
-#'  For HO-P a\code{integer} specifying the degree of the polynomial used to model the
-#'   age-dependent lambda of the latent trait. For HO-F
-#'   either a \code{vector} indicating the polynomial degree per domain or a \code{integer}
-#'   then the same polynomial degree is used for all dimensions.
-#' 
-#'@param itemD only required if \code{model} is a multidimensional model.
-#' A \code{vector} indicating on which domain each item is loading on.
-#' It is important that the first domain has the value 1 and the following domains
-#' have the subsequent integers. E.g., for 4 domains the vector should only contain the
-#' values 1,2,3,4. itemD has the length of the number of tested items.
-#'
-#' @param K_item only required if \code{model = "GRMnorm"}.
-#' A \code{vector} indicating the number of categories of each item.
-#' The minimum number in K_item is 2, since binary items have two response categories.
-#' K_item has the length of the number of tested items.
-#'
-#' @param k_mean only required if \code{age_model = "splines"}.
-#' A \code{num} indicating the number of knots used for modelling the
-#' latent trait mean.
-#'
-#' @param k_sd only required if \code{age_model = "splines"}.
-#' A \code{num} indicating the number of knots used for modelling the
-#' latent trait standard deviation
-#' 
-#' @param k_sd2 only required if \code{age_model = "splines"}  and \code{irt_model} a HO-P or HO-C model.
-#' A \code{num} indicating the number of knots used for modelling the lambda for HO-P 
-#' and the loading of the unique age effect for HO-F. 
-#'
-#'@param fixed_knots_mean only required if knots should not be chosen based on
-#' data such as the default in \code{s} from \code{mgcv}. It can be choose between
-#' equidistant knots by setting fixed_knots_sd =  "equidistant" or fully user
-#' specified which a numerical vector of knot values
-#'
-#'@param fixed_knots_sd only required if knots should not be chosen based on
-#' data such as the default in \code{s} from \code{mgcv}. It can be choose between
-#' equidistant knots by setting fixed_knots_sd =  "equidistant" or fully user
-#' specified which a numerical vector of knot values.
-#'
-#'@param fixed_knots_sd2 only required if knots should not be chosen based on
-#' data such as the default in \code{s} from \code{mgcv}. It can be choose between
-#' equidistant knots by setting fixed_knots_sd =  "equidistant" or fully user
-#' specified which a numerical vector of knot values.
-#'
-#' @param prior_knowledge only required if prior knowledge should be incoperated
-#' in the model. A list of the parameter groups for which prior_knowledge
-#' should be incorporated for each parameter group with prior knowledge a list of
-#' prior means and prior standard deviations has to be indicated. For b in the GRM model
-#' this has to be a list per means and standard deviations.
-#' Below in the example a example list is used.
-#'
-#' @param parameter_fixed only required if model parameters should be fixed.
-#' A list where the parameter groups that should be fixed are indicated with the list names
-#' and the list elements indicating the values to which the parameters should be fixed.
-#' 
-#' @param seed an optional \code{integer} specifying the random seed for
-#'   reproducibility. If \code{NULL} (default), a random seed is generated
-#'   internally.
-#'
-#' @param iter_warmup an \code{integer} specifying the number of warm-up
-#'   iterations per chain used by the MCMC sampler.
-#'
-#' @param iter_sampling an \code{integer} specifying the number of post
-#'   warm-up (sampling) iterations per chain.
-#'
-#' @param chains an \code{integer} specifying the number of Markov chains to
-#'   run in parallel. The default is 4 chains.
-#'
-#' @param parallel_chains an optional \code{integer} specifying the number of
-#'   CPU cores used for parallel sampling. If \code{NULL} (default), all
-#'   available cores detected by \code{\link[parallel]{detectCores}} are used.
-#'   
-#' @param extract_stan_object A logical indicating whether to include the raw
-#'   Stan/CmdStanR fit object in the returned list. Default is \code{TRUE}, such that
-#'   posterior draws, diagnostics, and other Stan-level output can be access directly.
-#'   Set to \code{FALSE} if working memory is an issue.
-#'
-#' @return A named list with the following elements:
+#' @param raw_data A \code{data.frame} or \code{matrix} with individual-level
+#'   data, one row per individual. It must contain the age variable and the
+#'   item response variables. Item responses may contain missing values
+#'   (\code{NA}).
+#' @param age_variable Column of \code{raw_data} containing age, given as a
+#'   numeric index or a column name. Age is treated as continuous.
+#' @param item_variables Columns of \code{raw_data} containing the item
+#'   responses, given as a numeric or character vector of indices or names.
+#' @param irt_model Character string naming the IRT norming model. One of:
 #'   \describe{
-#'     \item{\code{model_info}}{A list of summarized model-level information
-#'       extracted by \code{extract_info()}, including parameter estimates,
-#'       convergence diagnostics, and model fit indices.}
-#'     \item{\code{norm_info}}{A list of information required to norm new
-#'       individuals, as extracted by \code{info_new_norming()}.}
-#'        \item{\code{conv_info}}{Table with a summary of the effective sample 
-#'        size and Rhat for every parameter group.}
-#'     \item{\code{newdata}}{The prepared data object returned by
-#'       \code{data_prep()}, containing the design matrices and Stan input
-#'       list.}
-#'     \item{\code{raw_data}}{The original data frame passed to
-#'       \code{raw_data}.}
-#'     \item{\code{age_variable}}{The name of the age variable, as supplied.}
-#'     \item{\code{item_variables}}{The interaction variable names, as supplied.}
-#'     \item{\code{model_stan_obj}}{The raw Stan fit object. Only present when
-#'       \code{extract_stan_object = TRUE}.}
+#'     \item{\code{"1PLnorm"}}{One-parameter logistic (Rasch) model with
+#'       age-dependent mean and variance.}
+#'     \item{\code{"2PLnorm"}}{Two-parameter logistic model with age-dependent
+#'       mean and variance.}
+#'     \item{\code{"3PLnorm"}}{Three-parameter logistic model with
+#'       age-dependent mean and variance.}
+#'     \item{\code{"GRMnorm"}}{Graded response model with age-dependent mean
+#'       and variance.}
+#'     \item{\code{"Testlet1PLnorm"}, \code{"Testlet2PLnorm"}}{Higher-order 1PL
+#'       or 2PL model with age-dependent mean and variance that are constant
+#'       across domains.}
+#'     \item{\code{"HO1PLnorm-C"}, \code{"HO2PLnorm-C"}}{Higher-order 1PL or
+#'       2PL model with age-dependent mean and variance and a constant
+#'       correlation matrix across age.}
+#'     \item{\code{"HO1PLnorm-P"}, \code{"HO2PLnorm-P"}}{Higher-order 1PL or
+#'       2PL model with age-dependent mean and variance and a correlation
+#'       matrix that is proportional across age.}
+#'     \item{\code{"HO1PLnorm-F"}, \code{"HO2PLnorm-F"}}{Higher-order 1PL or
+#'       2PL model with age-dependent mean and variance and a freely varying
+#'       correlation matrix across age.}
 #'   }
+#' @param age_model Character string specifying how the effect of age on the
+#'   latent trait is modeled. One of:
+#'   \describe{
+#'     \item{\code{"poly"}}{Polynomials of standardized age for the mean and
+#'       standard deviation of the latent trait.}
+#'     \item{\code{"splines"}}{Penalized B-splines of standardized age for the
+#'       mean and standard deviation of the latent trait.}
+#'   }
+#' @param itemD Only required for multidimensional models. Integer vector of
+#'   length equal to the number of items, indicating the domain each item
+#'   loads on. Domains must be numbered consecutively starting at 1 (e.g.,
+#'   \code{1, 2, 3, 4} for four domains).
+#' @param K_item Only required for \code{irt_model = "GRMnorm"}. Integer
+#'   vector of length equal to the number of items, giving the number of
+#'   response categories of each item (minimum 2, for binary items).
+#' @param poly_mean Only required if \code{age_model = "poly"}. Integer giving
+#'   the polynomial degree for the age-dependent mean of the latent trait.
+#'   For higher-order models with domain-specific trajectories, either a
+#'   vector with one degree per domain, or a single integer used for all
+#'   domains.
+#' @param poly_sd Only required if \code{age_model = "poly"}. Integer giving
+#'   the polynomial degree for the age-dependent standard deviation of the
+#'   latent trait. Domain-specific degrees are specified as for
+#'   \code{poly_mean}.
+#' @param poly_sd_unique Only required if \code{age_model = "poly"} and
+#'   \code{irt_model} is a higher-order model with a age varing correlation matrix
+#'   (\code{-P}) or (\code{-F}).
+#'   For HO-P a \code{integer} specifying the degree of the polynomial used to model the
+#'   age-dependent lambda of the latent trait.
+#'   For HO-F either a \code{vector} indicating the polynomial degree per domain or a \code{integer}
+#'   then the same polynomial degree is used for all dimensions.
+#' @param k_mean,k_sd Only used if \code{age_model = "splines"}. Number of
+#'   knots (basis functions) for the spline of the latent trait mean
+#'   (\code{k_mean}, default 10) and standard deviation (\code{k_sd},
+#'   default 8).
+#' @param k_sd2 Only used if \code{age_model = "splines"} and \code{irt_model}
+#'   is a higher-order model with a age-dependent correlation
+#'   matrix (\code{-P}) or (\code{-F}).
+#'    A \code{num} indicating the number of knots used for modelling the lambda for HO-P 
+#'    and the loading of the unique age effect for HO-F. Default is 8.
+#' @param fixed_knots_mean,fixed_knots_sd,fixed_knots_sd2 Only used if
+#'   \code{age_model = "splines"}. By default, knot positions are chosen from
+#'   the data, as in \code{\link[mgcv]{s}}. Use \code{"equidistant"} for
+#'   equally spaced knots, or a numeric vector to specify knot positions
+#'   directly. They apply to the splines for the mean, the standard
+#'   deviation, and the unique age effect (see \code{k_sd2}), respectively.
+#' @param prior_knowledge Optional. A named list with one element per
+#'   parameter group for which prior knowledge should be incorporated. Each
+#'   element is a list of prior means and prior standard deviations. For
+#'   parameter \code{b} in the GRM, means and standard deviations must each
+#'   be supplied as a list. Default is \code{NULL} (no prior knowledge).
+#' @param parameter_fixed Optional. A named list in which each name is a
+#'   parameter group to be fixed and each element gives the value(s) to which
+#'   it is fixed. Default is \code{NULL} (no fixed parameters).
+#' @param iter_warmup Integer. Number of warm-up iterations per chain. Default
+#'   is 500.
+#' @param iter_sampling Integer. Number of post-warm-up (sampling) iterations
+#'   per chain. Default is 500.
+#' @param chains Integer. Number of Markov chains. Default is 4.
+#' @param parallel_chains Optional integer. Number of chains run in parallel.
+#'   If \code{NULL} (default), as many chains as \code{chains} are run in
+#'   parallel, limited by the number of available cores
+#' @param seed Optional integer random seed for reproducibility. If
+#'   \code{NULL} (default), a seed is drawn at random.
+#' @param extract_stan_object Logical. If \code{TRUE} (default), the raw Stan
+#'   fit object is included in the result, giving direct access to posterior
+#'   draws and sampler diagnostics. Set to \code{FALSE} to reduce memory use.
 #'
-#' @details
-#' The function implements a three-stage workflow:
-#' \enumerate{
-#'   \item \strong{Data preparation}: \code{data_prep()} constructs the Stan
-#'     input list, including the IRT design matrix, spline or polynomial basis
-#'     matrices for age, and any interaction terms.
-#'   \item \strong{Model fitting}: The Stan model is called via
-#'     \code{fit_IRTnorm()}, which runs a Bayesian HMC sampler with the
-#'     specified number of warmup and sampling iterations.
-#'   \item \strong{Post-processing}: \code{fit_info_param} extracts information 
-#'   for convergence checks, \code{extract_info()} summarizes the
-#'     posterior and \code{info_new_norming()} computes the quantities needed
-#'     to derive norm scores for new respondents.
+#' @return An object of class \code{"IRTnorm"}, a list with components:
+#' \describe{
+#'   \item{\code{model_info}}{Model-level summary, including parameter
+#'     estimates, convergence diagnostics, and model fit indices.}
+#'   \item{\code{norm_info}}{Information required to norm new individuals.}
+#'   \item{\code{conv_info}}{Table summarizing the effective sample size and Rhat for
+#'     each parameter group.}
+#'   \item{\code{newdata}}{The prepared data used for fitting, including the
+#'     design matrices.}
+#'   \item{\code{raw_data}}{The data passed to \code{raw_data}.}
+#'   \item{\code{age_variable}}{The age variable, as supplied.}
+#'   \item{\code{item_variables}}{The item response variables, as supplied.}
+#'   \item{\code{model_stan_obj}}{The raw Stan fit object. Only present if
+#'     \code{extract_stan_object = TRUE}.}
 #' }
-#'
-#' @seealso
-#' \code{\link{data_prep}}, \code{\link{extract_info}},
-#' \code{\link{info_new_norming}}
+#' @details
+#' The function prepares the data, fits the model with a Bayesian sampler,
+#' and extracts the information needed to assess convergence, summarize the
+#' model, and norm new individuals. To choose the best model specification, see
+#' \code{\link{compare_age_models}} and \code{\link{compare_IRTnorm_models}}.
+
+#' @seealso \code{\link{compare_age_models}},
+#'   \code{\link{compare_IRTnorm_models}}
 #'
 #' @examples
 #' \dontrun{
-#' # Minimal example with a 2PLnorm model 
+#' data(my_data)
+#' 
+#' # 1PL norming model with a spline age trajectory
 #' result <- estimate_norming_model(
-#'   raw_data      = my_data,
-#'   age_variable  = "age",
-#'   item_variables = 1:50,
-#'   irt_model     = "2PLnorm",
-#'   age_model     = "splines",
-#'   iter_warmup   = 500,
-#'   iter_sampling = 1000,
-#'   chains        = 4,
-#'   parallel_chains = 4
-#' )
+#'   raw_data = my_data,
+#'   age_variable = "age",
+#'   item_variables = 1:25,
+#'   irt_model = "1PLnorm",
+#'   age_model = "splines" )
 #'
-#' # Access model summary
+#' # Model summary
 #' result$model_info
-#'}
+#'
+#'# 1PL norming model with prior knowledge on the beta values 
+#' prior_info = list(beta = list(beta_prior_mu = c(-0.7, -0.4, -0.6, -0.8, -0.5, -2.4,
+#'                                                 -2.0, -1.0, -2.2, 2.4, -2.5, 2.9, 
+#'                                                 -0.3, -2.1, 2.8, 1.2, 0.7, -1.0, 2.7,
+#'                                                 -1.7, -2.0, -1.0, -2.5, -1.6, -1.6),
+#'                                                 beta_prior_sd = rep(0.3, 25)))
+#'
+#'result2 <- estimate_norming_model(raw_data = my_data,
+#'                                 age_variable = "age",
+#'                                 item_variables = 1:25,
+#'                                 irt_model = "1PLnorm",
+#'                                  age_model = "splines", 
+#'                                  prior_knowledge = prior_info)
+#' # Model summary
+#' result2$model_info
+#' }
 #' @export
-
 estimate_norming_model <- function(raw_data, age_variable, item_variables, 
                                    irt_model,
                                    age_model,
@@ -353,6 +309,8 @@ estimate_norming_model <- function(raw_data, age_variable, item_variables,
   if(!is.logical(extract_stan_object)){
     stop("extract_stan_object has to be logical, e.g either TRUE or FALSE.")
   }
+  check_rawinput(raw_data = raw_data, item_variables = item_variables, 
+                 age_variable = age_variable)
 # data preperation 
   newdata <- data_prep(raw_data = raw_data,
                        age_variable = age_variable,

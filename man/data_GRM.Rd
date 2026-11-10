@@ -3,7 +3,7 @@
 \docType{data}
 \name{data_GRM}
 \alias{data_GRM}
-\title{A dataset containing item responses and age information based on the GRM.}
+\title{A data set containing item responses and age information based on the GRM.}
 \format{
 An object of class \code{data.frame} with 50 rows and 21 columns.
 }
@@ -14,6 +14,6 @@ Simulated data.
 data(data_GRM)
 }
 \description{
-A dataset containing item responses and age information based on the GRM.
+A data set containing item responses and age information based on the GRM.
 }
 \keyword{datasets}

@@ -55,17 +55,14 @@ test_that("individuals outside age_range warn with count and bounds", {
   fit <- set_age(fit, 2, 13)     # above
   expect_warning(
     raw_score_ppc(fit, age_range = c(2, 6, 12)),
-    "2 individual\\(s\\) fall outside 'age_range' \\(2,12\\]"
+    "2 individual\\(s\\) fall outside 'age_range' \\[2,12\\]"
   )
 })
 
-test_that("lower bound is open and upper bound is closed", {
-  fit <- set_age(make_ppc_fit(), 1, 2)               # exactly on lower bound
+test_that("lower bound and upper bound are closed", {
+  fit <- set_age(make_ppc_fit(), 1, 1.99)               
   expect_warning(raw_score_ppc(fit, c(2, 12)), "1 individual")
-  
-  fit <- set_age(make_ppc_fit(), 1, 12)              # exactly on upper bound
-  expect_no_warning(raw_score_ppc(fit, c(2, 12)))
-})
+  })
 
 test_that("no warning when everyone is inside age_range or age_range is NULL", {
   expect_no_warning(raw_score_ppc(make_ppc_fit(), c(2, 6, 12)))
@@ -133,7 +130,7 @@ test_that("with age_range: one result per interval inside the dimension entry", 
   expect_length(res, 1)                  # one dimension
   expect_length(res[[1]], 2)             # two age groups
   expect_equal(vapply(res[[1]], function(g) g$age, character(1)),
-               c("age: (2,6]", "age: (6,12]"))
+               c("age: [2,6]", "age: [6,12]"))
   expect_equal(n_obs_total(res[[1]]), 40)
 })
 

@@ -1,101 +1,82 @@
-
-
-#' Compute Observed and IRTnorm model-implied Raw Score Distributions
+#' Observed and model-implied raw score distributions
 #'
-#' @title Posterior Predictive Raw Score Distribution Analysis
-#' @name raw_score_ppc
+#' Compares the observed distribution of raw scores with the distribution
+#' implied by a fitted IRT norming model (posterior predictive check). This
+#' shows how well the model reproduces the raw scores in the data, either for
+#' the whole sample or separately for age groups. Use
+#' \code{\link{visual_raw_score_ppc}} to plot the result.
 #'
-#' @description
-#' The function \code{raw_score_ppc} computes the observed raw score distribution from data
-#' and the posterior predictive (IRTnorm model-implied) raw score distributions from a fitted
-#' Bayesian IRT-based norming model. The function can perform the analysis either
-#' for the entire sample or separately for multiple age groups.
-#'
-#' @param fit_info a named \code{list} as returned by \code{\link{estimate_norming_model}}.
-#' @param age_range Numeric \code{vector} defining age group boundaries. If \code{NULL}
-#'   (default), no age grouping is performed. If specified, it must contain at least
-#'   two values defining the boundaries of age groups (e.g., \code{c(0, 30, 60, 90)}
-#'   creates three groups: (0,30], (30,60], (60,90]).
-#' @return
-#' If \code{age_range = NULL}, returns a list containing:
-#' \itemize{
-#'   \item \code{df}: Data frame with columns:
-#'     \itemize{
-#'       \item \code{score}: Raw scores range from 0 to the maximum possible score
-#'       \item \code{obs}: Observed frequency for each score
-#'       \item \code{Q5}: 5th percentile of posterior predictive frequencies
-#'       \item \code{Q50}: Median (50th percentile) of posterior predictive frequencies
-#'       \item \code{Q95}: 95th percentile of posterior predictive frequencies
-#'     }
-#'   \item \code{replicated}: Matrix of replicated frequencies (draws × scores)
-#'   \item \code{nitem}: Number of items
-#' }
-#'
-#' If \code{age_range} is specified, returns a list of lists, one for each age group,
-#' where each element contains the same structure as above plus:
-#' \itemize{
-#'   \item \code{age}: Character string describing the age range (e.g., "age: (30,60]")
-#' }
+#' @param fit_info An object of class \code{"IRTnorm"}, as returned by
+#'   \code{\link{estimate_norming_model}}.
+#' @param age_range Optional numeric vector with at least two values giving the
+#'   boundaries of the age groups, on the same scale as the age variable in the
+#'   data (e.g., \code{c(5, 7, 9, 11)} creates the groups \[5,7\], \[7,9\], and
+#'   \[9,11\]). If \code{NULL} (default), the whole sample is analyzed. Persons
+#'   outside the range of \code{age_range} are excluded from the age-group
+#'   results, and a warning reports how many.
 #'
 #' @details
-#' The function performs the following steps:
-#' \enumerate{
-#'   \item Computes raw scores by summing item responses for each individual.
-#'   \item Calculates the observed frequency distribution of raw scores.
-#'   \item Extracts posterior predictive replications from the fitted IRTnorm model.
-#'   \item Computes the distribution of replicated raw scores for each MCMC draw.
-#'   \item Summarizes the replicated distributions using 5th, 50th, and 95th percentiles.
-#' }
+#' The observed raw score is the sum of a person's item responses. For each
+#' raw score, the observed frequency is compared with the frequencies in data
+#' replicated from the fitted model. The 90\% credible interval (Q5 to Q95) of
+#' the replicated frequencies gives the range of frequencies that is plausible
+#' under the model. The model fits well if the observed frequencies lie within
+#' or close to this interval across the score range. For background on
+#' posterior predictive checks of IRT models, see Sinharay, Johnson, and
+#' Stern (2006).
 #'
-#' When \code{age_range} is specified, all steps are performed separately for each
-#' age group, allowing assessment of the IRTnorm model fit across different demographic subgroups.
+#' For multidimensional models, the analysis is run for the total score over
+#' all items and, in addition, for the raw score of each domain.
 #'
-#' The \eqn{90\%} credible interval (between Q5 and Q95) provides a range of plausible
-#' frequencies under the fitted IRTnorm model. Good IRTnorm model fit is indicated when observed
-#' frequencies fall within or near these credible intervals.
-#' Further information about posterior predictive assessment of IRT models
-#' can be found in Sinharay, Johnson, & Stern (2006).
-#' @note
-#' \itemize{
-#'   \item Age ranges use the convention (lower, upper], meaning lower is exclusive
-#'     and upper is inclusive.
-#'   \item Missing scores (scores with zero observations) are included in the output
-#'     with frequency 0.
-#'   \item The function assumes that \code{fit$y_rep} contains posterior
-#'     predictive samples in the correct format.
-#' }
+#' Raw scores without any observations are kept in the output with frequency 0.
+#'
+#' @return An object of class \code{"IRTnorm_ppc"}, a list with one element
+#'   for the total score and, for multidimensional models, one additional
+#'   element per domain (in domain order).
+#'
+#'   If \code{age_range = NULL}, each element is a list with:
+#'   \describe{
+#'     \item{\code{df}}{Data frame with one row per possible raw score and the
+#'       columns \code{score}, \code{obs} (observed frequency), \code{Q5},
+#'       \code{Q50}, and \code{Q95} (5th, 50th, and 95th percentile of the
+#'       model-implied frequencies).}
+#'     \item{\code{replicated}}{Matrix of model-implied frequencies, with one
+#'       row per posterior draw and one column per raw score.}
+#'     \item{\code{nitem}}{Number of items the score is based on.}
+#'   }
+#'   If \code{age_range} is specified, each element is itself a list with one
+#'   entry per age group. Each entry has the same components as above, plus
+#'   \code{age}, a label describing the age group (e.g., \code{"age: [30,60]"}).
 #'
 #' @examples
 #' \dontrun{
-#' # Load data
 #' data(response_data)
+#' info <- estimate_norming_model(
+#'   raw_data = response_data,
+#'   age_variable = "age",
+#'   item_variables = 1:50,
+#'   irt_model = "2PLnorm",
+#'   age_model = "poly",
+#'   poly_mean = 3,
+#'   poly_sd = 2
+#' )
 #'
-#' # Prepare data for IRTnorm model fit
-#' info <- estimate_norming_model(data = response_data,
-#' age_variable = "age",
-#' item_variables = 1:50,
-#' irt_model = "2PLnorm",
-#' age__model = "polynom",
-#' poly_mean = 3,
-#' poly_sd = 2)
-#'
-#' # Single analysis (no age grouping)
+#' # Whole sample
 #' result <- raw_score_ppc(fit_info = info)
+#' visual_raw_score_ppc(result)
 #'
-#' visual_raw_score_ppc(N_info = result)
-#'
-#' # Age-grouped analysis
-#' result_age <- raw_score_ppc(fit_info = info, age_range = seq(-2,2,1))
-#' 
+#' # Separately by age group
+#' result_age <- raw_score_ppc(fit_info = info, age_range = c(5, 7, 9, 11))
 #' visual_raw_score_ppc(result_age)
-#'}
+#' }
 #'
-#' @seealso
-#' \code{\link{visual_raw_score_ppc}} for visualizing the results
+#' @seealso \code{\link{visual_raw_score_ppc}} for plotting the results,
+#'   \code{\link{estimate_norming_model}}
 #'
 #' @references
-#' Sinharay, S., Johnson, M. S., & Stern, H. S. (2006). Posterior predictive assessment
-#' of item response theory models. Applied Psychological Measurement, 30(4), 298-321.
+#' Sinharay, S., Johnson, M. S., & Stern, H. S. (2006). Posterior predictive
+#' assessment of item response theory models. \emph{Applied Psychological
+#' Measurement, 30}(4), 298-321.
 #'
 #' @export
 raw_score_ppc <- function(fit_info,
@@ -110,8 +91,8 @@ raw_score_ppc <- function(fit_info,
   age_variable <- fit_info$age_variable
 
   if (!is.null(age_range)) {
-    if(!is.numeric(age_range) | length(age_range) == 1){
-      stop("age_range has to consit of a at least two numeric values.")
+    if(!is.numeric(age_range) || length(age_range) <2){
+      stop("age_range must be a numeric vector with at least two values.")
     }
     ages <- raw_data[[age_variable]]
     lower <- min(age_range)
@@ -263,7 +244,7 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 
   for (i in seq_len(age_groups)) {
     # Define age filter
-    age_filter <- ages > age_range[i] & ages <= age_range[i + 1]
+    age_filter <- ages >= age_range[i] & ages <= age_range[i + 1]
 
     # Process this age group
     result <- process_group(
@@ -283,99 +264,99 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
   return(results)
 }
 
-#' Visualize IRTnorm model-implied vs Observed raw score distributions
+#' Plot observed and model-implied raw score distributions
 #'
-#' @title Posterior Predictive IRTnorm model Check for raw score distributions
-#' @name visual_raw_score_ppc
-#' @description
-#' The function \code{visual_raw_score_ppc} creates a visualization comparing the IRTnorm model-implied
-#' (posterior predictive) raw score distribution against the observed raw score
-#' distribution. This serves as a posterior predictive IRTnorm model check (PPMC) to assess
-#' how well the fitted IRTnorm model reproduces the observed data patterns.
+#' Plots the observed raw score distribution together with the distribution
+#' implied by the fitted IRT norming model (posterior predictive check), as
+#' computed by \code{\link{raw_score_ppc}}. This shows how well the model
+#' reproduces the raw scores in the data. The plot is printed and also
+#' returned.
 #'
-#' The function automatically detects whether the input comes from a single analysis
-#' or from age-grouped analyses, and creates the appropriate visualization (single
-#' plot or faceted plot by age groups).
-#'
-#' @param raw_score_ppc_info A list object returned by the \code{raw_score_ppc} function. This can be either:
-#'   \itemize{
-#'     \item A single result list (when \code{age_range = NULL} in \code{raw_score_ppc}).
-#'     \item A list of results by age groups (when \code{age_range} is specified in \code{raw_score_ppc}).
-#'   }
-#'   Each result contains:
-#'   \itemize{
-#'     \item \code{df}: Data frame with observed frequencies and quantiles.
-#'     \item \code{replicated}: Matrix of replicated raw score distributions.
-#'     \item \code{nitem}: Number of items.
-#'     \item \code{age}: Age group label (only for age-grouped results).
-#'   }
-#'@param dim_plot \code{character} indicating which latent trait of the HO-2PL-norm
-#'IRTnorm model should be visualized.
-#'Can only be of the following characters: "general", "domain1".
-#'
-#' @return Invisibly returns a ggplot2 object. The plot is printed to the current
-#'   graphics device. The returned object can be further customized or saved.
+#' @param raw_score_ppc_info An object of class \code{"IRTnorm_ppc"}, as
+#'   returned by \code{\link{raw_score_ppc}}, either for the whole sample or
+#'   for age groups.
+#' @param dim_plot Character string indicating which latent trait to plot:
+#'   \code{"general"} or \code{"domainK"}, where \code{K} is the domain number
+#'   (e.g., \code{"domain1"}). Only required for multidimensional models in
+#'   combination with age groups, because then only one trait can be shown at
+#'   a time. It is ignored for all other models.
 #'
 #' @details
-#' The visualization includes:
+#' The plot shows, for each raw score:
 #' \itemize{
-#'   \item \strong{Orange jittered points}: Individual posterior predictive draws
-#'     showing the distribution of replicated frequencies across MCMC iterations.
-#'   \item \strong{Dashed line}: Median (50th percentile) of the replicated distributions.
-#'   \item \strong{Dotted lines}: 5th and 95th percentiles of the replicated distributions,
-#'     forming a \eqn{90\%}credible interval.
-#'   \item \strong{Black points}: Observed raw score frequencies from the actual data.
+#'   \item \strong{Black points}: the observed frequencies in the data.
+#'   \item \strong{Orange points}: the model-implied frequencies, one point
+#'     per posterior draw.
+#'   \item \strong{Dashed line}: the median of the model-implied frequencies.
+#'   \item \strong{Dotted lines}: the 5th and 95th percentiles of the
+#'     model-implied frequencies, which together form a 90\% credible
+#'     interval.
 #' }
+#' The model fits well if the observed frequencies lie within or close to the
+#' credible interval and follow the pattern of the median line.
 #'
-#' Good IRTnorm model fit is indicated when observed frequencies (black points) fall within
-#' or near the credible intervals (between dotted lines) and follow the general pattern
-#' of the median line.
+#' The layout depends on the input:
+#' \itemize{
+#'   \item Whole sample, unidimensional model: a single panel.
+#'   \item Age groups: one panel per age group.
+#'   \item Whole sample, multidimensional model: one panel per trait (the
+#'     general trait and each domain).
+#'   \item Age groups, multidimensional model: one panel per age group for the
+#'     trait selected with \code{dim_plot}.
+#' }
+#' Each panel has its own axis scales.
 #'
-#' For age-grouped analyses, the function creates a faceted plot with separate panels
-#' for each age group, allowing comparison of IRTnorm model fit across different age ranges.
+#' @return A \code{ggplot} object, returned invisibly. It can be customized
+#'   with additional \pkg{ggplot2} layers or saved with
+#'   \code{\link[ggplot2]{ggsave}}.
+#'
 #' @examples
 #' \dontrun{
-#' # Load data
 #' data(response_data)
+#' info <- estimate_norming_model(
+#'   raw_data = response_data,
+#'   age_variable = "age",
+#'   item_variables = 1:50,
+#'   irt_model = "2PLnorm",
+#'   age_model = "poly",
+#'   poly_mean = 3,
+#'   poly_sd = 2
+#' )
 #'
-#' # Prepare data for IRTnorm model fit
-#' info <- estimate_norming_model(data = response_data,
-#' age_variable = "age",
-#' item_variables = 1:50,
-#' irt_model = "2PLnorm",
-#' age__model = "polynom",
-#' poly_mean = 3,
-#' poly_sd = 2)
-#' 
-#' # Single analysis (no age grouping)
-#' result <- raw_score_ppc(fit_info = info_poly)
+#' # Whole sample
+#' result <- raw_score_ppc(fit_info = info)
+#' visual_raw_score_ppc(result)
 #'
-#' visual_raw_score_ppc(N_info = result)
-#'
-#' # Age-grouped analysis
-#' result_age <- raw_score_ppc(fit_info = info,
-#'                  age_range = seq(-2,2,1))
-#'
+#' # Separately by age group
+#' result_age <- raw_score_ppc(fit_info = info, age_range = c(-2,-1,0,1,2))
 #' visual_raw_score_ppc(result_age)
-#'}
-#' @seealso \code{\link{raw_score_ppc}} for computing the raw score distributions
+#'
+#' }
+#'
+#' @seealso \code{\link{raw_score_ppc}} for computing the raw score
+#'   distributions
 #'
 #' @references
 #' Gelman, A., Carlin, J. B., Stern, H. S., & Rubin, D. B. (2013).
-#' Bayesian Data Analysis (3rd ed.). Chapman and Hall/CRC.
+#' \emph{Bayesian Data Analysis} (3rd ed.). Chapman and Hall/CRC.
+#'
+#' Sinharay, S., Johnson, M. S., & Stern, H. S. (2006). Posterior predictive
+#' assessment of item response theory models. \emph{Applied Psychological
+#' Measurement, 30}(4), 298-321.
 #'
 #' @export
 visual_raw_score_ppc <- function(raw_score_ppc_info, dim_plot = NULL) {
-##TODO NEEDS TO BE CHECKED IF THIS IF CASE IS GOOD 
-  if(!inherits(raw_score_ppc_info, "IRTnorm_ppc")){
+
+    if(!inherits(raw_score_ppc_info, "IRTnorm_ppc")){
     stop("raw_score_ppc_info has to be generated from raw_score_ppc()")
   }
 
-  if (length(raw_score_ppc_info) == 1 && is.list(raw_score_ppc_info[[1]]) && 
+  # existing unwrap block
+  if (length(raw_score_ppc_info) == 1 && is.list(raw_score_ppc_info[[1]]) &&
       !is.null(raw_score_ppc_info[[1]][[1]]$age)) {
     raw_score_ppc_info <- raw_score_ppc_info[[1]]
   }
-  
+ 
 process_single_result <- function(result, age_label = NULL, dim_label = NULL) {
   # Extract data
   df <- result$df
@@ -385,8 +366,9 @@ process_single_result <- function(result, age_label = NULL, dim_label = NULL) {
 
   # Reshape to long format
   rep.long <- replicated2 |>
-    tidyr::pivot_longer(cols = -id, names_to = "score", values_to = "frequency")
+    tidyr::pivot_longer(cols = -dplyr::all_of("id"), names_to = "score", values_to = "frequency")
   rep.long$score <- as.numeric(rep.long$score)
+
 
   # Add age group label if provided
   if (!is.null(age_label)) {
@@ -401,14 +383,11 @@ process_single_result <- function(result, age_label = NULL, dim_label = NULL) {
   return(list(df = df, rep.long = rep.long))
 }
 
-if(length(raw_score_ppc_info) == 1 & !is.null(dim_plot)){
-  warning("Your model is unidimensional, therefore your input for dim_plot is ignored.")
-}
-
-# Helper
-remove_substr <- function(text, start, end) {
-  paste0(substring(text, 1, start - 1),
-         substring(text, end + 1))
+if (!(length(raw_score_ppc_info) > 1 && !is.null(raw_score_ppc_info[[1]][[1]]$age)) &&
+    !is.null(dim_plot)) {
+  warning("`dim_plot` is only used for multidimensional models with age groups ",
+          "and is ignored here.")
+  dim_plot <- NULL
 }
 # True if multiple dimensions are tested and if multiple ages are evaluated
 if(length(raw_score_ppc_info) > 1 & !is.null(raw_score_ppc_info[[1]][[1]]$age)){
@@ -424,12 +403,7 @@ if(length(raw_score_ppc_info) > 1 & !is.null(raw_score_ppc_info[[1]][[1]]$age)){
     if(dim_plot == "general"){
       raw_score_ppc_info <- raw_score_ppc_info[[1]]
     }else{
-      #int_NC <- as.numeric(remove_substr(dim_plot, 1,6))
-      #if(!is.na(int_NC)){
-        raw_score_ppc_info <- raw_score_ppc_info[[as.numeric(substr(dim_plot, 7,7)) +1]] # +1
-      #}else{
-      #  stop("'dim_plot' has the wrong format. ")
-      #}
+        raw_score_ppc_info <- raw_score_ppc_info[[as.numeric(as.numeric(sub("domain", "", dim_plot))) +1]] 
 
     }
   }
@@ -513,11 +487,11 @@ p <- ggplot2::ggplot() +
 
 n_age <- length(unique(rep.long_all$age_group))
 if(n_age > 1){
-  p <- p + ggplot2::facet_wrap(~ age_group, scale = "free", ncol = round(sqrt(n_age)))
+  p <- p + ggplot2::facet_wrap(ggplot2::vars(.data$age_group), scale = "free", ncol = round(sqrt(n_age)))
 }
 if(n_domains){
   n_domain <- length(unique(rep.long_all$domain))
-  p <-  p + ggplot2::facet_wrap(~ domain, scale = "free", ncol = round(sqrt(n_domain)))
+  p <-  p + ggplot2::facet_wrap(ggplot2::vars(.data$domain), scale = "free", ncol = round(sqrt(n_domain)))
 }
 if(!is.null(dim_plot)){
   p <- p + ggplot2::ggtitle(dim_plot)
@@ -526,71 +500,79 @@ print(p)
 return(invisible(p))
 }
 
-#' Visualize the distribution of norm scores across age ranges.
+#' Visualize the distribution of norm scores across age groups
 #'
-#' The \code{normscore_dist} function visualizes whether estimated norm scores
-#' follow an approximately standard normal distribution across different age
-#' ranges. For each specified age group, a histogram of estimated norm scores is
-#' plotted together with the corresponding density of a standard normal
-#' distribution.
+#' Plots the estimated norm scores of the individuals in the data as a
+#' histogram for each age group, together with the density of a standard
+#' normal distribution. This shows whether the norming achieved the intended
+#' normalization of the latent trait within age groups: if it did, the
+#' histogram should follow the curve in every age group.
 #'
-#' This diagnostic plot is useful for assessing whether the norming procedure
-#' achieved the intended normalization of the latent trait within age groups.
-#'
-#' @title Check the distribution of norm scores across age ranges
-#'
-#' @name normscore_dist
-#'
-#' @param fit_info A named \code{list} as returned by \code{\link{estimate_norming_model}}.
-#'
-#' @param age_range A \code{numeric} vector specifying the cut-off points for
-#'   age groups. Consecutive values define the lower (exclusive) and upper
-#'   (inclusive) bounds of each age group.
-#'
-#' @param binwidth A \code{numeric} value specifying the bin width of the
-#'   histogram. Defaults to \code{0.5}.
-#'
-#' @param dim_plot Only required for multidimensional IRTnorm models.
-#' \code{character} indicating which latent trait of the higher-order model 
-#' should be visualized.
-#' Can only be of the following characters: "general", "domain1".
-#' @return A \pkg{ggplot2} object showing histograms of norm scores by age group,
-#'   overlaid with the scaled density of a standard normal distribution.
+#' @param fit_info An object of class \code{"IRTnorm"}, as returned by
+#'   \code{\link{estimate_norming_model}}.
+#' @param age_range Numeric vector with at least two values giving the
+#'   boundaries of the age groups, on the same scale as the age variable in the
+#'   data (e.g., \code{c(5, 7, 9, 11)} creates the groups \[5,7\], \[7,9\], and
+#'   \[9,11\]). The lower boundary of a group is excluded and the upper boundary
+#'   is included.
+#' @param binwidth Numeric. Width of the histogram bins, in norm score units.
+#'   Default is 0.5.
+#' @param dim_plot Only required for multidimensional models. Character string
+#'   indicating which trait to plot: \code{"general"} or \code{"domainK"},
+#'   where \code{K} is the domain number (e.g., \code{"domain1"}). For
+#'   multidimensional models, the domain scores are shown on the standardized
+#'   scale.
 #'
 #' @details
-#' Individuals are assigned to age groups defined by \code{age_range} using the
-#' intervals \eqn{(a_i, a_{i+1}]}. For each age group, the histogram of estimated
-#' norm scores (\code{normscore_est}) is plotted together with the expected
-#' density of a standard normal distribution, scaled by the number of
-#' observations and the histogram bin width.
+#' The norm score of each individual is the posterior mean of the
+#' standardized latent trait. The normal curve is scaled to the number of
+#' individuals in the age group and to \code{binwidth}, so that it is directly
+#' comparable to the histogram frequencies. Each age group is shown in its own
+#' panel.
 #'
-#' Faceting is used to display the distributions separately for each age group.
+#' Individuals outside the range of \code{age_range} are removed from the
+#' plot, with a warning.
 #'
-#' @seealso \code{\link{extract_info}}, \code{\link{fit_IRTnorm}}
+#' @return A \code{ggplot} object, which can be printed directly or further
+#'   customized with additional \pkg{ggplot2} layers.
+#'
+#' @seealso \code{\link{estimate_norming_model}},
+#'   \code{\link{raw_score_ppc}}
+#'
 #' @examples
 #' \dontrun{
-#' # Load data
-#' data(response_data)
+#' load(response_data)
+#' info <- estimate_norming_model(
+#'   raw_data = response_data,
+#'   age_variable = "age",
+#'   item_variables = 1:50,
+#'   irt_model = "2PLnorm",
+#'   age_model = "poly",
+#'   poly_mean = 3,
+#'   poly_sd = 2
+#' )
 #'
-#' # Fit IRTnorm model and extract information
-#' info <- estimate_norming_model(data = response_data,
-#' age_variable = "age",
-#' item_variables = 1:50,
-#' irt_model = "2PLnorm",
-#' age__model = "polynom",
-#' poly_mean = 3,
-#' poly_sd = 2)
+#' # Norm score distribution in age groups
+#' normscore_dist(fit_info = info, age_range = c(-2,1,0,1,2))
 #'
-#' # Plot the density of the normed latent trait in age-groups
-#' normscore_dist(fit_info = info, age_range = seq(-2,2,1))}
+#' }
+#'
 #' @export
 normscore_dist <- function(fit_info, age_range, binwidth = 0.5, dim_plot = NULL){
   if(!inherits(fit_info, "IRTnorm")){
     stop("fit_info has to be generated from estimate_norming_model()")
   }
+    if(!is.numeric(age_range) || length(age_range) <2){
+      stop("age_range must be a numeric vector with at least two values.")
+    }
   
+  age_range <- sort(age_range)
   model_info <- fit_info$model_info 
   if(model_info$info_sample$irt_mod[1] <= 4){
+    if(!is.null(dim_plot)){
+      warning("Your model is unidimensional, the argument dim_plot is ignored.")
+      dim_plot <- NULL
+    }
     data <-  model_info$info_sample
   }
   if(model_info$info_sample$irt_mod[1] > 4){
@@ -598,10 +580,16 @@ normscore_dist <- function(fit_info, age_range, binwidth = 0.5, dim_plot = NULL)
       stop("Your data is from a multidimensional IRT model. Choose which dimension
            you want to visualize by specifying 'dim_plot'.")
     }
+    D <- fit_info$newdata$D
+    if (!dim_plot %in% c("general", paste0("domain", seq_len(D)))) {
+      stop("`dim_plot` must be one of: ",
+           paste(c("general", paste0("domain", seq_len(D))), collapse = ", "), ".")
+    }
+    
     if(dim_plot == "general"){
       data <-  model_info$info_sample[model_info$info_sample$trait == "theta", ]
     }else{
-      data <-  model_info$info_sample[model_info$info_sample$trait == paste0("normeddelta",substr(dim_plot, 7,7)), ]
+      data <-  model_info$info_sample[model_info$info_sample$trait == paste0("normeddelta",as.numeric(sub("domain", "", dim_plot))), ]
     }
     data$normscore_est <- data$est_ability
   }
@@ -609,12 +597,13 @@ normscore_dist <- function(fit_info, age_range, binwidth = 0.5, dim_plot = NULL)
     stop("All norm scores are identical. Cannot plot a meaningful distribution.")
   }
   
+  
   data$age_group <- NA
   n_agegroup <- (length(age_range) - 1)
   n_group <-NULL
-  for(age in 1:n_agegroup){
-    data$age_group[data$age > age_range[age] & data$age <= age_range[age +1]] <- paste0("age: (", age_range[age], ",", age_range[age +1], "]")
-    n_group <- c(n_group,sum(data$age > age_range[age] & data$age <= age_range[age +1]) )
+  for(age in seq_len(n_agegroup)){
+    data$age_group[data$age >= age_range[age] & data$age <= age_range[age +1]] <- paste0("age: [", age_range[age], ",", age_range[age +1], "]")
+    n_group <- c(n_group,sum(data$age >= age_range[age] & data$age <= age_range[age +1]) )
   }
   if(any(is.na(data$age_group))){
     warning("Some individuals are not within the plotted age groups. These have been removed")
@@ -627,17 +616,18 @@ normscore_dist <- function(fit_info, age_range, binwidth = 0.5, dim_plot = NULL)
     data.frame(
       x = x_val,
       y = stats::dnorm(x_val, 0, 1) * binwidth * n_group[i],
-      age_group = paste0("age: (", age_range[i], ",", age_range[i + 1], "]")
+      age_group = paste0("age: [", age_range[i], ",", age_range[i + 1], "]")
     )
   })
   
   curve_data <- do.call(rbind, curve_list)
   
   ggplot2::ggplot()  +
-    ggplot2::geom_histogram(ggplot2::aes(x = normscore_est), binwidth = binwidth ,
+    ggplot2::geom_histogram(ggplot2::aes(x = .data$normscore_est), binwidth = binwidth ,
                             data = data, color = "#fdb863", fill = "#fdb863") +
-    ggplot2::geom_line(data = curve_data, ggplot2::aes(x, y), linewidth = 1) +
-    ggplot2::facet_grid(~factor(age_group,levels = paste0("age: (", age_range[1:(n_agegroup)], ",", age_range[-1], "]"))) + ggplot2::xlab("norm score") +
+    ggplot2::geom_line(data = curve_data, ggplot2::aes(.data$x, .data$y), linewidth = 1) +
+    ggplot2::facet_grid(~factor(age_group,levels = paste0("age: [", age_range[1:(n_agegroup)], ",", age_range[-1], "]"))) + 
+    ggplot2::xlab("norm score") +
     ggplot2::ylab("frequency of individuals") + ggplot2::theme_bw()
   
   
@@ -662,63 +652,60 @@ irt_plot_theme <- function(){
 is_multidim <- function(irt_mod) irt_mod >= 5
 
 
-#' Visualize observed data and IRT norming model–implied quantile curves.
+#' Plot latent trait estimates and model-implied quantile curves
 #'
-#' \code{quantile_curves} visualizes realized latent trait
-#' estimates alongside model-implied latent trait quantiles.
+#' Plots the estimated latent trait of each individual against age, together
+#' with the quantile curves implied by the fitted IRT norming model. This shows
+#' whether the model-implied distribution of the latent trait matches the
+#' spread of the estimates across the age range: if it does, the expected
+#' share of points should fall below each curve (e.g., about 25\% below the
+#' 25\% curve).
 #'
-#' Quantiles of the model-implied latent trait distribution are computed for each 
-#' individual and smoothed as a function of age using local polynomial regression 
-#' (LOESS), while realized latent trait estimates (\code{theta_est}) are displayed as points.
-#'
-#' This provides a diagnostic comparison between estimated latent traits based 
-#' on the observed response pattern and the distribution implied by the fitted
-#'  IRT norming model, allowing assessment of whether the model reproduces 
-#'  plausible norm scores across the entire age range.
-#'
-#' @title Visualize IRT norming model–implied latent traits and quantile curves
-#' @name quantile_curves
-#'
-#' @param fit_info a named \code{list} as returned by \code{\link{estimate_norming_model}}
-#'
-#'@param probs vector indicating which quantiles should be plotted. 
-#' Default is c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95). 
-#' 
-#' @return A \pkg{ggplot2} object. 
-#'   Realized latent trait estimates
-#'   plotted against age together with smoothed model-implied latent trait
-#'   quantile curves (\eqn{5\%}, \eqn{25\%}, \eqn{50\%}, \eqn{75\%}, \eqn{95\%}).
+#' @param fit_info An object of class \code{"IRTnorm"}, as returned by
+#'   \code{\link{estimate_norming_model}}.
+#' @param probs Numeric vector of probabilities strictly between 0 and 1,
+#'   giving the quantiles to plot. Default is
+#'   \code{c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)}.
 #'
 #' @details
-#' For each individual, quantiles of the
-#' model-implied latent trait distribution are computed from the
-#' age-dependent normal distribution of the latent trait, and smoothed as a
-#' function of age using LOESS. Realized latent trait estimates are overlaid
-#' as points for comparison.
+#' The points are the estimated latent trait values of the individuals in the
+#' data. For multidimensional models, the points are the domain-specific
+#' traits, and each domain is shown in its own panel.
 #'
+#' The curves show the quantiles of the age-dependent normal distribution
+#' of the latent trait implied by the fitted model. They are drawn as smoothed
+#' curves across age. If there are too few distinct ages for smoothing, the
+#' unsmoothed quantiles are connected by lines instead.
+#'
+#' @return Invisibly, a data frame with the model-implied quantiles for each
+#'   individual, with the columns \code{age}, \code{quan} (quantile value),
+#'   \code{qname} (the probability, e.g., \code{"p0.05"}) and, for
+#'   multidimensional models, \code{domain}. It can be used to create custom
+#'   plots.
+#'
+#' @seealso \code{\link{estimate_norming_model}},
+#'   \code{\link{normscore_dist}}
 #'
 #' @examples
 #' \dontrun{
-#' # Load data
 #' data(response_data)
-#'
 #' info <- estimate_norming_model(
-#'   raw_data        = response_data,
-#'   age_variable    = "age",
-#'   item_variables   = 1:50,
-#'   irt_model       = "2PLnorm",
-#'   poly_mean       = 3,
-#'   poly_sd         = 2,
-#'   age_model       = "poly",
-#'   iter_warmup     = 500,
-#'   iter_sampling   = 1000,
-#'   chains          = 2,
-#'   parallel_chains = 2
+#'   raw_data = response_data,
+#'   age_variable = "age",
+#'   item_variables = 1:50,
+#'   irt_model = "2PLnorm",
+#'   age_model = "poly",
+#'   poly_mean = 3,
+#'   poly_sd = 2
 #' )
 #'
-#' plot_quantile_curves(fit_info = info)
+#' # Default quantiles
+#' quantile_curves(fit_info = info)
 #'
+#' # Selected quantiles; keep the underlying values
+#' q <- quantile_curves(fit_info = info, probs = c(0.025, 0.5, 0.975))
 #' }
+#'
 #' @export
 quantile_curves <- function(fit_info, 
                             probs = c(0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95)){
@@ -727,6 +714,9 @@ quantile_curves <- function(fit_info,
   }
   if(any(probs >= 1| probs <= 0)){
     stop("probs have to be in (0,1)")
+  }
+  if(!is.numeric(probs) || any(probs < 0 | probs > 1)){
+    stop("probs have to be numerical values in (0,1)")
   }
   
   model_info  <- fit_info$model_info
@@ -760,16 +750,16 @@ quantile_curves <- function(fit_info,
       data.frame(
         age    = rep(int_data$age, each = length(probs)),
         quan   = quan,
-        qname  = rep(paste0("p", probs), nperson),
+        qname  = factor(rep(paste0("p", probs), nperson), levels = paste0("p", probs)),
         domain = d
       )
     }))
-   # person_data$theta_est <- person_data$est_ability
+    person_data$theta_est <- person_data$est_ability
       }
   
   
   p <- ggplot2::ggplot() +
-    ggplot2::geom_point(ggplot2::aes(.data$age, .data$est_ability), data = person_data) +
+    ggplot2::geom_point(ggplot2::aes(.data$age, .data$theta_est), data = person_data) +
     ggplot2::ylab("latent trait") + ggplot2::theme_bw() + irt_plot_theme()
   
   # check if enough data to use lm with loess
@@ -777,13 +767,13 @@ quantile_curves <- function(fit_info,
                         function(a) length(unique(a)))
   span <- 0.75; degree <- 2
   min_n <- ceiling((degree + 1) / span) + 1 
-  if (min(n_per_group) > min_n){
-    p <- p + ggplot2::geom_smooth(ggplot2::aes(.data$age, .data$quan, color = qname), data = new_data, formula = 'y ~ x', method = 'loess')
+  if (min(n_per_group) >= min_n){
+    p <- p + ggplot2::geom_smooth(ggplot2::aes(.data$age, .data$quan, color = .data$qname), data = new_data, formula = 'y ~ x', method = 'loess')
   }else{
-   p <- p + ggplot2::geom_line(ggplot2::aes(.data$age, .data$quan, color = qname), data = new_data) 
+   p <- p + ggplot2::geom_line(ggplot2::aes(.data$age,.data$quan, color = .data$qname), data = new_data) 
   }
 
-  if (is_multidim(irt_mod)) p <- p + ggplot2::facet_grid(~domain)
+  if (is_multidim(irt_mod)) p <- p + ggplot2::facet_grid(~.data$domain)
   print(p)
   invisible(new_data)
 }
@@ -869,65 +859,79 @@ make_dummy_matrix <- function(info, K_item) {
 
 
 
-#'@title Visualization of item and person fit
-#'@name item_person_fit
-#'@description Visualizes item-level fit or person-level fit by comparing observed
-#'response patterns with IRTnorm model-implied response patterns.
+#' Plot item fit and person fit
 #'
-#' @param fit_info A named \code{list} as returned by \code{\link{estimate_norming_model}}.
-#'@param parameter A \code{character} indicating whether item fit or person fit
-#' should be visualized. Must be either \code{"item"} or \code{"person"}.
-#' @return A \pkg{ggplot2} object showing smoothed quantile curves of the
-#'   IRTnorm model-implied latent trait distribution (\eqn{5\%},\eqn{ 25\%},\eqn{ 50\%},
-#'   \eqn{75\%}, and \eqn{95\%}). together with realized latent trait estimates plotted against age.
-#'@details For each person–item combination, the function computes the IRTnorm model-implied
-#'probability of a correct response. Depending on \code{estimate}, responses are
-#' either dichotomized at 0.5 (\code{"mostlikely"}) or retained as expected probabilities (\code{"expected"}).
+#' Compares the observed responses with the responses implied by the fitted
+#' IRT norming model, either per item (item fit) or per person (person fit).
+#' The closer the points lie to the diagonal reference line, the better the
+#' model reproduces the data.
 #'
-#' If \code{parameter = "item"}, the plot compares observed and the IRTnorm model-implied
-#' the amount of correct answers per item.
+#' @param fit_info An object of class \code{"IRTnorm"}, as returned by
+#'   \code{\link{estimate_norming_model}}.
+#' @param parameter Character string, either \code{"item"} or
+#'   \code{"person"}.
+#'   \itemize{
+#'     \item \code{"item"}: compares the observed and model-implied
+#'       proportion of correct responses for each item. See Details.
+#'     \item \code{"person"}: compares the observed and model-implied raw
+#'       score of each person.
+#'   }
 #'
-#' If \code{parameter = "person"}, the plot compares observed and the IRTnorm model-implied
-#' raw score per person.
+#' @details
+#' The model-implied values are computed from the item parameter estimates
+#' and the estimated latent trait of each person (posterior means). Missing
+#' responses are ignored in both the observed and the model-implied values.
 #'
-#' A diagnonal reference line is added to facilitate visual assessment of fit.
-#' The closer the observed points are to the diagonal, the better the fit is.
-#'@examples
-#'\dontrun{
-#' # Load data
+#' \strong{Item fit.} For the 1PL, 2PL, and 3PL models, each point is one
+#' item, with the observed proportion of correct responses on the x-axis and
+#' the model-implied proportion on the y-axis. For multidimensional models,
+#' the items are shown in one panel per domain. Items without any valid
+#' response are excluded, with a warning. For the graded response model, the
+#' plot shows, for each item, the observed and model-implied proportion in
+#' each response category as stacked bars.
+#'
+#' \strong{Person fit.} Each point is one person, with the observed raw score
+#' on the x-axis and the model-implied expected raw score on the y-axis. For
+#' multidimensional models, the raw score is computed separately for each
+#' domain and shown in one panel per domain.
+#'
+#' @return Invisibly, a list with two components: \code{plot}, the
+#'   \code{ggplot} object, and \code{data}, the data frame underlying the
+#'   plot. The plot is also printed when the function is called.
+#'
+#' @seealso \code{\link{estimate_norming_model}},
+#'   \code{\link{raw_score_ppc}}
+#'
+#' @examples
+#' \dontrun{
 #' data(response_data)
+#' info <- estimate_norming_model(
+#'   raw_data = response_data,
+#'   age_variable = "age",
+#'   item_variables = 1:50,
+#'   irt_model = "2PLnorm",
+#'   age_model = "poly",
+#'   poly_mean = 3,
+#'   poly_sd = 2
+#' )
 #'
-#' # Fit IRTnorm model and extract information
-#' info <- estimate_norming_model(data = response_data,
-#' age_variable = "age",
-#' item_variables = 1:50,
-#' irt_model = "2PLnorm",
-#' age__model = "polynom",
-#' poly_mean = 3,
-#' poly_sd = 2)
-#' 
-#'  # Example usage
-#'  item_person_fit(
-#'    fit_info = info,
-#'    parameter = "item"
-#'  )
+#' # Item fit
+#' item_person_fit(fit_info = info, parameter = "item")
 #'
-#'  item_person_fit(
-#'    fit_info = info,
-#'    parameter = "person"
-#'  )
-#'}
+#' # Person fit, keeping the plot and the underlying data
+#' res <- item_person_fit(fit_info = info, parameter = "person")
+#' res$plot
+#' head(res$data)
+#' }
 #'
-#' @seealso
-#' \code{\link{extract_info}}
-#'@export
+#' @export
 item_person_fit <- function(fit_info,  parameter){
   if(!inherits(fit_info, "IRTnorm")){
     stop("fit_info has to be generated from estimate_norming_model()")
   }
   parameter <- match.arg(parameter, c("item", "person"))
   model_info <- fit_info$model_info
-  answer_pattern <- fit_info$raw_data[, fit_info$item_variables]
+  answer_pattern <- fit_info$raw_data[, fit_info$item_variables,drop = FALSE]
   data <- fit_info$newdata
   nperson <- data$J
   nitem <- data$I
@@ -949,7 +953,6 @@ item_person_fit <- function(fit_info,  parameter){
       stop("'data$itemD' contains dimension indices that do not match the number of dimensions in 'data$D'. Check that itemD values run from 1 to D.")
     }
     temp <- model_info$info_sample[substr(model_info$info_sample$trait,1,1) == "d",]
-    temp$id <- rep(seq_len(nperson), data$D)
     info_person <- matrix(temp$est_ability, ncol = data$D)
   }
   info_item   <- model_info$info_item
@@ -972,7 +975,7 @@ item_person_fit <- function(fit_info,  parameter){
     expected <- matrix(
       0,
       nrow =nperson,
-      ncol = sum(data$K_item) # nitem*(max(data$K_item))
+      ncol = sum(data$K_item) 
     )
     if(is.list(info_item$threshold)){
       expected[, 1:(sum(data$K_item[1]))] <- grm_probs(theta = info_person, a = info_item$alpha[1], b = info_item$threshold[[1]])
@@ -1006,6 +1009,8 @@ item_person_fit <- function(fit_info,  parameter){
                        type = rep(c("observed","irt_mod"), each = sum(data$K_item)),
                        item = rep(rep(1:nitem, data$K_item), 2),
                        level = rep(sequence(data$K_item),2))
+      df$item_label <- factor(paste0("item ", df$item),
+                              levels = paste0("item ", seq_len(nitem)))
     }
     if(data$irt_mod > 4){
       df <- data.frame(
@@ -1049,16 +1054,16 @@ item_person_fit <- function(fit_info,  parameter){
     titlename <- "person fit: raw score"
   }
   if(data$irt_mod == 4 & parameter == "item"){
-    p <- ggplot2::ggplot(df, ggplot2::aes(x = factor(type), y = value, fill = factor(level))) +
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = factor(.data$type),
+                                          y = .data$value, fill = factor(.data$level))) +
       ggplot2::geom_bar(stat = "identity") +
-      ggplot2::facet_wrap(~ paste0("item ", item)) +
-      #scale_fill_viridis_d(option = "plasma") +
+      ggplot2::facet_wrap(ggplot2::vars(.data$item_label)) +
       ggplot2::labs(x = NULL, y = "proportion", fill = "Level") +
       ggplot2::theme_bw() +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
     
   }else{
-    p <- ggplot2::ggplot(df, ggplot2::aes(x = observed, y = irt_mod)) +
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$observed, y = .data$irt_mod)) +
       ggplot2::geom_point() +
       ggplot2::geom_abline(
         intercept = 0, slope = 1,
@@ -1074,48 +1079,72 @@ item_person_fit <- function(fit_info,  parameter){
   p <- p + ggplot2::theme(plot.title = ggplot2::element_text(size=12))
   
   if(data$irt_mod > 4){
-    p <- p +  ggplot2::facet_grid(~domain)
-    
+    p <- p + ggplot2::facet_grid(cols = ggplot2::vars(.data$domain))
   }
   print(p)
   invisible(list(plot = p, data = df))
-  #invisible(df)
 }
 
 
 
 
-#' @title Plot the estimated age effect of IRT-based continuous norming model
-#'@name effect_age
-#'@description
-#' Visualizes the IRTnorm model-implied relationship between age and the
-#' latent trait distribution mean and standard deviation.
+#' Plot the estimated age effect of an IRT norming model
 #'
-#'@param fit_info A list containing IRTnorm model output from the \code{extract_info()} function.
-#' It must include the elements \code{info_sample} (person-level information,
-#' including latent trait estimates) and \code{info_item} (item parameters).
-#'@return A \pkg{ggplot2} object showing the estimated mean and standard deviation of the
-#' latent trait as functions of age.
-#' @seealso
-#' \code{\link{extract_info}}
-#'@examples
-#'\dontrun{
-#' # Load data
-#' data(response_data)
+#' Plots how the fitted IRT norming model relates age to the distribution of
+#' the latent trait. For unidimensional models, the plot shows the
+#' age-dependent mean and standard deviation of the latent trait. For
+#' multidimensional models, it shows the age-dependent mean and standard
+#' deviation of each domain and the correlation between each domain and the
+#' general trait.
 #'
-#' # Fit IRTnorm model and extract information
-#' info <- estimate_norming_model(data = response_data,
-#' age_variable = "age",
-#' item_variables = 1:50,
-#' irt_model = "2PLnorm",
-#' age__model = "polynom",
-#' poly_mean = 3,
-#' poly_sd = 2)
+#' @param fit_info An object of class \code{"IRTnorm"}, as returned by
+#'   \code{\link{estimate_norming_model}}.
 #'
-#' # Plot estimated age effect
+#' @details
+#' The curves show the model-implied values, based on the posterior mean
+#' estimates, evaluated at the ages of the individuals in the data. They are
+#' therefore only drawn over the age range that is observed in the data.
+#'
+#' For unidimensional models, the mean and the standard deviation are shown
+#' in two panels.
+#'
+#'  For multidimensional models, the plot is a grid with one row per quantity
+#' (mean, standard deviation, correlation) and one column per domain. The
+#' y-axis scale is shared across the domains within a row, so the domains can
+#' be compared directly. The correlation is the correlation between the
+#' domain-specific trait and the general trait.
+#'
+#' @return Invisibly, a list with two components: \code{plot}, the
+#'   \code{ggplot} object, and \code{data}, the data frame underlying the
+#'   plot (columns \code{age}, \code{value}, \code{moment} and, for
+#'   multidimensional models, \code{trait}).
+#'   The plot is printed when the function is called.
+#'
+#' @seealso \code{\link{estimate_norming_model}},
+#'   \code{\link{quantile_curves}}
+#'
+#' @examples
+#' \dontrun{
+#' info <- estimate_norming_model(
+#'   raw_data = response_data,
+#'   age_variable = "age",
+#'   item_variables = 1:50,
+#'   irt_model = "2PLnorm",
+#'   age_model = "poly",
+#'   poly_mean = 3,
+#'   poly_sd = 2
+#' )
+#'
+#' # Plot the estimated age effect
 #' effect_age(fit_info = info)
-#'}
-#'@export
+#'
+#' # Keep the plot and the underlying data
+#' res <- effect_age(fit_info = info)
+#' res$plot
+#' head(res$data)
+#' }
+#'
+#' @export
 effect_age <- function(fit_info){
   if(!inherits(fit_info, "IRTnorm")){
     stop("fit_info has to be generated from estimate_norming_model()")
@@ -1172,10 +1201,12 @@ effect_age <- function(fit_info){
                    panel.grid.major = ggplot2::element_blank()) +
     ggplot2::ylab("latent trait")
   if(info_person$irt_mod[1] <= 4){
-    p <- p +ggplot2::facet_wrap(~moment, scales = "free", nrow = 1)
+    p <- p +ggplot2::facet_wrap(ggplot2::vars(.data$moment), scales = "free", nrow = 1)
   }
   if(info_person$irt_mod[1] > 4){
-    p <- p + ggplot2::facet_wrap(moment~trait, scales = "free_y", 2)
+    p <- p + ggplot2::facet_grid(rows = ggplot2::vars(.data$moment),
+                                 cols = ggplot2::vars(.data$trait),
+                                 scales = "free_y")
   }
 
   print(p)
@@ -1234,7 +1265,7 @@ compute_domain_averages <- function(Q3, itemD) {
 #'
 #' @noRd
 visual_multi <- function(Q3 = Q3, itemD = itemD){
-  breaks <- head(cumsum(rle(itemD)$lengths), -1) + 1
+  breaks <- utils::head(cumsum(rle(itemD)$lengths), -1) + 1
   n <- ncol(Q3)
   
   # Horizontal lines: from the diagonal to the right edge
@@ -1285,41 +1316,88 @@ visual_multi <- function(Q3 = Q3, itemD = itemD){
 
 
 
-#'@title compute item residual correlation 
-#'@name item_residual_cor
-#'@description
-#' 
-
-#' The \code{item_residual_cor} prints a summaries of the item residual correlations.
-#' When visualized is set to true it additionally visualizes the residual correlation matrix form of a heat map.
-#' Returns the item residual correlation matrix when the output is saved. 
+#' Compute item residual correlations (Q3)
 #'
-#' @param fit_info A named \code{list} as returned by \code{\link{estimate_norming_model}}.
+#' Checks the local independence assumption of the fitted IRT norming model.
+#' For each person and item, the residual is the observed response minus the
+#' model-implied expected response. The residual correlations between all item
+#' pairs (Yen's Q3) should be close to zero if the model captures the
+#' dependencies in the data. The function prints a summary of the correlations
+#' between items and, optionally, plots them as a heat map.
 #'
-#' @param visual A logical indicating if the heat map should be visualized. 
-#' The default is TRUE. 
-#' 
-#' @return A list with the first residual correlation matrix. 
-#' 
-#' @seealso [estimate_norming_model()]
+#' @param fit_info An object of class \code{"IRTnorm"}, as returned by
+#'   \code{\link{estimate_norming_model}}.
+#' @param visual Logical. If \code{TRUE} (default), the residual correlation
+#'   matrix is plotted as a heat map.
+#' @param domain Optional integer indicating which domain to analyze. Only
+#'   usable for multidimensional models; the analysis is then restricted to the
+#'   items of this domain. If \code{NULL} (default), all items are analyzed.
+#'   For unidimensional models, the argument is ignored with a warning.
+#'
+#' @details
+#' The expected responses are computed from the posterior mean item parameters
+#' and the estimated latent trait of each person (posterior means). Missing
+#' responses are ignored when computing the correlations (pairwise complete
+#' observations).
+#'
+#' A summary (minimum, quartiles, mean, maximum) of the correlations between
+#' all distinct item pairs is printed. Correlations far from zero, in
+#' particular strongly positive ones, indicate pairs of items that are related
+#' beyond what the model explains.
+#'
+#' For multidimensional models without a specified \code{domain}, the
+#' function additionally prints the average residual correlation within and
+#' between domains, and the heat map is organized by domain.
+#'
+#' The heat map and the printed output are produced when the function is
+#' called. The numerical results are returned invisibly.
+#'
+#' @return Invisibly, a list with the components:
+#' \describe{
+#'   \item{\code{Q3}}{Matrix of residual correlations between all items
+#'     analyzed.}
+#'   \item{\code{summary_info}}{Summary of the correlations between distinct
+#'     items (the off-diagonal elements of \code{Q3}).}
+#'   \item{\code{itemD}}{Domain of each item. Only for multidimensional
+#'     models without a specified \code{domain}.}
+#'   \item{\code{compare_domains}}{Average residual correlations within and
+#'     between domains. Only for multidimensional models without a specified
+#'     \code{domain}.}
+#' }
+#'
+#' @seealso \code{\link{estimate_norming_model}},
+#'   \code{\link{item_person_fit}}
+#'
+#' @references
+#' Yen, W. M. (1984). Effects of local item dependence on the fit and
+#' equating performance of the three-parameter logistic model.
+#' \emph{Applied Psychological Measurement, 8}(2), 125-145.
 #'
 #' @examples
 #' \dontrun{
-#' # Load data
 #' data(response_data)
+#' info <- estimate_norming_model(
+#'   raw_data = response_data,
+#'   age_variable = "age",
+#'   item_variables = 1:50,
+#'   irt_model = "2PLnorm",
+#'   age_model = "poly",
+#'   poly_mean = 3,
+#'   poly_sd = 2
+#' )
 #'
-#' # Prepare data for IRTnorm model fit
-#' info <- estimate_norming_model(data = response_data,
-#' age_variable = "age",
-#' item_variables = 1:50,
-#' irt_model = "2PLnorm",
-#' age__model = "polynom",
-#' poly_mean = 3,
-#' poly_sd = 2)
-#'
+#' # Summary and heat map
 #' item_residual_cor(info)
-#'}
-#'@export
+#'
+#' # Keep the residual correlation matrix, without the plot
+#' res <- item_residual_cor(info, visual = FALSE)
+#' res$Q3[1:5, 1:5]
+#'
+#' # Multidimensional model: restrict to one domain
+#' # item_residual_cor(info_multi, domain = 1)
+#' }
+#'
+#' @export
 item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
   if(!inherits(fit_info, "IRTnorm")){
     stop("fit_info has to be generated from estimate_norming_model()")
@@ -1340,15 +1418,15 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
   if(irt_mod < 5){
     theta <- fit_info$model_info$info_sample$theta_est
   }
-  if(!is.null(domain) & irt_mod <= 4){
+  if(!is.null(domain) && irt_mod <= 4){
     warning("The domain argument is only for hierarchical norming models. 
             You indicated a unidimensional model, therefore domain is ignored.")
   }
-  if(!is.null(domain) & irt_mod > 4){
+  if(!is.null(domain) && irt_mod > 4){
     itemD <- data$itemD
-    if(!(domain %in% itemD)){
-      stop("domain has to be a numerical value indicating which of the 
-           domains of the test are suppost to be inspected.")
+    if(!(domain %in% itemD) ||length(domain) != 1 ){
+      stop("domain has to be a single numerical value indicating which of the 
+           domains of the test are supposed to be inspected.")
     }
     irt_mod <- 2
     a_vec <- a_vec[itemD == domain]
@@ -1388,17 +1466,7 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
         E[, i] <- drop(p %*% (seq_len(ncol(p)) - 1))
       }
     }
-    
-    
-    
-    #for (i in seq_len(I)) {
-    #  k_i <- seq_len(data$K_item[i] - 1)
-    #  b_i <- b_vec[paste0("b[", i, ",", k_i, "]")]
-    #int_threshold <-((1 + (data$K_max -1)*(i-1)):((data$K_max -1)*(i)))[seq_len(data$K_item[i] -1)]
-    #  temp_grm <- grm_probs(theta = theta, a = a_vec[i], b = unname(b_i)) # b_vec[int_threshold])
-    #  E[, i] <- temp_grm %*% matrix(rep(0:(data$K_item[i] - 1)))
-    #p <- c(p, p_temp)
-    #}
+
   }
   if(irt_mod > 4){
     D <- fit_info$newdata$D
@@ -1410,9 +1478,9 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
     }
   }
   
-  D <-  raw_data  - E   
+  DIFF <-  raw_data  - E   
   
-  Q3 <- cor(D, use = "pairwise.complete.obs")
+  Q3 <- stats::cor(DIFF, use = "pairwise.complete.obs")
   colnames(Q3) <- rownames(Q3) <- colnames( raw_data )
   off_diag <- Q3 [row(Q3 ) != col(Q3 )]
   
@@ -1448,46 +1516,70 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
 }
 
 
-#'@title Explore model implied correlations across domains
-#'@name cor_structure
-#'@description
-#' 
-
-#' The \code{cor_structure} function helps explore the relationship of the 
-#' domains in a hierarchical IRT model. For IRT-norm models that assume a age 
-#' independent correlation (Testlet1PLnorm, Testlet2PLnorm, HO1PLnorm-C,HO2PLnorm-C)
-#' it calculates the sum score correlation and model-implied correlation across domains. 
-#' For models with age-dependent domain correlations (HO1PLnorm-P,HO2PLnorm-P,
-#' HO1PLnorm-F,HO2PLnorm-F) it calculates the model-implied domain correlation per 
-#' individum. If visual = TRUE it plots the domain correlations against the individuals 
-#' ages. 
-#' 
-#' @param fit_info A named \code{list} as returned by \code{\link{estimate_norming_model}}.
+#' Explore the model-implied correlations between domains
 #'
-#' @param visual A logical indicating if for models with age dependent domain correlation 
-#' if the correlation changes across age should be plotted. 
-#' The default is TRUE. 
-#' 
-#' @return A data.frame with the model-implied domain correlations.  
+#' Explores the relationship between the domains of a multidimensional
+#' IRT norming model by returning the
+#' model-implied correlations between the domain-specific traits.
+#'
+#' How the correlations are reported depends on the model:
+#' \itemize{
+#'   \item \strong{Constant correlations} (\code{"Testlet1PLnorm"},
+#'     \code{"Testlet2PLnorm"}, \code{"HO1PLnorm-C"}, \code{"HO2PLnorm-C"}):
+#'     the model-implied correlation of each pair of domains is returned
+#'     together with the correlation of the observed domain sum scores, so
+#'     that the two can be compared.
+#'   \item \strong{Age-dependent correlations} (\code{"HO1PLnorm-P"},
+#'     \code{"HO2PLnorm-P"}, \code{"HO1PLnorm-F"}, \code{"HO2PLnorm-F"}):
+#'     the model-implied correlation of each pair of domains is returned for
+#'     every individual, and can be plotted against age.
+#' }
+#'
+#' @param fit_info An object of class \code{"IRTnorm"}, as returned by
+#'   \code{\link{estimate_norming_model}}, fitted with a multidimensional
+#'   model.
+#' @param visual Logical. Only used for models with age-dependent
+#'   correlations. If \code{TRUE} (default), the model-implied correlations
+#'   are plotted against age, with one color per domain pair.
+#'
+#' @details
+#' The model-implied correlations are based on the posterior mean estimates.
+#' Domain pairs are labeled by their domain numbers (e.g., \code{"1&2"} for
+#' domains 1 and 2).
+#'
+#' @return A data frame.
+#'
+#'   For models with constant correlations, it has one row per domain pair and
+#'   the columns \code{sumscore_cor} (correlation of the observed domain sum
+#'   scores), \code{model_cor} (model-implied correlation), and
+#'   \code{domains} (the domain pair).
+#'
+#'   For models with age-dependent correlations, it has one row per
+#'   individual, one column per domain pair with the model-implied correlation
+#'   (named, e.g., \code{"cor(d1,d2)"}), and the column \code{age}.
+#'
+#' @seealso \code{\link{estimate_norming_model}},
+#'   \code{\link{effect_age}}
 #'
 #' @examples
 #' \dontrun{
-#' # Load data
 #' data(response_data)
+#' info <- estimate_norming_model(
+#'   raw_data = response_data,
+#'   age_variable = "age",
+#'   item_variables = 1:50,
+#'   irt_model = "HO2PLnorm-C",
+#'   itemD = rep(1:3, each = 17)[-1],
+#'   age_model = "poly",
+#'   poly_mean = 3,
+#'   poly_sd = 2
+#' )
 #'
-#' # Prepare data for IRTnorm model fit
-#' info <- estimate_norming_model(data = response_data,
-#' age_variable = "age",
-#' item_variables = 1:50,
-#' irt_model  = "HO2PLnorm-C", 
-#' itemD = rep(1:3, each = 17)[-1],
-#' age__model = "polynom",
-#' poly_mean = 3,
-#' poly_sd = 2)
-#'
+#' # Model-implied vs. sum score correlations between the domains
 #' cor_structure(info)
-#'}
-#'@export
+#' }
+#'
+#' @export
 cor_structure <- function(fit_info, visual = TRUE){
   if(!inherits(fit_info, "IRTnorm")){
     stop("fit_info has to be generated from estimate_norming_model()")
@@ -1495,7 +1587,7 @@ cor_structure <- function(fit_info, visual = TRUE){
   
   normdata <- fit_info$newdata
   response_data <- fit_info$raw_data
-  if(normdata$irt_mod < 4){
+  if(normdata$irt_mod <= 4){
     stop("this function is only for hierarchical IRTnorm models, you fit object 
          is from a unidimensional model")
   }
@@ -1505,9 +1597,9 @@ cor_structure <- function(fit_info, visual = TRUE){
   j <- sequence((D - 1):1, from = 2:D)
   cor_mod_temp <- fit_info$model_info$info_relation[["nu"]]
   if(normdata$irt_mod < 9){
-    temp <- as.matrix(response_data[,fit_info$item_variables])
+    temp <- as.matrix(response_data[,fit_info$item_variables, drop = FALSE])
     sumscore <- as.data.frame(t(rowsum(t(temp), group = itemD, na.rm= TRUE)))
-    cor_sum <- cor(sumscore)
+    cor_sum <- stats::cor(sumscore)
     cor_mod <- cor_mod_temp[i] * cor_mod_temp[j]
     info <- data.frame(sumscore_cor = cor_sum[cbind(i, j)], 
                        model_cor = cor_mod, 
@@ -1522,9 +1614,9 @@ cor_structure <- function(fit_info, visual = TRUE){
     unique_sigma <- fit_info$model_info$info_relation[["unique_sigma"]]
     delta_sigma <- matrix(ncol = D, nrow = normdata$J)
     for(d in seq_len(D)){
-      delta_sigma[,d] <- fit_info$info_sample$theta_sigma[fit_info$info_sample$trait == paste0("delta",d)]
+      delta_sigma[,d] <- fit_info$model_info$info_sample$theta_sigma[fit_info$model_info$info_sample$trait == paste0("delta",d)]
     }
-    cor_mod_temp <- delta_sigma * unique_sigma
+    cor_mod_temp <- delta_sigma / sqrt(delta_sigma^2 + unique_sigma^2)
   }
   cor_mod_temp2 <- matrix(NA, nrow = nrow(cor_mod_temp), ncol = length(i))
   for(ti in seq_along(i)){
@@ -1535,11 +1627,16 @@ cor_structure <- function(fit_info, visual = TRUE){
     cor_mod <- data.frame(cor_mod_temp2, age = fit_info$raw_data[fit_info$age_variable])
     colnames(cor_mod) <-  c(paste0("cor(d",i, ",d", j, ")"), "age")
     if(visual){
-      cor_long <- data.frame(combi = rep(paste0("cor(d",i, ",d", j,")"), each = nrow(cor_mod)),
-                             cor_value = as.vector(as.matrix(cor_mod[,paste0("cor(d",i, ",d", j,")")])),
-                             age = rep(cor_mod$age, length(i)))
+      pair_labels <- paste0("cor(d", i, ",d", j, ")")
+      
+      cor_long <- data.frame(
+        combi = factor(rep(pair_labels, each = nrow(cor_mod)),
+                       levels = pair_labels),
+        cor_value = as.vector(as.matrix(cor_mod[, pair_labels])),
+        age = rep(cor_mod$age, length(i))
+      )
       p <- ggplot2::ggplot(cor_long) + 
-        ggplot2::geom_point(ggplot2::aes(age, cor_value, color = combi)) + 
+        ggplot2::geom_point(ggplot2::aes(.data$age, .data$cor_value, color = .data$combi)) + 
         ggplot2::theme_bw()+ 
         ggplot2::ylab("correlation")
       print(p)
