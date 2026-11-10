@@ -89,13 +89,7 @@ cmdstan_available <- function(){
 fit_IRTnorm <- function(data, seed = NULL,
                         iter_warmup = 500, iter_sampling = 500,
                         chains = 4, parallel_chains = NULL, ...){
-  if (!requireNamespace("cmdstanr", quietly = TRUE)) {
-    stop(
-      "Package 'cmdstanr' is required but not installed.\n",
-      "Install it with: install.packages('cmdstanr', repos = c('https://stan-dev.r-universe.dev', getOption('repos')))",
-      call. = FALSE
-    )
-  }
+  cmdstan_available()
   cmdstanr::check_cmdstan_toolchain()
   age_model <- c("poly","splines")
   IRTmodel <- c("1PLnorm","2PLnorm","3PLnorm", "GRMnorm",
@@ -120,16 +114,13 @@ fit_IRTnorm <- function(data, seed = NULL,
                       "beta_prior_mu","beta_prior_sd",
                       "gamma_prior_mu","gamma_prior_sd",
                       "b_prior_mu","b_prior_sd",
-                      "nu_prior_mu","nu_prior_sd")))){#,
-                      #"lambda_prior_mu","lambda_prior_sd",
-                      #"unique_sigma_prior_mu", "unique_sigma_prior_sd")))){
+                      "nu_prior_mu","nu_prior_sd")))){
+              
     prior_known_temp <-intersect(names(data), c("alpha_prior_mu","alpha_prior_sd",
                                            "beta_prior_mu","beta_prior_sd",
                                            "gamma_prior_mu","gamma_prior_sd",
                                            "b_prior_mu","b_prior_sd",
-                                           "nu_prior_mu","nu_prior_sd"))#,
-                                           #"lambda_prior_mu","lambda_prior_sd",
-                                           #"unique_sigma_prior_mu", "unique_sigma_prior_sd"))
+                                           "nu_prior_mu","nu_prior_sd"))
     prior_known <- NULL
     if(any(substr(prior_known_temp,1,5) == "alpha")){
       prior_known <- c(prior_known,"alpha")
@@ -164,29 +155,6 @@ fit_IRTnorm <- function(data, seed = NULL,
     seed <- sample.int(.Machine$integer.max, 1)
   }
 
-  # Capture extra arguments
-  #  dots <- list(...)
- # if(data$irt_mod != 4){
- #   fit <- mod$sample(
-  #    data = data,
-  #    seed = seed,
-  #    chains = chains,
-  #    parallel_chains = parallel_chains,
-  #    refresh = (iter_sampling + iter_warmup)/10 ,
-  #    iter_warmup = iter_warmup,
-  #    iter_sampling = iter_sampling, ...)
-  #}
- # if(data$irt_mod == 4){
-  #  fit <- mod$sample(
-  #    data = data,
-  #    seed = seed,
-  #    chains = chains,
-  #    parallel_chains = parallel_chains,
-  #    refresh = (iter_sampling + iter_warmup)/10 ,
-   #   iter_warmup = iter_warmup,
-   #   iter_sampling = iter_sampling, init = 1, ...)
- # }
-  # Base arguments shared by both cases
   base_args <- list(
     data             = data,
     seed             = seed,

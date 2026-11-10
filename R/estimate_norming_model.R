@@ -51,13 +51,7 @@
 #'@keywords internal
 
 fit_info_param <- function(fit, data){
-  if (!requireNamespace("cmdstanr", quietly = TRUE)) {
-    stop(
-      "Package 'cmdstanr' is required but not installed.\n",
-      "Install it with: install.packages('cmdstanr', repos = c('https://stan-dev.r-universe.dev', getOption('repos')))",
-      call. = FALSE
-    )
-  }
+  cmdstan_available()
   #fixed irt_mod parameters
   no_fit <- intersect(names(data), c("alpha","beta","gamma","b"))
   
