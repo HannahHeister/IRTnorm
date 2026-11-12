@@ -17,6 +17,24 @@ knitr::opts_chunk$set(
 )
 ```
 
+
+
+# Install IRTnorm for the first time
+IRTnorm estimates Bayesian IRT models using Stan. The Stan-based functions
+require the `cmdstanr` package and a working CmdStan installation.
+
+Fitting Stan models requires a modern C++ compiler and the GNU Make build
+utility. Installation instructions for your operating system are in the
+[CmdStan Guide](https://mc-stan.org/docs/cmdstan-guide/installation.html#cpp-toolchain).
+
+Once the toolchain is installed, install `cmdstanr`, then CmdStan, then IRTnorm:
+```{r install-irtnorm, eval=FALSE}
+install.packages("cmdstanr",
+                 repos = c("https://stan-dev.r-universe.dev", getOption("repos")))
+cmdstanr::install_cmdstan()
+install.packages("IRTnorm")
+```
+More information about `cmdstanr` is available at <https://mc-stan.org/cmdstanr/>.
 # Introduction
 
 Norm-referenced psychological tests evaluate an individual's performance
