@@ -1,6 +1,6 @@
-#' Response data example dataset
+#' A data set containing item responses and age information based on a unidimensional 2PLnorm model.
 #'
-#' A dataset containing item responses and age information.
+#' A dataset containing item responses on 56 items and age of 500 individuals.
 #' @docType data
 #' @usage data(response_data)
 #' @format A \code{data.frame} with \eqn{n} = 500 rows and \eqn{p}  = 56 columns:
@@ -8,20 +8,20 @@
 #'   \item{item1}{Numeric. Response to item 1 (0 = incorrect, 1 = correct).}
 #'   \item{item2}{Numeric. Response to item 2 (0 = incorrect, 1 = correct).}
 #'   ...
-#'   \item{item50}{Numeric. Response to item 56 (0 = incorrect, 1 = correct).}
+#'   \item{item56}{Numeric. Response to item 56 (0 = incorrect, 1 = correct).}
 #'   \item{age}{Numeric. Age of the respondent in years.}
 #'   
 #' }
 #' @source Simulated data.
 "response_data"
 
-#' A data set containing item responses and age information based on the GRM.
+#' A data set containing item responses and age information based on a unidimensional GRMnorm model.
 #' @docType data
 #' @usage data(data_GRM)
 #' @source Simulated data.
 "data_GRM"
 
-#' A data set containing item responses and age information based on the 1PLnorm model.
+#' A data set containing item responses and age information based on a unidimensional 1PLnorm model.
 #' @docType data
 #' @usage data(my_data)
 #' @source Simulated data.
@@ -69,14 +69,14 @@
 #' @source output from the compare_IRTnorm_models function.
 "IRTmods"
 
-#' Presaved output of item_residual_cor for the 2PL model. 
+#' Presaved output of item_residual_cor for the 2PL model for the vignette to run fast. 
 #'
 #' @docType data
 #' @usage data(info_residualcor)
 #' @source output of item_residual_cor for the 2PL model.
 "info_residualcor"
 
-#' Presaved testdata .
+#' Presaved testdata for the vignette to run fast.
 #'
 #' @docType data
 #' @usage data(test)
@@ -84,7 +84,7 @@
 #' @source output from the compare_IRTnorm_models function.
 "test"
 
-#' Presaved testdata .
+#' Presaved testdata for the vignette to run fast.
 #'
 #' @docType data
 #' @usage data(HOex_cor_info)
@@ -99,7 +99,7 @@
 #' @source Simulated data.
 "HOdata"
 
-#' Presaved HOex_res_info_all in order for the vignette to run fast.
+#' Presaved HOex_res_info_all for the vignette to run fast.
 #'
 #' @docType data
 #' @usage data(HOex_res_info_all)
@@ -107,7 +107,7 @@
 #' @source based on data from the HO example 
 "HOex_res_info_all"
 
-#' Presaved HOex_res_info1 in order for the vignette to run fast.
+#' Presaved HOex_res_info1 for the vignette to run fast.
 #'
 #' @docType data
 #' @usage data(HOex_res_info1)
@@ -116,7 +116,7 @@
 "HOex_res_info1"
 
 
-#' Presaved GRM model fit in order for the vignette to run fast.
+#' Presaved GRM model fit for the vignette to run fast.
 #'
 #' @docType data
 #' @usage data(infoGRM)

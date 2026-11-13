@@ -42,14 +42,14 @@ build_spline <- function(age_df, k, fixed_knots) {
 #'
 #' @description
 #' Converts person-by-item response data and an age variable into the named
-#' list required to fit an age-dependent Bayesian IRT norming model. Missing
+#' list, which is required to fit an age-dependent Bayesian IRT norming model. Missing
 #' item responses are dropped, age is standardized, and the age design
 #' matrices (polynomial or spline) are constructed.
 #'
 #' This function is mainly called internally by the model-fitting function.
 #' It is exported so that you can inspect the data list that is passed to the
 #' sampler, which can be useful when interpreting the fitted stan object, 
-#' such as in the example of the vingette: How_to_use_IRTnorm.
+#' such as in the example of the vignette: How_to_use_IRTnorm.
 #'
 #' @param raw_data A \code{data.frame} or \code{matrix} with one row per
 #'   person. It must contain the age variable and the item response variables.
@@ -59,9 +59,8 @@ build_spline <- function(age_df, k, fixed_knots) {
 #'   treated as continuous. Persons with missing age are removed with a warning.
 #' @param item_variables A \code{character} or \code{numeric} vector with the
 #'   columns of \code{raw_data} that contain the item responses.
-#' @param irt_model A \code{character} scalar giving the norming model. The
-#'   first option is the default. All models have an age-dependent mean and
-#'   standard deviation of the latent trait.
+#' @param irt_model A \code{character} scalar giving the norming model. The default is \code{"1PLnorm"}. 
+#' All models have an age-dependent mean and standard deviation of the latent trait.
 #'   \describe{
 #'     \item{\code{"1PLnorm"}}{One-parameter logistic (Rasch) model.}
 #'     \item{\code{"2PLnorm"}}{Two-parameter logistic model.}
@@ -82,7 +81,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #'       Requires \code{itemD}.}
 #'   }
 #' @param age_model A \code{character} scalar specifying how age effects are
-#'   modeled. The first option is the default.
+#'   modeled. The default is \code{"splines"}. 
 #'   \describe{
 #'     \item{\code{"splines"}}{Penalized B-spline basis functions of
 #'       standardized age (see \code{k_mean}, \code{k_sd}, \code{k_sd2} and the
@@ -95,7 +94,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #'   domain each item loads on. Domains must be numbered consecutively
 #'   starting at 1 (e.g., \code{1, 2, 3, 4} for four domains).
 #' @param K_item Only required for \code{irt_model = "GRMnorm"}. An integer
-#'   vector of length equal to the number of items giving the number of
+#'   vector of length equal to the number of items, giving the number of
 #'   response categories per item (minimum 2 for binary items). Responses must
 #'   be coded starting at 1; if the smallest response is below 1, all
 #'   responses are shifted and a warning is issued.
@@ -109,7 +108,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #'   If \code{NULL}, the design matrix for \code{poly_sd} is reused.
 #' @param k_mean,k_sd Only used if \code{age_model = "splines"}. Number of
 #'   basis functions/knots for the age-dependent mean and standard deviation of
-#'   the latent trait. Defaults are 10 and 8.
+#'   the latent trait. Defaults are 10 and 8, respectively.
 #' @param k_sd2 Only used if \code{age_model = "splines"} and \code{irt_model}
 #'   is an HO-P or HO-F model. Number of basis functions/knots for the
 #'   additional age-dependent component (the lambda term for HO-P, the loading
@@ -123,7 +122,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #' @param prior_knowledge Optional. A named list used to supply informative
 #'   priors. Each element is named after a parameter group (e.g.,
 #'   \code{"alpha"}, \code{"beta"}, \code{"gamma"}, \code{"nu"}, \code{"b"})
-#'   and is itself a list of two vectors: the prior means first, then the prior
+#'   and is itself a list of two vectors: first the prior means, then the prior
 #'   standard deviations. The names of these two inner elements (e.g.,
 #'   \code{alpha_prior_mu}, \code{alpha_prior_sd}) are used as the names in
 #'   the returned list, so they must match what the model expects.
@@ -152,7 +151,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #'   \item{Polynomial age model}{
 #'     \code{S} and \code{W} (number of mean and sd coefficients),
 #'     \code{age} and \code{age2} (design matrices for the mean and sd), and
-#'     for HO-P/HO-F models \code{M} and \code{age3}.}
+#'     for HO-P/HO-F models \code{M} and \code{age3} (mean and sd for the higher-order latent trait.}
 #'   \item{Spline age model}{
 #'     For the mean (index 1), sd (index 2) and, for HO-P/HO-F models, the
 #'     additional component (index 3): the number of fixed effects
@@ -184,7 +183,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #' mapping each response to its item and person.
 #'
 #' Age is standardized as \code{(age - m_age) / s_age}, where \code{m_age}
-#' and \code{s_age} are the mean and standard deviation rounded to two
+#' and \code{s_age} are the sample mean and standard deviation rounded to two
 #' decimals. Polynomial or spline bases are built on the standardized age.
 #' Keep \code{m_age} and \code{s_age} if you want to evaluate the fitted
 #' model at new ages, since they must be applied in the same way.

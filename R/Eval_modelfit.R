@@ -18,7 +18,7 @@
 #' @details
 #' The observed raw score is the sum of a person's item responses. For each
 #' raw score, the observed frequency is compared with the frequencies in data
-#' replicated from the fitted model. The 90\% credible interval (Q5 to Q95) of
+#' replicated from the fitted model. The 90% credible interval (Q5 to Q95) of
 #' the replicated frequencies gives the range of frequencies that is plausible
 #' under the model. The model fits well if the observed frequencies lie within
 #' or close to this interval across the score range. For background on
@@ -269,8 +269,7 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #' Plots the observed raw score distribution together with the distribution
 #' implied by the fitted IRT norming model (posterior predictive check), as
 #' computed by \code{\link{raw_score_ppc}}. This shows how well the model
-#' reproduces the raw scores in the data. The plot is printed and also
-#' returned.
+#' reproduces the raw scores in the data. The plot is printed and returned.
 #'
 #' @param raw_score_ppc_info An object of class \code{"IRTnorm_ppc"}, as
 #'   returned by \code{\link{raw_score_ppc}}, either for the whole sample or
@@ -289,7 +288,7 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #'     per posterior draw.
 #'   \item \strong{Dashed line}: the median of the model-implied frequencies.
 #'   \item \strong{Dotted lines}: the 5th and 95th percentiles of the
-#'     model-implied frequencies, which together form a 90\% credible
+#'     model-implied frequencies, which together form a 90% credible
 #'     interval.
 #' }
 #' The model fits well if the observed frequencies lie within or close to the
@@ -503,15 +502,15 @@ return(invisible(p))
 #' Visualize the distribution of norm scores across age groups
 #'
 #' Plots the estimated norm scores of the individuals in the data as a
-#' histogram for each age group, together with the density of a standard
+#' histogram for each age group specified, together with the density of a standard
 #' normal distribution. This shows whether the norming achieved the intended
-#' normalization of the latent trait within age groups: if it did, the
+#' normalization of the latent trait within the age groups specified: if it did, the
 #' histogram should follow the curve in every age group.
 #'
 #' @param fit_info An object of class \code{"IRTnorm"}, as returned by
 #'   \code{\link{estimate_norming_model}}.
 #' @param age_range Numeric vector with at least two values giving the
-#'   boundaries of the age groups, on the same scale as the age variable in the
+#'   boundaries of the age groups to specify, on the same scale as the age variable in the
 #'   data (e.g., \code{c(5, 7, 9, 11)} creates the groups \[5,7\], \[7,9\], and
 #'   \[9,11\]). The lower boundary of a group is excluded and the upper boundary
 #'   is included.
@@ -526,7 +525,7 @@ return(invisible(p))
 #' @details
 #' The norm score of each individual is the posterior mean of the
 #' standardized latent trait. The normal curve is scaled to the number of
-#' individuals in the age group and to \code{binwidth}, so that it is directly
+#' individuals in the age group specified and to \code{binwidth}, so that it is directly
 #' comparable to the histogram frequencies. Each age group is shown in its own
 #' panel.
 #'
@@ -554,7 +553,6 @@ return(invisible(p))
 #'
 #' # Norm score distribution in age groups
 #' normscore_dist(fit_info = info, age_range = c(-2,1,0,1,2))
-#'
 #' }
 #'
 #' @export
@@ -658,8 +656,8 @@ is_multidim <- function(irt_mod) irt_mod >= 5
 #' with the quantile curves implied by the fitted IRT norming model. This shows
 #' whether the model-implied distribution of the latent trait matches the
 #' spread of the estimates across the age range: if it does, the expected
-#' share of points should fall below each curve (e.g., about 25\% below the
-#' 25\% curve).
+#' share of points should fall below each curve (e.g., about 25% below the
+#' 25% curve).
 #'
 #' @param fit_info An object of class \code{"IRTnorm"}, as returned by
 #'   \code{\link{estimate_norming_model}}.
@@ -897,7 +895,7 @@ make_dummy_matrix <- function(info, K_item) {
 #'
 #' @return Invisibly, a list with two components: \code{plot}, the
 #'   \code{ggplot} object, and \code{data}, the data frame underlying the
-#'   plot. The plot is also printed when the function is called.
+#'   plot. The plot is printed when the function is called.
 #'
 #' @seealso \code{\link{estimate_norming_model}},
 #'   \code{\link{raw_score_ppc}}

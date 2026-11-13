@@ -367,8 +367,9 @@ extract_relationinfo <- function(fit, irt_mod,
   
   return(relation)
 }
+
 #'@title Extract person-, item-, and norming-level information from a
-#'fitted IRT-based continuous norming model.
+#'fitted IRT-based continuous norming model
 #'@name extract_info
 #'@description
 #' The \code{extract_info} function extracts key posterior summaries and
@@ -395,7 +396,7 @@ extract_relationinfo <- function(fit, irt_mod,
 #'   \item{y_rep}{A matrix containing posterior predictive replicated item
 #'     responses (\code{y_rep}), useful for posterior predictive checks.}
 #'
-#'   \item{info_coef}{A \code{list}) containing the posterior mean estimates of
+#'   \item{info_coef}{A \code{list} containing the posterior mean estimates of
 #'   the regression parameters for the age effects.}
 #'
 #'   \item{nu_est}{For multidimensinal models a \code{vector} containing posterior mean estimates of
@@ -464,7 +465,7 @@ extract_info <- function(fit, data){
   return(info)
 }
 
-#'#'@title Extract all posterior draws of the norming model to enable norming 
+#'@title Extract all posterior draws of the norming model to enable norming 
 #' of new individuals. 
 #'@name info_new_norming
 #'@description
@@ -479,7 +480,7 @@ extract_info <- function(fit, data){
 #'
 #'@return a list containing posterior draws relevant for norming new individuals. 
 #'
-#'#'@seealso \code{\link{data_prep}}, \code{\link{fit_IRTnorm}}
+#'@seealso \code{\link{data_prep}}, \code{\link{fit_IRTnorm}}
 #'
 #' @examples
 #' \dontrun{
