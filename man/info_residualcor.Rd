@@ -3,7 +3,7 @@
 \docType{data}
 \name{info_residualcor}
 \alias{info_residualcor}
-\title{Presaved output of item_residual_cor for the 2PL model.}
+\title{Presaved output of item_residual_cor for the 2PL model for the vignette to run fast.}
 \format{
 An object of class \code{summaryDefault} (inherits from \code{table}) of length 6.
 }
@@ -14,6 +14,6 @@ output of item_residual_cor for the 2PL model.
 data(info_residualcor)
 }
 \description{
-Presaved output of item_residual_cor for the 2PL model.
+Presaved output of item_residual_cor for the 2PL model for the vignette to run fast.
 }
 \keyword{datasets}

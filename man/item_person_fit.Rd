@@ -22,7 +22,7 @@ score of each person.
 \value{
 Invisibly, a list with two components: \code{plot}, the
 \code{ggplot} object, and \code{data}, the data frame underlying the
-plot. The plot is also printed when the function is called.
+plot. The plot is printed when the function is called.
 }
 \description{
 Compares the observed responses with the responses implied by the fitted

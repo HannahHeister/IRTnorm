@@ -3,7 +3,7 @@
 \docType{data}
 \name{my_data}
 \alias{my_data}
-\title{A data set containing item responses and age information based on the 1PLnorm model.}
+\title{A data set containing item responses and age information based on a unidimensional 1PLnorm model.}
 \format{
 An object of class \code{data.frame} with 500 rows and 26 columns.
 }
@@ -14,6 +14,6 @@ Simulated data.
 data(my_data)
 }
 \description{
-A data set containing item responses and age information based on the 1PLnorm model.
+A data set containing item responses and age information based on a unidimensional 1PLnorm model.
 }
 \keyword{datasets}

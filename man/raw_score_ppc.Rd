@@ -46,7 +46,7 @@ the whole sample or separately for age groups. Use
 \details{
 The observed raw score is the sum of a person's item responses. For each
 raw score, the observed frequency is compared with the frequencies in data
-replicated from the fitted model. The 90\\% credible interval (Q5 to Q95) of
+replicated from the fitted model. The 90\% credible interval (Q5 to Q95) of
 the replicated frequencies gives the range of frequencies that is plausible
 under the model. The model fits well if the observed frequencies lie within
 or close to this interval across the score range. For background on

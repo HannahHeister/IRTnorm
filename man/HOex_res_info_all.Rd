@@ -3,7 +3,7 @@
 \docType{data}
 \name{HOex_res_info_all}
 \alias{HOex_res_info_all}
-\title{Presaved HOex_res_info_all in order for the vignette to run fast.}
+\title{Presaved HOex_res_info_all for the vignette to run fast.}
 \format{
 A \code{list} with information returned from item_residual_cor.
 }
@@ -14,6 +14,6 @@ based on data from the HO example
 data(HOex_res_info_all)
 }
 \description{
-Presaved HOex_res_info_all in order for the vignette to run fast.
+Presaved HOex_res_info_all for the vignette to run fast.
 }
 \keyword{datasets}

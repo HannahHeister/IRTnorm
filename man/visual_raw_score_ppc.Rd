@@ -26,8 +26,7 @@ with additional \pkg{ggplot2} layers or saved with
 Plots the observed raw score distribution together with the distribution
 implied by the fitted IRT norming model (posterior predictive check), as
 computed by \code{\link{raw_score_ppc}}. This shows how well the model
-reproduces the raw scores in the data. The plot is printed and also
-returned.
+reproduces the raw scores in the data. The plot is printed and returned.
 }
 \details{
 The plot shows, for each raw score:
@@ -37,7 +36,7 @@ The plot shows, for each raw score:
 per posterior draw.
 \item \strong{Dashed line}: the median of the model-implied frequencies.
 \item \strong{Dotted lines}: the 5th and 95th percentiles of the
-model-implied frequencies, which together form a 90\\% credible
+model-implied frequencies, which together form a 90\% credible
 interval.
 }
 The model fits well if the observed frequencies lie within or close to the

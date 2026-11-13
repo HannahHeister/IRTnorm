@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 ```
 
 The steps for deriving continuous norms with IRT-based norming are largely
-the same across different types of IRT models. The main vignette `vignette("how-to-use-irtnorm")`
+the same across different types of IRT models. The main vignette `vignette("How_to_use_IRTnorm")`
 provides a detailed explanation of all steps involved in using the 2PL-norm model. The current vignette covers the
 special considerations that arise when the data do not meet the assumptions
 of that example, that is, when
@@ -30,7 +30,7 @@ of that example, that is, when
 
 Both cases require a few additional inputs, which are described below. All
 steps not covered here do not depend on the IRT model and are carried out as
-described in the main vignette. Therefore, we recommend reading the vignette `vignette("how-to-use-irtnorm")`
+described in the main vignette. Therefore, we recommend reading the vignette `vignette("How_to_use_IRTnorm")`
 first.
 
 ```{r grm_loadlibrary, eval=TRUE, echo=TRUE, include=TRUE, warning=FALSE, message=FALSE}
@@ -67,10 +67,12 @@ category at least once, so we can obtain `K_item` from the data:
 K_item <- matrixStats::colMaxs(as.matrix(data_GRM[, 1:20]))
 ```
 
-If the highest category of an item is not observed in your data, this
-shortcut underestimates `K_item`. In that case, specify the numbers of
-categories from the test manual.
-
+Generally, you should check whether all response categories specified in the
+test manual are represented in the observed data. If one or more categories,
+particularly the highest category, are never observed, you should consider 
+collapsing adjacent response categories, provided this is theoretically and 
+substantively justifiable. Otherwise, the estimation of the corresponding 
+threshold parameters may be unstable. 
 
 ## Model selection
 

@@ -33,13 +33,13 @@ for each element, and finally summary statistics are taken across elements
 within each group.
 
 The output is ordered by diagnostic, with all parameter groups reported
-first for \code{rhat}, followed by \code{ess_bulk}, and then \code{ess_tail}.
+first for \code{rhat}, followed by \code{ess_bulk}, and finally \code{ess_tail}.
 
 This function is intended for IRTnorm model diagnostics and quality control.
 Interpretation guidelines commonly used in practice include:
 \itemize{
 \item R-hat values close to 1 (e.g., < 1.01) indicate good mixing,
-\item larger ESS values indicate more reliable posterior summaries.
+\item larger ESS values (e.g., > 400) indicate sufficiently reliable posterior summaries.
 }
 }
 \examples{

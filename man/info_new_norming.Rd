@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_IRTnorm.R
 \name{info_new_norming}
 \alias{info_new_norming}
-\title{#'@title Extract all posterior draws of the norming model to enable norming
+\title{Extract all posterior draws of the norming model to enable norming
 of new individuals.}
 \usage{
 info_new_norming(fit, data)
@@ -16,8 +16,6 @@ the original data and indexing information used for model fitting.}
 }
 \value{
 a list containing posterior draws relevant for norming new individuals.
-
-#'@seealso \code{\link{data_prep}}, \code{\link{fit_IRTnorm}}
 }
 \description{
 The \code{info_new_norming} function extracts the posterior draws of all
@@ -46,5 +44,8 @@ mod_sp <- fit_IRTnorm(
 # Step 4: Extract information
 info <- info_new_norming(fit = mod_sp, data = prep_data)
 }
+}
+\seealso{
+\code{\link{data_prep}}, \code{\link{fit_IRTnorm}}
 }
 \keyword{internal}

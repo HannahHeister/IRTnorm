@@ -118,7 +118,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #'   \code{"equidistant"} for equidistant knots, or a numeric vector of knot
 #'   locations (on the standardized age scale) for fully user-specified
 #'   knots. They apply to the mean, standard deviation and (for HO-P/HO-F
-#'   models) the additional component, respectively.
+#'   the additional parameter needed to model the correlation between domains age-dependent).
 #' @param prior_knowledge Optional. A named list used to supply informative
 #'   priors. Each element is named after a parameter group (e.g.,
 #'   \code{"alpha"}, \code{"beta"}, \code{"gamma"}, \code{"nu"}, \code{"b"})
@@ -151,10 +151,10 @@ build_spline <- function(age_df, k, fixed_knots) {
 #'   \item{Polynomial age model}{
 #'     \code{S} and \code{W} (number of mean and sd coefficients),
 #'     \code{age} and \code{age2} (design matrices for the mean and sd), and
-#'     for HO-P/HO-F models \code{M} and \code{age3} (mean and sd for the higher-order latent trait.}
+#'     for HO-P/HO-F models \code{M} and \code{age3} (mean and sd and correlation between domains.}
 #'   \item{Spline age model}{
 #'     For the mean (index 1), sd (index 2) and, for HO-P/HO-F models, the
-#'     additional component (index 3): the number of fixed effects
+#'     additional parameter needed to model the correlation between domains age-dependent(index 3): the number of fixed effects
 #'     (\code{S_fixed}, \code{W_fixed}, \code{M_fixed}), the number of
 #'     penalized basis functions (\code{K1}, \code{K2}, \code{K3}), the
 #'     fixed-effect and penalized design matrices (\code{X1}-\code{X3},

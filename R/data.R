@@ -1,14 +1,12 @@
 #' A data set containing item responses and age information based on a unidimensional 2PLnorm model.
-#'
-#' A dataset containing item responses on 56 items and age of 500 individuals.
 #' @docType data
 #' @usage data(response_data)
-#' @format A \code{data.frame} with \eqn{n} = 500 rows and \eqn{p}  = 56 columns:
+#' @format A \code{data.frame} with \eqn{n} = 500 rows and \eqn{p}  = 51 columns:
 #' \describe{
 #'   \item{item1}{Numeric. Response to item 1 (0 = incorrect, 1 = correct).}
 #'   \item{item2}{Numeric. Response to item 2 (0 = incorrect, 1 = correct).}
 #'   ...
-#'   \item{item56}{Numeric. Response to item 56 (0 = incorrect, 1 = correct).}
+#'   \item{item50}{Numeric. Response to item 50 (0 = incorrect, 1 = correct).}
 #'   \item{age}{Numeric. Age of the respondent in years.}
 #'   
 #' }
@@ -28,15 +26,13 @@
 "my_data"
 
 #' Presaved info for the vignette to run fast.
-#'
 #' @docType data
 #' @usage data(info_small)
 #' @format A \code{list} with information of the fitted model.
-#' @source output from the estimate_norming_model function.
+#' @source selected output from the estimate_norming_model function.
 "info"
 
 #' Presaved information of a newly normed individual for the vignette to run fast.
-#'
 #' @docType data
 #' @usage data(int_info_newperson)
 #' @format list containing the norm score estimates of a newly normed individual.
@@ -44,25 +40,22 @@
 "int_info_newperson"
 
 #' Presaved different_poly_2PL for the vignette to run fast.
-#'
 #' @docType data
 #' @usage data(agemodel_2PL)
-#' @format A \code{list} with information for model comparison. 
+#' @format A \code{list} with selected information for model comparison. 
 #' @source output from the compare_age_models function.
 "agemodel_2PL"
 
 #' Presaved different_poly_2PL for the vignette to run fast.
-#'
 #' @docType data
 #' @usage data(agemodel_2PL_excl)
-#' @format A \code{list} with information for model comparison. 
+#' @format A \code{list} with selected information for model comparison. 
 #' @source output from the compare_age_models function based on data after 
 #' excluding the two highly influentional item responses.
 "agemodel_2PL_excl"
 
 
 #' Presaved different_IRTmodels for the vignette to run fast.
-#'
 #' @docType data
 #' @usage data(IRTmods)
 #' @format A \code{list} with information for model comparison. 
@@ -70,26 +63,16 @@
 "IRTmods"
 
 #' Presaved output of item_residual_cor for the 2PL model for the vignette to run fast. 
-#'
 #' @docType data
 #' @usage data(info_residualcor)
 #' @source output of item_residual_cor for the 2PL model.
 "info_residualcor"
 
 #' Presaved testdata for the vignette to run fast.
-#'
-#' @docType data
-#' @usage data(test)
-#' @format A \code{list} with information for model comparison. 
-#' @source output from the compare_IRTnorm_models function.
-"test"
-
-#' Presaved testdata for the vignette to run fast.
-#'
 #' @docType data
 #' @usage data(HOex_cor_info)
-#' @format A \code{list} with information for model comparison. 
-#' @source output from the compare_IRTnorm_models function.
+#' @format \code{data.frame} with information for model comparison. 
+#' @source selected output from the compare_IRTnorm_models function.
 "cor_info"
 
 
@@ -100,7 +83,6 @@
 "HOdata"
 
 #' Presaved HOex_res_info_all for the vignette to run fast.
-#'
 #' @docType data
 #' @usage data(HOex_res_info_all)
 #' @format A \code{list} with information returned from item_residual_cor.
@@ -108,18 +90,8 @@
 "HOex_res_info_all"
 
 #' Presaved HOex_res_info1 for the vignette to run fast.
-#'
 #' @docType data
 #' @usage data(HOex_res_info1)
-#' @format A \code{list} with information returned from item_residual_cor.
+#' @format A summary of the  information returned from item_residual_cor.
 #' @source based on data from the HO example  for the first domain
 "HOex_res_info1"
-
-
-#' Presaved GRM model fit for the vignette to run fast.
-#'
-#' @docType data
-#' @usage data(infoGRM)
-#' @format A \code{list} with seleted elements of the information returned from estimate_norming_model.
-#' @source based on data from the GRM example
-"infoGRM"

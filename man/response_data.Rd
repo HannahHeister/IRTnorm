@@ -3,14 +3,14 @@
 \docType{data}
 \name{response_data}
 \alias{response_data}
-\title{Response data example dataset}
+\title{A data set containing item responses and age information based on a unidimensional 2PLnorm model.}
 \format{
-A \code{data.frame} with \eqn{n} = 500 rows and \eqn{p}  = 56 columns:
+A \code{data.frame} with \eqn{n} = 500 rows and \eqn{p}  = 51 columns:
 \describe{
 \item{item1}{Numeric. Response to item 1 (0 = incorrect, 1 = correct).}
 \item{item2}{Numeric. Response to item 2 (0 = incorrect, 1 = correct).}
 ...
-\item{item50}{Numeric. Response to item 56 (0 = incorrect, 1 = correct).}
+\item{item50}{Numeric. Response to item 50 (0 = incorrect, 1 = correct).}
 \item{age}{Numeric. Age of the respondent in years.}
 
 }
@@ -22,6 +22,6 @@ Simulated data.
 data(response_data)
 }
 \description{
-A dataset containing item responses and age information.
+A data set containing item responses and age information based on a unidimensional 2PLnorm model.
 }
 \keyword{datasets}

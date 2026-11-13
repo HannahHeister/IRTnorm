@@ -39,9 +39,8 @@ treated as continuous. Persons with missing age are removed with a warning.}
 \item{item_variables}{A \code{character} or \code{numeric} vector with the
 columns of \code{raw_data} that contain the item responses.}
 
-\item{irt_model}{A \code{character} scalar giving the norming model. The
-first option is the default. All models have an age-dependent mean and
-standard deviation of the latent trait.
+\item{irt_model}{A \code{character} scalar giving the norming model. The default is \code{"1PLnorm"}.
+All models have an age-dependent mean and standard deviation of the latent trait.
 \describe{
 \item{\code{"1PLnorm"}}{One-parameter logistic (Rasch) model.}
 \item{\code{"2PLnorm"}}{Two-parameter logistic model.}
@@ -63,7 +62,7 @@ Requires \code{itemD}.}
 }}
 
 \item{age_model}{A \code{character} scalar specifying how age effects are
-modeled. The first option is the default.
+modeled. The default is \code{"splines"}.
 \describe{
 \item{\code{"splines"}}{Penalized B-spline basis functions of
 standardized age (see \code{k_mean}, \code{k_sd}, \code{k_sd2} and the
@@ -78,7 +77,7 @@ domain each item loads on. Domains must be numbered consecutively
 starting at 1 (e.g., \code{1, 2, 3, 4} for four domains).}
 
 \item{K_item}{Only required for \code{irt_model = "GRMnorm"}. An integer
-vector of length equal to the number of items giving the number of
+vector of length equal to the number of items, giving the number of
 response categories per item (minimum 2 for binary items). Responses must
 be coded starting at 1; if the smallest response is below 1, all
 responses are shifted and a warning is issued.}
@@ -95,7 +94,7 @@ If \code{NULL}, the design matrix for \code{poly_sd} is reused.}
 
 \item{k_mean, k_sd}{Only used if \code{age_model = "splines"}. Number of
 basis functions/knots for the age-dependent mean and standard deviation of
-the latent trait. Defaults are 10 and 8.}
+the latent trait. Defaults are 10 and 8, respectively.}
 
 \item{k_sd2}{Only used if \code{age_model = "splines"} and \code{irt_model}
 is an HO-P or HO-F model. Number of basis functions/knots for the
@@ -107,12 +106,12 @@ knots are placed based on the data, as in \code{mgcv::s()}. Use
 \code{"equidistant"} for equidistant knots, or a numeric vector of knot
 locations (on the standardized age scale) for fully user-specified
 knots. They apply to the mean, standard deviation and (for HO-P/HO-F
-models) the additional component, respectively.}
+the additional parameter needed to model the correlation between domains age-dependent).}
 
 \item{prior_knowledge}{Optional. A named list used to supply informative
 priors. Each element is named after a parameter group (e.g.,
 \code{"alpha"}, \code{"beta"}, \code{"gamma"}, \code{"nu"}, \code{"b"})
-and is itself a list of two vectors: the prior means first, then the prior
+and is itself a list of two vectors: first the prior means, then the prior
 standard deviations. The names of these two inner elements (e.g.,
 \code{alpha_prior_mu}, \code{alpha_prior_sd}) are used as the names in
 the returned list, so they must match what the model expects.
@@ -143,10 +142,10 @@ decimals), and \code{age_mod} (1 = polynomial, 2 = splines).}
 \item{Polynomial age model}{
 \code{S} and \code{W} (number of mean and sd coefficients),
 \code{age} and \code{age2} (design matrices for the mean and sd), and
-for HO-P/HO-F models \code{M} and \code{age3}.}
+for HO-P/HO-F models \code{M} and \code{age3} (mean and sd and correlation between domains.}
 \item{Spline age model}{
 For the mean (index 1), sd (index 2) and, for HO-P/HO-F models, the
-additional component (index 3): the number of fixed effects
+additional parameter needed to model the correlation between domains age-dependent(index 3): the number of fixed effects
 (\code{S_fixed}, \code{W_fixed}, \code{M_fixed}), the number of
 penalized basis functions (\code{K1}, \code{K2}, \code{K3}), the
 fixed-effect and penalized design matrices (\code{X1}-\code{X3},
@@ -169,14 +168,14 @@ names.}
 }
 \description{
 Converts person-by-item response data and an age variable into the named
-list required to fit an age-dependent Bayesian IRT norming model. Missing
+list, which is required to fit an age-dependent Bayesian IRT norming model. Missing
 item responses are dropped, age is standardized, and the age design
 matrices (polynomial or spline) are constructed.
 
 This function is mainly called internally by the model-fitting function.
 It is exported so that you can inspect the data list that is passed to the
 sampler, which can be useful when interpreting the fitted stan object,
-such as in the example of the vingette: How_to_use_IRTnorm.
+such as in the example of the vignette: How_to_use_IRTnorm.
 }
 \details{
 Each row of \code{raw_data} is one person and each column in
@@ -186,7 +185,7 @@ remaining responses are stored in long format, with \code{ii}, \code{jj}
 mapping each response to its item and person.
 
 Age is standardized as \code{(age - m_age) / s_age}, where \code{m_age}
-and \code{s_age} are the mean and standard deviation rounded to two
+and \code{s_age} are the sample mean and standard deviation rounded to two
 decimals. Polynomial or spline bases are built on the standardized age.
 Keep \code{m_age} and \code{s_age} if you want to evaluate the fitted
 model at new ages, since they must be applied in the same way.

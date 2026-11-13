@@ -5,7 +5,7 @@
 \alias{agemodel_2PL_excl}
 \title{Presaved different_poly_2PL for the vignette to run fast.}
 \format{
-A \code{list} with information for model comparison.
+A \code{list} with selected information for model comparison.
 }
 \source{
 output from the compare_age_models function based on data after

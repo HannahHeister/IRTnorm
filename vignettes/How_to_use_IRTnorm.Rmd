@@ -70,7 +70,7 @@ This vignette introduces the main modeling concepts of `IRTnorm` and
 demonstrates their use on a unidimensional test with binary items. For items
 with more than two ordered response categories (graded response model) and
 for tests with several domains (hierarchical models), see the
-`vignette("Norming with the graded response model and hierarchical models")`, after reading this vignette. The models are
+`vignette("special cases")`, after reading this vignette. The models are
 fitted with Stan, so the package `cmdstanr` and a working CmdStan
 installation are required.
 
@@ -92,7 +92,7 @@ The main workflow in `IRTnorm` consists of four steps:
    | `quantile_curves()` | consistency of the estimates with the model-implied quantiles |
    | `normscore_dist()` | normality of the norm scores within age groups |
    | `effect_age()` | plausibility of the estimated age trajectories |
-   | `cor_structure()` | correlations between domains (hierarchical models only, see `vignette("Norming with the graded response model and hierarchical models")`) |
+   | `cor_structure()` | correlations between domains (hierarchical models only, see `vignette("Norming_with_the_graded_response_model_and_hierarchical_models")`) |
 
 4. **Norm new individuals** (`norm_new_individual()`).
 
@@ -101,10 +101,16 @@ The main workflow in `IRTnorm` consists of four steps:
 # Norming a unidimensional test
 
 We illustrate the workflow with a small simulated data set (`response_data`),
-to keep the example concise. In practical applications, larger data sets are
-usually required, with a larger number of items to obtain sufficiently precise estimates of the latent trait scores and a larger sample size to obtain sufficiently precise norm estimates. The age variable in this data set is on a standardized
+to keep the example concise. The age variable in this data set is on a standardized
 scale, which is why ages such as -1 and age groups such as `seq(-2, 2, 1)`
 appear below. Item responses are binary and coded 0 and 1.
+The data is simulated under a 2PLnorm model with 
+the latent trait mean and standard deviation regressed with a quadratic term
+(mu = 0.455 + 0.572age - 0.357 age^2; sigma = 0.538 * 0.154 age^2). 
+In practical applications, larger data sets are
+usually required, with a larger number of items to obtain sufficiently precise
+estimates of the latent trait scores and a larger sample size to obtain sufficiently 
+precise norm estimates.
 
 ```{r loadlibrary, echo=TRUE, include=TRUE, warning=FALSE, message=FALSE}
 library(IRTnorm)
@@ -301,7 +307,7 @@ with `highlight_ranks`.
 visual_age_models(agemodel_2PL, perspective = "trajectory", highlight_ranks = 3)
 ```
 
-We have strong theoretical reasons to expect that the mean of the latent trait does not decrease substantially with age.
+Let's assume we have strong theoretical reasons to expect that the mean of the latent trait does not decrease substantially with age.
 We therefore select the model with the trajectory that keeps the mean as stable as possible for older individuals,
 which is the model with the second-best ELPD rank. The ELPD plot shows that
 this is the model with a fourth-degree polynomial for the mean and a
@@ -595,7 +601,7 @@ This vignette used the 2PL-norm model for a unidimensional test with binary
 items. For tests with ordered response categories (graded response model) or
 with several domains (hierarchical models), the workflow is the same, with a
 few additional inputs and fit checks. These are described in the 
-`vignette("Norming with the graded response model and hierarchical models")`.
+`vignette("Norming_with_the_graded_response_model_and_hierarchical_models")`.
 
 # Founding 
 Development of `IRTnorm` was supported by Dutch Research Council NWO, [grant 406.27.GO.022](https://doi.org/10.61686/YHUOB23106).

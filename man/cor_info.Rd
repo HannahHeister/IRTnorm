@@ -3,17 +3,17 @@
 \docType{data}
 \name{cor_info}
 \alias{cor_info}
-\title{Presaved testdata .}
+\title{Presaved testdata for the vignette to run fast.}
 \format{
-A \code{list} with information for model comparison.
+\code{data.frame} with information for model comparison.
 }
 \source{
-output from the compare_IRTnorm_models function.
+selected output from the compare_IRTnorm_models function.
 }
 \usage{
 data(HOex_cor_info)
 }
 \description{
-Presaved testdata .
+Presaved testdata for the vignette to run fast.
 }
 \keyword{datasets}

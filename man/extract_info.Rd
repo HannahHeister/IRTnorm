@@ -3,7 +3,7 @@
 \name{extract_info}
 \alias{extract_info}
 \title{Extract person-, item-, and norming-level information from a
-fitted IRT-based continuous norming model.}
+fitted IRT-based continuous norming model}
 \usage{
 extract_info(fit, data)
 }
@@ -28,7 +28,7 @@ item parameters.}
 \item{y_rep}{A matrix containing posterior predictive replicated item
 responses (\code{y_rep}), useful for posterior predictive checks.}
 
-\item{info_coef}{A \code{list}) containing the posterior mean estimates of
+\item{info_coef}{A \code{list} containing the posterior mean estimates of
 the regression parameters for the age effects.}
 
 \item{nu_est}{For multidimensinal models a \code{vector} containing posterior mean estimates of

@@ -26,8 +26,8 @@ Plots the estimated latent trait of each individual against age, together
 with the quantile curves implied by the fitted IRT norming model. This shows
 whether the model-implied distribution of the latent trait matches the
 spread of the estimates across the age range: if it does, the expected
-share of points should fall below each curve (e.g., about 25\\% below the
-25\\% curve).
+share of points should fall below each curve (e.g., about 25\% below the
+25\% curve).
 }
 \details{
 The points are the estimated latent trait values of the individuals in the

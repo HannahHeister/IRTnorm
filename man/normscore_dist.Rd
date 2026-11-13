@@ -11,7 +11,7 @@ normscore_dist(fit_info, age_range, binwidth = 0.5, dim_plot = NULL)
 \code{\link{estimate_norming_model}}.}
 
 \item{age_range}{Numeric vector with at least two values giving the
-boundaries of the age groups, on the same scale as the age variable in the
+boundaries of the age groups to specify, on the same scale as the age variable in the
 data (e.g., \code{c(5, 7, 9, 11)} creates the groups [5,7], [7,9], and
 [9,11]). The lower boundary of a group is excluded and the upper boundary
 is included.}
@@ -31,15 +31,15 @@ customized with additional \pkg{ggplot2} layers.
 }
 \description{
 Plots the estimated norm scores of the individuals in the data as a
-histogram for each age group, together with the density of a standard
+histogram for each age group specified, together with the density of a standard
 normal distribution. This shows whether the norming achieved the intended
-normalization of the latent trait within age groups: if it did, the
+normalization of the latent trait within the age groups specified: if it did, the
 histogram should follow the curve in every age group.
 }
 \details{
 The norm score of each individual is the posterior mean of the
 standardized latent trait. The normal curve is scaled to the number of
-individuals in the age group and to \code{binwidth}, so that it is directly
+individuals in the age group specified and to \code{binwidth}, so that it is directly
 comparable to the histogram frequencies. Each age group is shown in its own
 panel.
 
@@ -61,7 +61,6 @@ info <- estimate_norming_model(
 
 # Norm score distribution in age groups
 normscore_dist(fit_info = info, age_range = c(-2,1,0,1,2))
-
 }
 
 }
