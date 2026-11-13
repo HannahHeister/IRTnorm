@@ -18,8 +18,8 @@ knitr::opts_chunk$set(
 ```
 
 The steps for deriving continuous norms with IRT-based norming are largely
-the same across IRT models. The vignette `vignette("how-to-use-irtnorm")`
-explains all steps in detail for the 2PL-norm model. This vignette covers the
+the same across different types of IRT models. The main vignette `vignette("how-to-use-irtnorm")`
+provides a detailed explanation of all steps involved in using the 2PL-norm model. The current vignette covers the
 special considerations that arise when the data do not meet the assumptions
 of that example, that is, when
 
@@ -30,7 +30,7 @@ of that example, that is, when
 
 Both cases require a few additional inputs, which are described below. All
 steps not covered here do not depend on the IRT model and are carried out as
-described in the main vignette. We therefore recommend reading that vignette
+described in the main vignette. Therefore, we recommend reading the vignette `vignette("how-to-use-irtnorm")`
 first.
 
 ```{r grm_loadlibrary, eval=TRUE, echo=TRUE, include=TRUE, warning=FALSE, message=FALSE}
@@ -76,7 +76,7 @@ categories from the test manual.
 
 Model selection under the GRM is limited to the selection of the age-model with `compare_age_models()`, 
 since there is currently no alternative IRT model for polytomous responses implemented. 
-Selecting the best age-model works as described in the main vignette. 
+Selecting the best age-model proceeds as described in the main vignette. 
 Here, we assume that the best model has been selected and that
 convergence has been checked as described in the main vignette.
 
@@ -125,7 +125,7 @@ indicating that the estimated item parameters describe the data adequately.
 
 When norming new individuals, their responses must be coded in the same way
 as the data used for fitting the model. For the GRM, all items must be coded
-starting at 1. Apart from that, norming a new individual works as for the
+starting at 1. Apart from that, norming a new individual proceeds as for the
 other models.
 
 # Hierarchical models
@@ -134,12 +134,12 @@ Some tests have a hierarchical structure: the full test measures a general
 latent trait, and each subtest measures a domain-specific trait. Each item
 then carries information about its own domain and about the general trait.
 In IRT-based continuous norming, such a structure is modeled with a
-hierarchical IRT model. The norming procedure is similar to the
-unidimensional case, but the model fit must be checked for the full test and
+hierarchical IRT model [@heister2026HO]. The norming procedure is similar to the
+unidimensional case, but the model fit must be checked for the full test as well as
 for each domain.
 
 To illustrate this, we use simulated data generated under the HO1PLnorm-C
-model with three domains of 30 items each.
+model with three domains of 30 items each. HO1PLnorm-C assumes the items to follow a 1PL model, with constant correlations among domains across age (C).
 
 ```{r ho_loaddata, eval=FALSE, echo=TRUE, include=TRUE}
 data("HOdata")
@@ -147,7 +147,7 @@ data("HOdata")
 
 ## Model selection
 
-Hierarchical models are selected in the same two steps as in the main
+Hierarchical models are selected in the same two steps as described in the main
 vignette, with two differences:
 
 - `compare_IRTnorm_models()` can compare different hierarchical models (for
@@ -181,18 +181,18 @@ infoHO <- estimate_norming_model(irt_model = "HO1PLnorm-C",
                                  iter_sampling = 500,
                                  extract_stan_object = TRUE)
 ```
-Her we presum that convergence has been checked, how to check for convergence is described in the main
+Here we presume that convergence has been checked. How to check for convergence is described in the main
 vignette.
 
 ## Evaluating the model fit
 
 Because of the hierarchical structure, the fit must be assessed for the full
-test and for each domain. 
+test as well as for each domain. 
 
 ### Raw score distribution
 
 For the whole sample, `raw_score_ppc()` automatically evaluates the total
-score and the score of each domain, and `visual_raw_score_ppc()` shows them
+score and the score of each domain. `visual_raw_score_ppc()` shows them
 in one plot with one panel per trait.
 
 ```{r ho_raw_ppc, echo=TRUE, include=TRUE, eval=FALSE}
@@ -207,7 +207,7 @@ knitr::include_graphics("figures/HOex_NC.png")
 The observed raw score distributions of the total test and of the domains
 agree well with the model-implied distributions.
 
-To check the fit within age groups, add the `age_range` argument. With age
+To check the fit conditional upon age, we consider the fit in age groups. To this end, add the `age_range` argument. With age
 groups, only one trait can be shown at a time, so `dim_plot` selects the
 trait: `"general"` for the total score, or `"domain1"`, `"domain2"`, and so
 on. In practice, all traits should be inspected. For illustration, we limit
@@ -256,7 +256,7 @@ knitr::include_graphics("figures/HOex_itemresidual_all.png")
 ```
 
 In this example, the residual correlations lie between -0.12 and 0.11, and
-the averages within and between domains are similar.
+the averages within and between domains are similar, as desired.
 
 To inspect a single domain in detail, use the `domain` argument. The function
 then restricts the analysis to the items of this domain and plots its heat
@@ -306,7 +306,7 @@ In addition, experts with content knowledge should judge whether the correlation
 
 ### Item and person fit
 
-The item fit and the person fit are shown per domain automatically.
+The item fit and the person fit are shown per domain.
 
 ```{r ho_itemfit, echo=TRUE, include=TRUE, eval=FALSE}
 item_person_fit(fit_info = infoHO, parameter = "item")
@@ -326,7 +326,7 @@ knitr::include_graphics("figures/HOex_personfit.png")
 
 ### Quantile curves
 
-The same holds for the model-implied quantile curves, which are shown in one
+The model-implied quantile curves are shown in one
 panel per domain.
 
 ```{r ho_qcurves, echo=TRUE, include=TRUE, eval=FALSE}
@@ -378,7 +378,7 @@ knitr::include_graphics("figures/HOex_ageeffect.png")
 
 ## Norming new individuals
 
-Norming new individuals works as in the unidimensional case with
+Norming new individuals proceeds as in the unidimensional case with
 `norm_new_individual()`. For hierarchical models, the result contains the
 norm scores of the general trait and of each domain.
 

@@ -21,8 +21,7 @@ knitr::opts_chunk$set(
 
 # Install IRTnorm for the first time
 IRTnorm estimates Bayesian IRT models using Stan. The Stan-based functions
-require the `cmdstanr` package and a working CmdStan installation.
-
+require the `cmdstanr` package and a working CmdStan installation. 
 Fitting Stan models requires a modern C++ compiler and the GNU Make build
 utility. Installation instructions for your operating system are in the
 [CmdStan Guide](https://mc-stan.org/docs/cmdstan-guide/installation.html#cpp-toolchain).
@@ -35,29 +34,30 @@ cmdstanr::install_cmdstan()
 install.packages("IRTnorm")
 ```
 More information about `cmdstanr` is available at <https://mc-stan.org/cmdstanr/>.
+
+
 # Introduction
 
 Norm-referenced psychological tests evaluate an individual's performance
 relative to a reference population, typically using standardized scores such
-as T-, IQ- or z-scores (@AERA2014). Many developmental and intelligence tests
-rely on reference populations that change continuously with age.
+as T-, IQ- or z-scores [@AERA2014]. Many developmental and intelligence tests
+rely on reference populations that change continuously with age [@timmerman2025GRoNC].
 
 In such settings, item response theory (IRT)-based continuous norming models
-are useful for deriving age-specific norm information. These models
+are useful for deriving age-specific normsn. These models
 explicitly allow the latent trait distribution to depend on age. As a result,
 each individual's latent trait estimate can be directly compared to the
 age-specific reference population using a z-standardized norm score
-(@heister2024item). As in most parametric IRT models, the latent trait
+[@heister2024item]. As in most parametric IRT models, the latent trait
 distribution is assumed to be normal in the reference population. Because the
-latent trait distribution of psychological tests typically changes smoothly
+latent trait distribution of psychological tests typically can be assumed to change smoothly
 with age, the mean and standard deviation can be modeled as smooth functions
 of age, using polynomial regression or penalized splines.
 
 Simulation studies have shown that IRT-based continuous norming models can
-accurately recover age-specific norms, and an empirical evaluation with the
-IDS-2 (@grob2018idsNL) has shown that these models can fit empirical data
-well (@heister2024item). Compared to raw score-based continuous norming
-methods, the default approach in many applications, IRT-based models use all
+accurately recover age-specific norms; further, an empirical evaluation with the intelligence test
+IDS-2 [@grob2018idsNL] has shown that these models can fit empirical data
+well [@heister2024item]. The default approach to norm psychological tests is to use raw score-based continuous norming [@timmerman2025GRoNC]. Unlike raw score-based continuous norming, IRT-based models use all
 available item-level information, can model multiple latent traits and their
 relationships, and integrate straightforwardly with adaptive testing.
 
@@ -69,8 +69,8 @@ new individuals.
 This vignette introduces the main modeling concepts of `IRTnorm` and
 demonstrates their use on a unidimensional test with binary items. For items
 with more than two ordered response categories (graded response model) and
-for tests with several domains (hierarchical models), see
-`vignette("special-cases")` after reading this vignette. The models are
+for tests with several domains (hierarchical models), see the
+`vignette("Norming with the graded response model and hierarchical models")`, after reading this vignette. The models are
 fitted with Stan, so the package `cmdstanr` and a working CmdStan
 installation are required.
 
@@ -92,7 +92,7 @@ The main workflow in `IRTnorm` consists of four steps:
    | `quantile_curves()` | consistency of the estimates with the model-implied quantiles |
    | `normscore_dist()` | normality of the norm scores within age groups |
    | `effect_age()` | plausibility of the estimated age trajectories |
-   | `cor_structure()` | correlations between domains (hierarchical models only, see `vignette("special-cases")`) |
+   | `cor_structure()` | correlations between domains (hierarchical models only, see `vignette("Norming with the graded response model and hierarchical models")`) |
 
 4. **Norm new individuals** (`norm_new_individual()`).
 
@@ -102,7 +102,7 @@ The main workflow in `IRTnorm` consists of four steps:
 
 We illustrate the workflow with a small simulated data set (`response_data`),
 to keep the example concise. In practical applications, larger data sets are
-usually required. The age variable in this data set is on a standardized
+usually required, with a larger number of items to obtain sufficiently precise estimates of the latent trait scores and a larger sample size to obtain sufficiently precise norm estimates. The age variable in this data set is on a standardized
 scale, which is why ages such as -1 and age groups such as `seq(-2, 2, 1)`
 appear below. Item responses are binary and coded 0 and 1.
 
@@ -115,21 +115,21 @@ data("response_data")
 ## 1. Select a model
 
 Selecting an appropriate IRT-based norming model requires considering a set
-of plausible models. The models can differ in the IRT model, in the
+of plausible models. The models can differ in the specific IRT model, in the
 specification of the age effects, or in both. We first choose the IRT model
 and then the age model.
 
 ### Choosing the IRT model
 
 Candidate IRT models should be pre-selected based on the characteristics of
-the test. For example, if the test contains binary items and guessing might
-influence the responses, a 3PL-norm model can be evaluated alongside the
+the test. For example, if the test consists of binary items and guessing might
+influence the responses, a 3PL-norm model can be evaluated alongside a
 2PL-norm model. If guessing is unlikely, 1PL- and 2PL-norm models are
 sufficient.
 
 The function `compare_IRTnorm_models()` fits the models and compares their
 expected log predictive density (ELPD), estimated with approximate
-leave-one-out cross-validation (LOO-CV) using the `loo` package (@loo2026).
+leave-one-out cross-validation (LOO-CV) using the `loo` package [@loo2026].
 
 The models are specified in the `model_specifications` argument, a list with
 one element per model. Each element is itself a list that contains at least
@@ -138,7 +138,7 @@ regression or `"splines"` for penalized splines). Additional options depend
 on the age model; see `?estimate_norming_model` for all of them.
 
 For a fair comparison, use the same age model in all models, with polynomial
-degrees high enough to capture the underlying trajectory. Here we use a
+degrees high enough to capture the underlying trajectory. Here, we use a
 fourth-degree polynomial for the mean and a third-degree polynomial for the
 standard deviation. By default, 500 warm-up and 500 sampling iterations are
 used per chain, which keeps the computation time low. More iterations can
@@ -168,15 +168,15 @@ data("IRTmods")
 ```
 
 The result contains the model comparison (`best_model`) and sampling
-diagnostics (`diagnostics`). Before interpreting the ELPD differences, we
-check that the LOO approximation is reliable by counting Pareto k values
+diagnostics (`diagnostics`). Before interpreting the ELPD differences, we assess the reliability of 
+the LOO approximation by examining the number of observations with Pareto $k$ values
 above 0.7.
 
 ```{r checkparetok1, echo=TRUE, include=TRUE, eval=TRUE}
 sum(IRTmods$diagnostics$pareto_k > 0.7)
 ```
 
-No Pareto k value exceeds 0.7, so the LOO approximation is stable enough to
+No Pareto $k$ value exceeds 0.7, so the LOO approximation is stable enough to
 rely on the ELPD differences.
 
 ```{r load_modelcomparee2, echo=TRUE, include=TRUE, eval=TRUE}
@@ -188,7 +188,7 @@ standard error of this difference. We recommend selecting the more complex
 IRT model if its ratio `ELPD_diff / SE` is below -1.96. 
 This is a guideline only; the best decision rule depends on the application, 
 and other rules may be defensible.
-In this example, the selected criterion is met, and
+In this example, the recommended selection criterion is met, and
 we therefore select the 2PL-norm model for the remainder of the analysis.
 
 ### Choosing the age model
@@ -199,7 +199,7 @@ only) compares age models by their ELPD, either over a user-specified grid
 of polynomial degrees (`method = "grid"`) or by forward selection
 (`method = "forward"`). Forward selection starts with the simplest model and
 increases the polynomial degree of the mean or the standard deviation step by
-step as long as the ELPD improves, up to a maximum number of model fits
+step, as long as the ELPD improves, up to a maximum number of model fits
 (`maxeval`). It is usually more efficient than a grid search, but because it
 is greedy, it can miss better combinations. Setting `include_splines = TRUE`
 additionally compares the polynomial models with penalized splines.
@@ -217,7 +217,7 @@ agemodel_2PL <- compare_age_models(method = "forward",
 data("agemodel_2PL")
 ```
 
-Again, we first check whether the LOO approximation is stable.
+Again, we first assess whether the LOO approximation is stable.
 
 ```{r load_paretok_age, echo=TRUE, include=TRUE, eval = FALSE}
 colSums(agemodel_2PL$paretok > 0.7)
@@ -225,7 +225,7 @@ colSums(agemodel_2PL$paretok > 0.7)
 ```{r load_paretok_ageinfo, echo=FALSE, eval = TRUE}
 c(0,0,0,0 ,0, 1 ,1 ,0, 0, 0, 0 ,0)
 ```
-Two of the evaluated models have Pareto k values above 0.7. To see whether
+Two of the evaluated models have Pareto $k$ values above 0.7. To see whether
 these influential observations affect the model selection, we repeat the
 forward selection with these responses set to missing. First, we identify
 the influential responses. Then, we create a new data set,
@@ -285,14 +285,14 @@ ggplot(combi) +
   theme_bw()
 ```
 
-The magnitude of the ELPD differs slightly between the two data sets, but the
-general pattern is the same. A second-degree polynomial for the standard
-deviation performs best in both. Only for the mean is there a small
+The magnitude of the ELPD differs slightly between the two data sets (original and excluded), but the
+general pattern is the same. The ELPD is highest, indicating the favoured model, for both data sets, when using a second-degree polynomial for the standard
+deviation. Only for the mean is there a small
 discrepancy: the original data favor the third-degree polynomial, and the
 data without the influential responses favor the fourth-degree polynomial.
 
 Because these differences in performance are small, we argue that the
-selection should be based not only on the ELPD but also on the resulting
+selection should be based not only on the ELPD, but also on the resulting estimated 
 trajectories. To inspect them, use `perspective = "trajectory"` in
 `visual_age_models()`. The number of highlighted top-ranked models is set
 with `highlight_ranks`.
@@ -301,9 +301,8 @@ with `highlight_ranks`.
 visual_age_models(agemodel_2PL, perspective = "trajectory", highlight_ranks = 3)
 ```
 
-We have a strong theoretical expectation that the mean of the latent trait
-does not decrease strongly for older individuals. We therefore select the
-trajectory that keeps the mean as stable as possible for these individuals,
+We have strong theoretical reasons to expect that the mean of the latent trait does not decrease substantially with age.
+We therefore select the model with the trajectory that keeps the mean as stable as possible for older individuals,
 which is the model with the second-best ELPD rank. The ELPD plot shows that
 this is the model with a fourth-degree polynomial for the mean and a
 second-degree polynomial for the standard deviation. In this plot, the
@@ -357,7 +356,7 @@ sum(info$model_stan_obj$sampler_diagnostics()[, , "divergent__"])
 Two further key diagnostics are the potential scale reduction factor (R-hat)
 and the effective sample size (ESS). R-hat should be close to 1 (commonly,
 below 1.01), indicating agreement between the chains. Larger ESS values
-indicate more precise estimates.
+indicate more precise estimates. As a rule of thumb, an ESS of at least 400 is generally recommended for reliable estimation, although higher values may be needed for precise estimation of tail quantities or other specific quantities of interest.
 
 ```{r showfit02, echo=TRUE, include=TRUE, eval=TRUE}
 info$conv_info
@@ -384,8 +383,8 @@ knitr::include_graphics("figures/2PLconv_plot.png")
 ```
 
 In this example, the chains overlap substantially and move freely through the
-same region of the parameter space, with no visible trends, drifts, or
-abrupt jumps. Rank plots additionally reveal convergence problems in the
+same region of the parameter space, without visible trends, drifts, or
+abrupt jumps, as desired. Rank plots additionally reveal convergence problems in the
 posterior tails:
 
 ```{r showhist, echo=TRUE, include=TRUE, eval=FALSE}
@@ -434,7 +433,7 @@ scores lie within the interval, and all observed values fall within the range
 of the replicated data. The fitted model therefore reproduces the observed
 raw score distribution well.
 
-To assess the fit across the full age range, repeat the evaluation for age
+To assess the fit within the age range, repeat the evaluation for age
 groups with the `age_range` argument, which gives the boundaries of the age
 groups on the scale of the age variable.
 
@@ -496,10 +495,10 @@ item_person_fit(fit_info = info, parameter = "person")
 ```
 
 The observed and model-implied raw scores are in close agreement. A slight
-systematic pattern is visible: for high-performing individuals, the model
+systematic regression towards the mean pattern is visible: for high-performing individuals, the model
 predicts a somewhat lower raw score than observed, and for low-performing
-individuals, a somewhat higher one. This regression towards the mean is
-common in Bayesian IRT models because the estimates of the latent trait are
+individuals, a somewhat higher one. Regression towards the mean is
+common in Bayesian IRT models, because the estimates of the latent trait are
 slightly shrunk towards the prior mean. The more informative the test, the
 smaller this effect. It does not indicate poor model fit, but it should be
 kept in mind when interpreting the results.
@@ -508,7 +507,7 @@ kept in mind when interpreting the results.
 
 The following checks examine whether the different parts of the model are
 consistent with each other. A model without inconsistencies is not
-guaranteed to fit well overall, but inconsistencies point to problems.
+guaranteed to fit well overall, but inconsistencies point to issues.
 
 First, `quantile_curves()` compares the estimated latent trait values of the
 individuals with the quantile curves implied by the model. About 5% of the
@@ -524,15 +523,15 @@ The model-implied quantile curves follow the estimated latent trait values
 closely, indicating that the fitted model is internally consistent.
 
 Second, the model assumes that the normed latent trait follows a standard
-normal distribution within each age group. The function `normscore_dist()`
-plots a histogram of the estimated norm scores for each age group, together
+normal distribution conditional upon age. This can be assessed by considering the distribution within age groups. The function `normscore_dist()`
+plots a histogram of the estimated norm scores for each age group specified, together
 with the density of the standard normal distribution.
 
 ```{r showfit6_2, echo=TRUE, include=TRUE, fig.width=6, fig.height=4, fig.align="center"}
 normscore_dist(fit_info = info, age_range = seq(-2, 2, 1), binwidth = 0.5)
 ```
 
-The distributions are approximately normal in all age groups, which further
+The distributions are approximately normal in all age groups specified, which further
 supports the consistency of the fitted model.
 
 Finally, `effect_age()` shows how the mean and the standard deviation of the
@@ -551,7 +550,7 @@ latent trait well.
 
 Suppose a new individual has the item responses `y` and the age `age`. The
 responses must be coded in the same way as the data used to fit the model
-(here 0 and 1). Missing responses (`NA`) are allowed.
+(here 0 and 1). Missing item responses (`NA`) are allowed.
 
 ```{r newobs, echo=TRUE, include=TRUE, eval=FALSE}
 y <- c(1,1,0,0,1,0,1,1,0,0,1,0,0,1,1,0,0,1,1,0,1,1,1,0,1,0,1,1,1,1,1,1,0,0,0,
@@ -567,7 +566,7 @@ relative to the latent trait distribution of the reference population at the
 individual's age. The new data are therefore only used to estimate the
 individual's own latent trait. The fitted model is not updated.
 
-The estimation uses random numbers, so set a seed to make the result
+The estimation uses random numbers, so we set a seed to make the result
 reproducible.
 
 ```{r getinfo_norming, echo=TRUE, include=TRUE, eval=FALSE}
@@ -595,8 +594,8 @@ is limited evidence that the performance is exceptionally high.
 This vignette used the 2PL-norm model for a unidimensional test with binary
 items. For tests with ordered response categories (graded response model) or
 with several domains (hierarchical models), the workflow is the same, with a
-few additional inputs and fit checks. These are described in
-`vignette("special-cases")`.
+few additional inputs and fit checks. These are described in the 
+`vignette("Norming with the graded response model and hierarchical models")`.
 
 # Founding 
 Development of `IRTnorm` was supported by Dutch Research Council NWO, [grant 406.27.GO.022](https://doi.org/10.61686/YHUOB23106).
