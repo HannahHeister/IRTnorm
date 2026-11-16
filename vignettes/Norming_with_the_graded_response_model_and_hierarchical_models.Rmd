@@ -1,6 +1,6 @@
 ---
 title: "Norming with the graded response model and hierarchical models"
-author: "Hannah M. Heister, Casper J. Albers and Marieke E. Timmerman"
+author: "Hannah M. Heister and Marieke E. Timmerman"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 bibliography: ../inst/REFERENCES.bib
@@ -136,7 +136,12 @@ Some tests have a hierarchical structure: the full test measures a general
 latent trait, and each subtest measures a domain-specific trait. Each item
 then carries information about its own domain and about the general trait.
 In IRT-based continuous norming, such a structure is modeled with a
-hierarchical IRT model [@heister2026HO]. The norming procedure is similar to the
+hierarchical IRT model [@heister2026HO]. The models discussed in this paper are 
+based on the 2PL model for the domain-level responses.  In the package, the models 
+are also implemented based on the 1PL model. Therefore, the models have been renamed,
+for example, HOnorm-C becomes HO1PLnorm-C and HO2PLnorm-C. 
+
+The norming procedure is similar to the
 unidimensional case, but the model fit must be checked for the full test as well as
 for each domain.
 
