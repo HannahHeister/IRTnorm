@@ -1,6 +1,6 @@
 ---
 title: "How to use IRTnorm"
-author: "Hannah M. Heister and Marieke E. Timmerman"
+author: "Hannah M. Heister and Casper J. Albers and Marieke E. Timmerman"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 bibliography: ../inst/REFERENCES.bib
@@ -603,7 +603,7 @@ with several domains (hierarchical models), the workflow is the same, with a
 few additional inputs and fit checks. These are described in the 
 `vignette("Norming_with_the_graded_response_model_and_hierarchical_models")`.
 
-# Founding 
+# Funding 
 Development of `IRTnorm` was supported by Dutch Research Council NWO, [grant 406.27.GO.022](https://doi.org/10.61686/YHUOB23106).
 
 # References
