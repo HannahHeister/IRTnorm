@@ -149,7 +149,7 @@ build_spline <- function(age_df, k, fixed_knots) {
 #'     and standard deviation used for standardization, rounded to two
 #'     decimals), and \code{age_mod} (1 = polynomial, 2 = splines).}
 #'   \item{Polynomial age model}{
-#'     \code{S} and \code{W} (number of mean and sd coefficients),
+#'     \code{S} and \code{W} (number of mean and standard deviation (sd) coefficients),
 #'     \code{age} and \code{age2} (design matrices for the mean and sd), and
 #'     for HO-P/HO-F models \code{M} and \code{age3} (mean and sd and correlation between domains.}
 #'   \item{Spline age model}{
@@ -250,7 +250,7 @@ data_prep <- function(raw_data, age_variable, item_variables,
 
   age <- as.vector(raw_data[, age_variable])
   
-  if(any(is.na(age))){
+  if(anyNA(age)){
     warning("In your dataset are observations with missing age_variable, 
              these individuals been removed from the dataset.")
     raw_data <- raw_data[!is.na(age),]
@@ -259,7 +259,7 @@ data_prep <- function(raw_data, age_variable, item_variables,
   answerpattern <- raw_data[, item_variables]
   nperson <- nrow(raw_data)
   nitem <- length(item_variables)
-  jj_list <- lapply(1:nitem, function(i) which(!is.na(answerpattern[,i])))
+  jj_list <- lapply(seq_len(nitem), function(i) which(!is.na(answerpattern[,i])))
 
   R <- as.vector(as.matrix(answerpattern))
   m_age <- round(mean(age),2)
@@ -344,7 +344,7 @@ data_prep <- function(raw_data, age_variable, item_variables,
   normingdata_IRT <- c(list(I = nitem,
                           J = nperson,
                           N = sum(colSums(!is.na(answerpattern))), #nperson*nitem,
-                          ii = rep(1:nitem, times = colSums(is.na(answerpattern) == F)),
+                          ii = rep(seq_len(nitem), times = colSums(is.na(answerpattern) == F)),
                           jj = unlist(jj_list),
                           y = R[!is.na(R)],
                           m_age = m_age,
@@ -352,13 +352,6 @@ data_prep <- function(raw_data, age_variable, item_variables,
                           itemD = rep(1, nitem),
                           dd =  rep(1,sum(colSums(!is.na(answerpattern)))),
                           age_variable = age), age_add)
-
- # if(!is.null(fixed_item)){
-  #  normingdata_IRT <-  c(normingdata_IRT, list(fixed_beta = fixed_item,
- #                      free_beta = (1:nitem)[-fixed_item],
-  #                     fixed_alpha = fixed_item,
-  #                     free_alpha = (1:nitem)[-fixed_item]))
-  #}
 
   if(irt_model == "1PLnorm"){
     normingdata_IRT[["irt_mod"]] <- 1
@@ -447,7 +440,7 @@ data_prep <- function(raw_data, age_variable, item_variables,
   prior_names <- names(prior_knowledge)
   para_names <- names(parameter_fixed)
   info_names <- c(para_names, prior_names)
-  if(any(duplicated(info_names))){
+  if(anyDuplicated(info_names)){
     stop(paste0("The model parameters",info_names[duplicated(info_names)],
                 "are indicated with prior information and as fixed, you can
                   only indicate one."))
@@ -456,7 +449,6 @@ data_prep <- function(raw_data, age_variable, item_variables,
   if(!is.null(prior_knowledge)){
     for(j in seq_len(length(prior_knowledge))){
       if(any(prior_names[j] == c("alpha","beta","gamma")) &
-         #length(prior_knowledge[[j]]) != 2 &
          any(lengths(prior_knowledge[[j]]) != nitem)){
         stop(paste0("When you choose to incoperate prior knowledge for ", prior_names[j],
                     " you have to indicate the distribution mean and standard deviation for all items.
@@ -496,10 +488,6 @@ data_prep <- function(raw_data, age_variable, item_variables,
         stop(paste0("When you choose to fix ", para_names[j],
                     " you have to indicate those for all items."))
       }
-      #  if(para_names[j] == "nu" & length(parameter_fixed[[j]]) != D)){
-      #      stop(paste0("When you choose to fix ", prior_names[j],
-      #                  " you have to indicate those for all D domains.")
-      #    }
         if(irt_model == "GRMnorm" & para_names[j] == "b"){
           if(length(parameter_fixed[[j]]) != nitem |
              !is.list(parameter_fixed[[j]]) |

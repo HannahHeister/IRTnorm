@@ -102,16 +102,16 @@ test_that("returned data has expected columns and class", {
 test_that("returned data has one row per person and probability", {
   n <- 60
   fit <- make_qfit_uni(n = n)
-  expect_equal(nrow(run_qc(fit)), n * 7)                       # default probs
-  expect_equal(nrow(run_qc(fit, probs = c(0.25, 0.5, 0.75))), n * 3)
-  expect_equal(nrow(run_qc(fit, probs = 0.5)), n)
+  expect_identical(nrow(run_qc(fit)), n * 7)                       # default probs
+  expect_identical(nrow(run_qc(fit, probs = c(0.25, 0.5, 0.75))), n * 3)
+  expect_identical(nrow(run_qc(fit, probs = 0.5)), n)
 })
 
 test_that("qname labels follow the probs and are repeated for each person", {
   fit <- make_qfit_uni(n = 10)
   res <- run_qc(fit, probs = c(0.1, 0.5, 0.9))
   expect_setequal(unique(res$qname), c("p0.1", "p0.5", "p0.9"))
-  expect_equal(as.character(res$qname), rep(c("p0.1", "p0.5", "p0.9"), 10))
+  expect_identical(as.character(res$qname), rep(c("p0.1", "p0.5", "p0.9"), 10))
 })
 
 test_that("default probs are the documented seven quantiles", {
@@ -124,7 +124,7 @@ test_that("age is repeated once per probability, in person order", {
   fit <- make_qfit_uni(n = 10)
   probs <- c(0.25, 0.5, 0.75)
   res <- run_qc(fit, probs = probs)
-  expect_equal(res$age, rep(fit$model_info$info_sample$age, each = length(probs)))
+  expect_identical(res$age, rep(fit$model_info$info_sample$age, each = length(probs)))
 })
 
 # ---- Unidimensional: quantile correctness ----------------------------------
@@ -138,21 +138,22 @@ test_that("quantiles equal qnorm(probs, theta_mu, theta_sigma) per person", {
   expected <- as.vector(sapply(seq_len(nrow(s)), function(i) {
     qnorm(probs, s$theta_mu[i], s$theta_sigma[i])
   }))
-  expect_equal(res$quan, expected)
+  expect_identical(res$quan, expected)
 })
 
 test_that("the median quantile equals theta_mu", {
   fit <- make_qfit_uni(n = 20)
   res <- run_qc(fit, probs = 0.5)
-  expect_equal(res$quan, fit$model_info$info_sample$theta_mu)
+  expect_identical(res$quan, fit$model_info$info_sample$theta_mu)
 })
 
 test_that("quantiles increase with probability within each person", {
   fit <- make_qfit_uni(n = 20)
   res <- run_qc(fit)
   by_person <- split(res$quan, rep(seq_len(20), each = 7))
-  expect_true(all(vapply(by_person, function(q) !is.unsorted(q, strictly = TRUE),
-                         logical(1))))
+  expect_false(
+    any(vapply(by_person, is.unsorted, logical(1), strictly = TRUE))
+  )
 })
 
 test_that("symmetric probabilities are symmetric around theta_mu", {
@@ -160,7 +161,7 @@ test_that("symmetric probabilities are symmetric around theta_mu", {
   lo <- run_qc(fit, probs = 0.1)$quan
   hi <- run_qc(fit, probs = 0.9)$quan
   mu <- fit$model_info$info_sample$theta_mu
-  expect_equal(mu - lo, hi - mu)
+  expect_identical(mu - lo, hi - mu)
 })
 
 test_that("larger theta_sigma widens the quantile spread", {
@@ -169,7 +170,7 @@ test_that("larger theta_sigma widens the quantile spread", {
   fit$model_info$info_sample$theta_sigma <- c(1, 2)
   res <- run_qc(fit, probs = c(0.05, 0.95))
   spread <- c(diff(res$quan[1:2]), diff(res$quan[3:4]))
-  expect_equal(spread[2], 2 * spread[1])
+  expect_identical(spread[2], 2 * spread[1])
 })
 
 test_that("works for every unidimensional irt_mod value (1 to 4)", {
@@ -184,17 +185,17 @@ test_that("unidimensional plot has points and smooth layers, no facets", {
   run_qc(make_qfit_uni())
   p <- ggplot2::last_plot()
   geoms <- vapply(p$layers, function(l) class(l$geom)[1], character(1))
-  expect_equal(as.character(geoms), c("GeomPoint", "GeomSmooth"))
+  expect_identical(as.character(geoms), c("GeomPoint", "GeomSmooth"))
   expect_s3_class(p$facet, "FacetNull")
-  expect_equal(p$labels$y, "latent trait")
+  expect_identical(p$labels$y, "latent trait")
 })
 
 test_that("plot data come from the right sources", {
   fit <- make_qfit_uni(n = 30)
   res <- run_qc(fit)
   p <- ggplot2::last_plot()
-  expect_equal(nrow(p$layers[[1]]$data), 30)
-  expect_equal(p$layers[[2]]$data, res)
+  expect_identical(nrow(p$layers[[1]]$data), 30)
+  expect_identical(p$layers[[2]]$data, res)
 })
 
 test_that("plot can be built without error", {
@@ -213,8 +214,8 @@ test_that("multidimensional: only delta traits are used (not theta or normeddelt
 test_that("multidimensional: scales with the number of domains", {
   n <- 25
   res <- run_qc(make_qfit_multi(n = n, n_dim = 3))
-  expect_equal(length(unique(res$domain)), 3)
-  expect_equal(nrow(res), n * 7 * 3)
+  expect_identical(length(unique(res$domain)), 3)
+  expect_identical(nrow(res), n * 7 * 3)
 })
 
 test_that("multidimensional: quantiles are computed per domain", {
@@ -227,7 +228,7 @@ test_that("multidimensional: quantiles are computed per domain", {
   expected <- as.vector(sapply(seq_len(nrow(d1)), function(i) {
     qnorm(probs, d1$theta_mu[i], d1$theta_sigma[i])
   }))
-  expect_equal(res$quan[res$domain == "delta1"], expected)
+  expect_identical(res$quan[res$domain == "delta1"], expected)
 })
 
 test_that("multidimensional: the median equals theta_mu for each domain", {
@@ -235,7 +236,7 @@ test_that("multidimensional: the median equals theta_mu for each domain", {
   res <- run_qc(fit, probs = 0.5)
   s <- fit$model_info$info_sample
   for (d in c("delta1", "delta2")) {
-    expect_equal(res$quan[res$domain == d], s$theta_mu[s$trait == d])
+    expect_identical(res$quan[res$domain == d], s$theta_mu[s$trait == d])
   }
 })
 
@@ -247,10 +248,10 @@ test_that("multidimensional plot is faceted by domain and uses est_ability", {
   
   pts <- p$layers[[1]]$data
   expect_setequal(unique(pts$trait), c("delta1", "delta2"))
-  expect_equal(nrow(pts), 30 * 2)
+  expect_identical(nrow(pts), 30 * 2)
 
   built <- ggplot2::ggplot_build(p)
-  expect_equal(length(unique(built$layout$layout$PANEL)), 2)
+  expect_identical(length(unique(built$layout$layout$PANEL)), 2)
 })
 
 test_that("multidimensional: returns data with a domain column", {
@@ -262,8 +263,8 @@ test_that("multidimensional: returns data with a domain column", {
 test_that("multidimensional: one row per person x prob x domain", {
   n <- 40
   fit <- make_qfit_multi(n = n)
-  expect_equal(nrow(run_qc(fit)), n * 7 * 2)
-  expect_equal(nrow(run_qc(fit, probs = c(0.25, 0.75))), n * 2 * 2)
+  expect_identical(nrow(run_qc(fit)), n * 7 * 2)
+  expect_identical(nrow(run_qc(fit, probs = c(0.25, 0.75))), n * 2 * 2)
 })
 
 # ---- Edge cases ------------------------------------------------------------

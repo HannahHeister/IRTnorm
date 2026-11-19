@@ -47,12 +47,12 @@ skip_if_not_installed("cmdstanr")
 
 test_that("age_mod 1, irt_mod 1: theta, polynomial params and beta", {
   res <- fit_info_param(make_fit(), list(age_mod = 1, irt_mod = 1))
-  expect_equal(params_of(res), c("z_theta", "p1_theta", "p2_theta", "beta"))
+  expect_identical(params_of(res), c("z_theta", "p1_theta", "p2_theta", "beta"))
 })
 
 test_that("age_mod 2 uses the l/u parameters instead of p*_theta", {
   res <- fit_info_param(make_fit(), list(age_mod = 2, irt_mod = 1))
-  expect_equal(params_of(res), c("z_theta", "l1", "l2", "u1", "u2", "beta"))
+  expect_identical(params_of(res), c("z_theta", "l1", "l2", "u1", "u2", "beta"))
 })
 
 test_that("irt_mod > 8 adds the third age parameter(s)", {
@@ -68,7 +68,9 @@ test_that("irt_mod > 8 adds the third age parameter(s)", {
 test_that("each model family selects its own item and relation parameters", {
   get <- function(m) params_of(fit_info_param(make_fit(), list(age_mod = 1, irt_mod = m)))
   expect_true("gamma" %in% get(3))                       # 3PL
-  expect_true(all(c("alpha", "b") %in% get(4)) && !"beta" %in% get(4))
+  expect_true(all(c("alpha", "b") %in% get(4)))
+  expect_true(!"beta" %in% get(4))
+  
   expect_true(all(c("unique", "nu") %in% get(5)))        # multidimensional
   expect_true("lambda" %in% get(9))
   expect_true("unique_sigma" %in% get(11))
@@ -82,7 +84,7 @@ test_that("parameters supplied as fixed data are not diagnosed", {
   expect_true("beta" %in% params_of(res))
   # data entries that are not model parameters are ignored
   res2 <- fit_info_param(make_fit(), list(age_mod = 1, irt_mod = 1, J = 100))
-  expect_equal(params_of(res2), c("z_theta", "p1_theta", "p2_theta", "beta"))
+  expect_identical(params_of(res2), c("z_theta", "p1_theta", "p2_theta", "beta"))
 })
 
 # ---- Output structure ------------------------------------------------------
@@ -93,10 +95,10 @@ test_that("output has one row per diagnostic and parameter, in block order", {
   expect_s3_class(res, "data.frame")
   expect_named(res, c("diagnostic", "variable",
                       "Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max."))
-  expect_equal(nrow(res), 3 * length(p))
-  expect_equal(res$diagnostic, rep(c("rhat", "ess_bulk", "ess_tail"), each = 4))
-  expect_equal(res$variable, rep(p, times = 3))
-  expect_equal(rownames(res), as.character(seq_len(nrow(res))))
+  expect_identical(nrow(res), 3 * length(p))
+  expect_identical(res$diagnostic, rep(c("rhat", "ess_bulk", "ess_tail"), each = 4))
+  expect_identical(res$variable, rep(p, times = 3))
+  expect_identical(rownames(res), as.character(seq_len(nrow(res))))
 })
 
 # ---- Diagnostic values -----------------------------------------------------
@@ -114,13 +116,14 @@ test_that("diagnostics are summarised across the elements of a vector parameter"
   beta_rhat <- res[res$diagnostic == "rhat" & res$variable == "beta", ]
   expect_gt(beta_rhat$Max., 1.5)        # beta[1]: chains far apart
   expect_lt(beta_rhat$Min., 1.05)       # beta[2]: fine
-  expect_true(beta_rhat$Min. <= beta_rhat$Median && beta_rhat$Median <= beta_rhat$Max.)
+  expect_true(beta_rhat$Min. <= beta_rhat$Median)
+  expect_true(beta_rhat$Median <= beta_rhat$Max.)
 })
 
 test_that("a scalar parameter has identical summary values", {
   res <- fit_info_param(make_fit(), list(age_mod = 1, irt_mod = 1))
   row <- res[res$diagnostic == "rhat" & res$variable == "p1_theta", 3:8]
-  expect_equal(as.numeric(row), rep(row$Min., 6))
+  expect_identical(as.numeric(row), rep(row$Min., 6))
 })
 
 test_that("a problem in one parameter does not leak into the others", {

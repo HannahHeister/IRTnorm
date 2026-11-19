@@ -3,7 +3,7 @@
 \docType{data}
 \name{agemodel_2PL}
 \alias{agemodel_2PL}
-\title{Presaved different_poly_2PL for the vignette to run fast.}
+\title{Saved different_poly_2PL for the vignette to run fast.}
 \format{
 A \code{list} with selected information for model comparison.
 }
@@ -14,6 +14,6 @@ output from the compare_age_models function.
 data(agemodel_2PL)
 }
 \description{
-Presaved different_poly_2PL for the vignette to run fast.
+Saved different_poly_2PL for the vignette to run fast.
 }
 \keyword{datasets}

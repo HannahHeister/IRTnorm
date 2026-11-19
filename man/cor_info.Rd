@@ -3,7 +3,7 @@
 \docType{data}
 \name{cor_info}
 \alias{cor_info}
-\title{Presaved testdata for the vignette to run fast.}
+\title{Saved test data for the vignette to run fast.}
 \format{
 \code{data.frame} with information for model comparison.
 }
@@ -14,6 +14,6 @@ selected output from the compare_IRTnorm_models function.
 data(HOex_cor_info)
 }
 \description{
-Presaved testdata for the vignette to run fast.
+Saved test data for the vignette to run fast.
 }
 \keyword{datasets}

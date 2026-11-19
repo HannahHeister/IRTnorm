@@ -94,12 +94,12 @@ test_that("uni: data are in long format with mean and sd stacked", {
   s <- fit$model_info$info_sample
   
   expect_named(d, c("age", "value", "moment"))
-  expect_equal(nrow(d), 100)
-  expect_equal(levels(d$moment), c("mean", "standard deviation"))
-  expect_equal(d$value[d$moment == "mean"], s$theta_mu)
-  expect_equal(d$value[d$moment == "standard deviation"], s$theta_sigma)
-  expect_equal(d$age[d$moment == "mean"], s$age)
-  expect_equal(d$age[d$moment == "standard deviation"], s$age)
+  expect_identical(nrow(d), 100)
+  expect_identical(levels(d$moment), c("mean", "standard deviation"))
+  expect_identical(d$value[d$moment == "mean"], s$theta_mu)
+  expect_identical(d$value[d$moment == "standard deviation"], s$theta_sigma)
+  expect_identical(d$age[d$moment == "mean"], s$age)
+  expect_identical(d$age[d$moment == "standard deviation"], s$age)
 })
 
 test_that("uni: works for every irt_mod from 1 to 4", {
@@ -108,13 +108,14 @@ test_that("uni: works for every irt_mod from 1 to 4", {
 
 test_that("uni: one line layer, two free-scale panels, correct label", {
   p <- run_effect(make_effect_uni())$plot
-  expect_equal(class(p$layers[[1]]$geom)[1], "GeomLine")
-  expect_equal(p$labels$y, "latent trait")
+  expect_identical(class(p$layers[[1]]$geom)[1], "GeomLine")
+  expect_identical(p$labels$y, "latent trait")
   expect_s3_class(p$facet, "FacetWrap")
   lay <- layout_of(p)
-  expect_equal(nrow(lay), 2)
-  expect_equal(as.character(facet_col(lay, "moment")), c("mean", "standard deviation"))
-  expect_true(p$facet$params$free$x && p$facet$params$free$y)
+  expect_identical(nrow(lay), 2)
+  expect_identical(as.character(facet_col(lay, "moment")), c("mean", "standard deviation"))
+  expect_true(p$facet$params$free$x)
+  expect_true(p$facet$params$free$y)
   expect_no_error(ggplot2::ggplot_build(p))
 })
 
@@ -129,24 +130,24 @@ test_that("multi: three moments for every person and trait", {
   n <- 30; D <- 2
   d <- run_effect(make_effect_multi(n = n, n_dim = D))$data
   expect_named(d, c("age", "value", "moment", "trait"))
-  expect_equal(nrow(d), 3 * D * n)
-  expect_equal(levels(d$moment), c("mean", "standard deviation", "correlation"))
-  expect_equal(as.vector(table(d$moment, d$trait)), rep(n, 3 * D))
+  expect_identical(nrow(d), 3 * D * n)
+  expect_identical(levels(d$moment), c("mean", "standard deviation", "correlation"))
+  expect_identical(as.vector(table(d$moment, d$trait)), rep(n, 3 * D))
 })
 
 test_that("multi: scales with the number of dimensions", {
   d <- run_effect(make_effect_multi(n = 20, n_dim = 3))$data
-  expect_equal(length(unique(d$trait)), 3)
-  expect_equal(nrow(d), 3 * 3 * 20)
+  expect_length(unique(d$trait), 3)
+  expect_identical(nrow(d), 3 * 3 * 20)
 })
 
 test_that("multi: mean and sd come from theta_mu and theta_sigma of the delta rows", {
   fit <- make_effect_multi()          # irt_mod 5
   d <- run_effect(fit)$data
   s <- delta_rows(fit)
-  expect_equal(d$value[d$moment == "mean"], s$theta_mu)
-  expect_equal(d$value[d$moment == "standard deviation"], s$theta_sigma)
-  expect_equal(d$age[d$moment == "correlation"], s$age)
+  expect_identical(d$value[d$moment == "mean"], s$theta_mu)
+  expect_identical(d$value[d$moment == "standard deviation"], s$theta_sigma)
+  expect_identical(d$age[d$moment == "correlation"], s$age)
 })
 
 # ---- Multidimensional: correlation per model family ------------------------
@@ -186,8 +187,8 @@ test_that("irt_mod 11-12: sd combines theta_sigma and unique_sigma (per person)"
     s <- delta_rows(fit)
     us <- fit$model_info$info_relation$unique_sigma
     expected_sd <- sqrt(s$theta_sigma^2 + us^2)
-    expect_equal(d$value[d$moment == "standard deviation"], expected_sd)
-    expect_equal(d$value[d$moment == "correlation"], s$theta_sigma / expected_sd)
+    expect_identical(d$value[d$moment == "standard deviation"], expected_sd)
+    expect_identical(d$value[d$moment == "correlation"], s$theta_sigma / expected_sd)
   }
 })
 
@@ -211,7 +212,7 @@ test_that("info_relation is read from model_info", {
 test_that("multi: one row per moment and column per trait with free y scales", {
   p <- run_effect(make_effect_multi(n = 30, n_dim = 2))$plot
   lay <- layout_of(p)
-  expect_equal(nrow(lay), 6)
+  expect_identical(nrow(lay), 6)
   expect_setequal(as.character(facet_col(lay, "moment")),
                   c("mean", "standard deviation", "correlation"))
   expect_setequal(as.character(facet_col(lay, "trait")), c("delta1", "delta2"))
@@ -221,13 +222,13 @@ test_that("multi: one row per moment and column per trait with free y scales", {
 })
 
 test_that("multi: panel count scales with dimensions", {
-  expect_equal(nrow(layout_of(run_effect(make_effect_multi(n_dim = 3))$plot)), 9)
+  expect_identical(nrow(layout_of(run_effect(make_effect_multi(n_dim = 3))$plot)), 9)
 })
 
 test_that("multi: one line layer, builds without error for all model families", {
   for (m in c(5, 9, 11)) {
     p <- run_effect(make_effect_multi(irt_mod = m))$plot
-    expect_equal(class(p$layers[[1]]$geom)[1], "GeomLine")
+    expect_identical(class(p$layers[[1]]$geom)[1], "GeomLine")
     expect_no_error(ggplot2::ggplot_build(p))
   }
 })

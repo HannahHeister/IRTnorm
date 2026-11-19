@@ -3,7 +3,7 @@
 \docType{data}
 \name{IRTmods}
 \alias{IRTmods}
-\title{Presaved different_IRTmodels for the vignette to run fast.}
+\title{Saved different_IRTmodels for the vignette to run fast.}
 \format{
 A \code{list} with information for model comparison.
 }
@@ -14,6 +14,6 @@ output from the compare_IRTnorm_models function.
 data(IRTmods)
 }
 \description{
-Presaved different_IRTmodels for the vignette to run fast.
+Saved different_IRTmodels for the vignette to run fast.
 }
 \keyword{datasets}

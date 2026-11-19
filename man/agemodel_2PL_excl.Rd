@@ -3,18 +3,18 @@
 \docType{data}
 \name{agemodel_2PL_excl}
 \alias{agemodel_2PL_excl}
-\title{Presaved different_poly_2PL for the vignette to run fast.}
+\title{Saved different_poly_2PL for the vignette to run fast.}
 \format{
 A \code{list} with selected information for model comparison.
 }
 \source{
 output from the compare_age_models function based on data after
-excluding the two highly influentional item responses.
+excluding the two highly influential item responses.
 }
 \usage{
 data(agemodel_2PL_excl)
 }
 \description{
-Presaved different_poly_2PL for the vignette to run fast.
+Saved different_poly_2PL for the vignette to run fast.
 }
 \keyword{datasets}

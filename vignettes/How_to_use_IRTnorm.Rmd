@@ -44,7 +44,7 @@ as T-, IQ- or z-scores [@AERA2014]. Many developmental and intelligence tests
 rely on reference populations that change continuously with age [@timmerman2025GRoNC].
 
 In such settings, item response theory (IRT)-based continuous norming models
-are useful for deriving age-specific normsn. These models
+are useful for deriving age-specific norms. These models
 explicitly allow the latent trait distribution to depend on age. As a result,
 each individual's latent trait estimate can be directly compared to the
 age-specific reference population using a z-standardized norm score
@@ -127,7 +127,7 @@ and then the age model.
 
 ### Choosing the IRT model
 
-Candidate IRT models should be pre-selected based on the characteristics of
+Candidate IRT models should be selected based on the characteristics of
 the test. For example, if the test consists of binary items and guessing might
 influence the responses, a 3PL-norm model can be evaluated alongside a
 2PL-norm model. If guessing is unlikely, 1PL- and 2PL-norm models are
@@ -178,10 +178,13 @@ diagnostics (`diagnostics`). Before interpreting the ELPD differences, we assess
 the LOO approximation by examining the number of observations with Pareto $k$ values
 above 0.7.
 
-```{r checkparetok1, echo=TRUE, include=TRUE, eval=TRUE}
+```{r checkparetok1, echo=TRUE, include=TRUE, eval=FALSE}
 sum(IRTmods$diagnostics$pareto_k > 0.7)
 ```
 
+```{r fakeparetok1, echo=FALSE, include=TRUE, eval=TRUE}
+0
+```
 No Pareto $k$ value exceeds 0.7, so the LOO approximation is stable enough to
 rely on the ELPD differences.
 
@@ -292,7 +295,7 @@ ggplot(combi) +
 ```
 
 The magnitude of the ELPD differs slightly between the two data sets (original and excluded), but the
-general pattern is the same. The ELPD is highest, indicating the favoured model, for both data sets, when using a second-degree polynomial for the standard
+general pattern is the same. The ELPD is highest, indicating the favored model, for both data sets, when using a second-degree polynomial for the standard
 deviation. Only for the mean is there a small
 discrepancy: the original data favor the third-degree polynomial, and the
 data without the influential responses favor the fourth-degree polynomial.

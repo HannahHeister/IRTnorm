@@ -195,7 +195,7 @@ check_dimension <- function(model_specifications){
   for(n in seq_len(nmodels)){
     unidim[n] <- model_specifications[[n]]$irt_model %in% c("1PLnorm", "2PLnorm","3PLnorm", "GRMnorm")
   }
-  if(any(unidim == TRUE) & any(unidim == FALSE)){
+  if(any(unidim) & any(!unidim)){
     stop("models in model_specifications do not imply the same dimensionality and can therefore not be compared.",call. = FALSE)
   }
     invisible(TRUE)
@@ -382,7 +382,7 @@ compare_age_models <- function(method = c("grid", "forward"),
   }
   check_rawinput(raw_data = raw_data, item_variables = item_variables, 
                  age_variable = age_variable)
-  if(any(is.na(irt_model))){
+  if(anyNA(irt_model)){
     stop("The IRT model selected is NA, you have to select one of the 
          followingirt_model: \"1PLnorm\", \"2PLnorm\", \"3PLnorm\", \"GRMnorm\"")
   }
@@ -652,7 +652,7 @@ visual_age_models <- function(compare_info, perspective = c("ELPD", "trajectory"
   if(perspective == "ELPD"){
     best_model <- compare_info$best_model
     best_model$ranked <- as.factor(best_model$rank)
-    if(any(is.na(best_model$poly_mean))){
+    if(anyNA(best_model$poly_mean)){
       best_model$poly_mean[is.na(best_model$poly_mean)] <- "splines"
       best_model$poly_sd[is.na(best_model$poly_sd)] <- "splines"
     }

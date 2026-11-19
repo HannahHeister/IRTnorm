@@ -37,7 +37,7 @@ traits, and each domain is shown in its own panel.
 The curves show the quantiles of the age-dependent normal distribution
 of the latent trait implied by the fitted model. They are drawn as smoothed
 curves across age. If there are too few distinct ages for smoothing, the
-unsmoothed quantiles are connected by lines instead.
+quantiles are connected by lines instead.
 }
 \examples{
 \dontrun{

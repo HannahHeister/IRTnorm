@@ -15,7 +15,7 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
     }else{
       age_sd <- as.matrix(stats::model.matrix(~ poly(age,data$W - 1, raw = TRUE), data = data.frame(age = age_scale)))
     }
-        if(multidim == FALSE){
+        if(!multidim){
       D <- 1
       mu_post <- p1_theta_post %*% t(age_mean)
       sigma_post <- exp(p2_theta_post %*% t(age_sd))
@@ -75,7 +75,7 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
     Xraw2_new <- mgcv::PredictMat(sm2, data_temp)
     X2_new    <- Xraw2_new %*% R2_X          # correct unpenalized
     Z2_new    <- Xraw2_new %*% R2_Z          # correct penalized
-    if(multidim == FALSE){
+    if(!multidim){
       D <- 1
       mu_post <- l1_post %*% t(X1_new) + u1_post %*% t(Z1_new)
       sigma_post <- exp(l2_post %*% t(X2_new) + u2_post %*% t(Z2_new))
@@ -136,11 +136,6 @@ log_post_draw_theta <- function(data, theta, a_vec, b_vec, c_vec, obs_K_item = N
                                 unique =NULL, nu_vec = NULL, lambda_vec = NULL,
                                 unique_vec = NULL, irt_mod, itemD = NULL) {
   nitem <- length(y_vec)
-  if(irt_mod > 4){
-    D <- data$D
-  }else{
-    D <- 1
-  } 
   if(is.null(c_vec) | all(c_vec == 0)){
     c_vec <- rep(0, nitem)
   }
@@ -407,7 +402,6 @@ norm_new_individual <- function(new_y, new_age,fit_info,
   # Pre-allocate
   all_ztheta_samples <- numeric(0)
   all_theta_samples <- numeric(0)
-  all_unique_samples <- NULL
   all_zdelta_samples <- NULL
   all_delta_samples<- NULL
   by_draw_samples <- vector("list", M)

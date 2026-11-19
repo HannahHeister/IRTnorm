@@ -1,0 +1,41 @@
+---
+output: github_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# IRTnorm
+The goal of IRTnorm is to enable norm score derivations based on Bayesian IRT-based 
+continuous norming models. 
+It covers model selection and fitting, as well as evaluating the fit and norming
+newly observed individuals. 
+
+
+## Installation
+You can install the development version of IRTnorm from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("HannahHeister/IRTnorm")
+```
+
+Fitting the models in this package requires [CmdStan](https://mc-stan.org/users/interfaces/cmdstan) and the [cmdstanr](https://mc-stan.org/cmdstanr/) R package. cmdstanr is not on CRAN, so install it from the Stan repository and then use it to install CmdStan:
+```r
+install.packages(
+  "cmdstanr",
+  repos = c("https://stan-dev.r-universe.dev", getOption("repos"))
+)
+cmdstanr::install_cmdstan()
+```
+
+You will also need a working C++ toolchain.
+See the [cmdstanr getting started guide](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) for platform-specific setup instructions.
+
+

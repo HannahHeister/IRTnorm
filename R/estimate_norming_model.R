@@ -190,7 +190,7 @@ fit_info_param <- function(fit, data){
 #'   latent trait. Domain-specific degrees are specified as for
 #'   \code{poly_mean}.
 #' @param poly_sd_unique Only required if \code{age_model = "poly"} and
-#'   \code{irt_model} is a higher-order model with a age varing correlation matrix
+#'   \code{irt_model} is a higher-order model with a age varying correlation matrix
 #'   (\code{-P}) or (\code{-F}).
 #'   For HO-P a \code{integer} specifying the degree of the polynomial used to model the
 #'   age-dependent lambda of the latent trait.
@@ -203,7 +203,7 @@ fit_info_param <- function(fit, data){
 #' @param k_sd2 Only used if \code{age_model = "splines"} and \code{irt_model}
 #'   is a higher-order model with a age-dependent correlation
 #'   matrix (\code{-P}) or (\code{-F}).
-#'    A \code{num} indicating the number of knots used for modelling the lambda for HO-P 
+#'    A \code{num} indicating the number of knots used for modeling the lambda for HO-P 
 #'    and the loading of the unique age effect for HO-F. Default is 8.
 #' @param fixed_knots_mean,fixed_knots_sd,fixed_knots_sd2 Only used if
 #'   \code{age_model = "splines"}. By default, knot positions are chosen from
@@ -349,7 +349,7 @@ estimate_norming_model <- function(raw_data, age_variable, item_variables,
                    item_variables = item_variables)
   
     
-  if(extract_stan_object == TRUE){
+  if(extract_stan_object){
     all_info[["model_stan_obj"]] <- fit_model
   }
   class(all_info) <- "IRTnorm"

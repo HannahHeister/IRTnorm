@@ -361,7 +361,7 @@ process_single_result <- function(result, age_label = NULL, dim_label = NULL) {
   df <- result$df
   replicated2 <- data.frame(result$replicated)
   colnames(replicated2) <- seq(0, result$nitem, 1)
-  replicated2$id <- 1:nrow(replicated2)
+  replicated2$id <- seq_len(nrow(replicated2))
 
   # Reshape to long format
   rep.long <- replicated2 |>
@@ -402,7 +402,7 @@ if(length(raw_score_ppc_info) > 1 & !is.null(raw_score_ppc_info[[1]][[1]]$age)){
     if(dim_plot == "general"){
       raw_score_ppc_info <- raw_score_ppc_info[[1]]
     }else{
-        raw_score_ppc_info <- raw_score_ppc_info[[as.numeric(as.numeric(sub("domain", "", dim_plot))) +1]] 
+        raw_score_ppc_info <- raw_score_ppc_info[[as.numeric(as.numeric(sub("domain", "", dim_plot, fixed = TRUE))) +1]] 
 
     }
   }
@@ -603,7 +603,7 @@ normscore_dist <- function(fit_info, age_range, binwidth = 0.5, dim_plot = NULL)
     data$age_group[data$age >= age_range[age] & data$age <= age_range[age +1]] <- paste0("age: [", age_range[age], ",", age_range[age +1], "]")
     n_group <- c(n_group,sum(data$age >= age_range[age] & data$age <= age_range[age +1]) )
   }
-  if(any(is.na(data$age_group))){
+  if(anyNA(data$age_group)){
     warning("Some individuals are not within the plotted age groups. These have been removed")
     data <- data[!is.na(data$age_group), ]
   }
@@ -673,7 +673,7 @@ is_multidim <- function(irt_mod) irt_mod >= 5
 #' The curves show the quantiles of the age-dependent normal distribution
 #' of the latent trait implied by the fitted model. They are drawn as smoothed
 #' curves across age. If there are too few distinct ages for smoothing, the
-#' unsmoothed quantiles are connected by lines instead.
+#' quantiles are connected by lines instead.
 #'
 #' @return Invisibly, a data frame with the model-implied quantiles for each
 #'   individual, with the columns \code{age}, \code{quan} (quantile value),
@@ -990,7 +990,7 @@ item_person_fit <- function(fit_info,  parameter){
     }
     answer_pattern_new <- make_dummy_matrix(info = answer_pattern, K_item = data$K_item)
   }
-  if(any(is.na(answer_pattern_new))){
+  if(anyNA(answer_pattern_new)){
     expected[is.na(answer_pattern_new)] <- NA
   }
   if(parameter == "item"){
@@ -1445,10 +1445,8 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
   if(irt_mod == 4){
     a_vec <- fit_info$model_info$info_item$alpha
     b_vec <- fit_info$model_info$info_item$threshold
-    #p <- NULL
     if(is.list(b_vec)){
       for (i in seq_len(I)) {
-        k_i <- seq_len(data$K_item[i] - 1)
         bi <- b_vec[[i]]
         cum <- stats::plogis(a_vec[i] * outer(theta, bi, "-"))   # N x (K-1): P(Y >= k)
         p   <- cbind(1, cum) - cbind(cum, 0)                 # N x K:     P(Y = k)
@@ -1456,8 +1454,6 @@ item_residual_cor <- function(fit_info, visual = TRUE, domain = NULL) {
       }
     }else{
       for (i in seq_len(I)) {
-        #k_i <- seq_len(data$K_item[i] - 1)
-        #bi <- b_vec[paste0("b[", i, ",", k_i, "]")]
         bi <- (b_vec[seq(i,length(b_vec),I)])[data$K_item[i] -1]
         cum <- stats::plogis(a_vec[i] * outer(theta, bi, "-"))   # N x (K-1): P(Y >= k)
         p   <- cbind(1, cum) - cbind(cum, 0)                 # N x K:     P(Y = k)

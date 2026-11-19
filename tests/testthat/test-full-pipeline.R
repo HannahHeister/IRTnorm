@@ -8,7 +8,11 @@ sim_pipeline_data <- function(m, J = 40, I = 6, D = 2, K = 3, seed = 1, na_frac 
   
   # general trait with a mild age trend; domain abilities load 0.7 on it
   g    <- 0.3 * as.numeric(scale(age)) + rnorm(J)
-  abil <- if (multi) sapply(seq_len(D), function(d) 0.7 * g + sqrt(1 - 0.49) * rnorm(J))
+  abil <- if (multi) {
+    vapply(seq_len(D), function(d) {
+      0.7 * g + sqrt(1 - 0.49) * rnorm(J)
+    }, numeric(J))
+  }
   else matrix(g, J, 1)
   dom  <- if (multi) itemD else rep(1, I)
   
@@ -66,7 +70,7 @@ pipeline_check <- function(out, sim, n_draws = 200) {
   expect_equal(nrow(ni$alpha), n_draws)
   expect_equal(ncol(ni$alpha), I)
   if (m == 4) {
-    expect_equal(length(unlist(ni$threshold[1,])), I * (sim$K - 1))
+    expect_length(unlist(ni$threshold[1,]), I * (sim$K - 1))
     expect_equal(nrow(ni$threshold), n_draws)
   } else {
     expect_equal(dim(ni$gamma), c(n_draws, I))
@@ -142,8 +146,8 @@ option_cases <- function(I = 6, D = 2, K = 3) {
     list(name = "GRM fixed b", m = 4,
          args = list(parameter_fixed = list(b = b_fix)),
          check = function(out) {
-           expect_equal(length(unlist(out$norm_info$threshold))/nrow(out$norm_info$threshold), I * (K - 1))
-           expect_equal(length(unique(out$norm_info$threshold[, 1])), 1)  # constant over draws
+           expect_length(unlist(out$norm_info$threshold)/nrow(out$norm_info$threshold), I * (K - 1))
+           expect_length(unique(out$norm_info$threshold[, 1]), 1)  # constant over draws
          }),
     list(name = "GRM prior b", m = 4,
          args = list(prior_knowledge = list(b = list(

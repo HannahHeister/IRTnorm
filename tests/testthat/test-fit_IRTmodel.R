@@ -96,21 +96,25 @@ test_that("seed: random when NULL (and controlled by set.seed), integer-valued",
   set.seed(1); fit_it(base_data()); s1 <- rec$sample$seed
   set.seed(1); fit_it(base_data()); s2 <- rec$sample$seed
   set.seed(2); fit_it(base_data()); s3 <- rec$sample$seed
-  expect_equal(s1, s2)
+  expect_identical(s1, s2)
   expect_false(s1 == s3)
-  expect_true(is.numeric(s1) && s1 >= 1 && s1 <= .Machine$integer.max)
+  expect_true(is.numeric(s1))
+  expect_true(s1 >= 1)
+  expect_true(s1 <= .Machine$integer.max)
+  
+
 })
 
 test_that("parallel_chains defaults to the number of cores", {
   rec <- setup_mocks()
   fit_IRTnorm(base_data(), chains = 1)
-  expect_equal(rec$sample$parallel_chains, parallel::detectCores())
+  expect_identical(rec$sample$parallel_chains, parallel::detectCores())
 })
 
 test_that("init = 1 is set for the GRM only", {
   rec <- setup_mocks()
   fit_it(base_data(irt_mod = 4))
-  expect_equal(rec$sample$init, 1)
+  expect_identical(rec$sample$init, 1)
   for (m in c(1, 2, 3, 5, 9, 12)) {
     fit_it(base_data(irt_mod = m))
     expect_null(rec$sample$init, info = m)

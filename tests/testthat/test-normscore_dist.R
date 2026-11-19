@@ -124,7 +124,7 @@ test_that("plot uses facets with one panel per age group", {
   p <- normscore_dist(fit, age_range = c(2, 5, 8, 12))
   expect_s3_class(p$facet, "FacetGrid")
   built <- ggplot2::ggplot_build(p)
-  expect_equal(length(unique(built$layout$layout$PANEL)), 3)
+  expect_length(unique(built$layout$layout$PANEL), 3)
 })
 
 test_that("facet order follows age_range", {
@@ -236,7 +236,7 @@ test_that("a single age group (two-element age_range) works", {
   fit <- make_fit_uni()
   p <- normscore_dist(fit, age_range = c(2, 12))
   expect_s3_class(p, "ggplot")
-  expect_equal(length(unique(p$layers[[2]]$data$age_group)), 1)
+  expect_length(unique(p$layers[[2]]$data$age_group), 1)
 })
 
 test_that("group counts sum to the number of retained individuals", {

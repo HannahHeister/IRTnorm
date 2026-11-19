@@ -3,7 +3,7 @@
 \docType{data}
 \name{int_info_newperson}
 \alias{int_info_newperson}
-\title{Presaved information of a newly normed individual for the vignette to run fast.}
+\title{Saved information of a newly normed individual for the vignette to run fast.}
 \format{
 list containing the norm score estimates of a newly normed individual.
 }
@@ -14,6 +14,6 @@ output from the norm_new_individual function.
 data(int_info_newperson)
 }
 \description{
-Presaved information of a newly normed individual for the vignette to run fast.
+Saved information of a newly normed individual for the vignette to run fast.
 }
 \keyword{datasets}

@@ -19,7 +19,7 @@ a list containing posterior draws relevant for norming new individuals.
 }
 \description{
 The \code{info_new_norming} function extracts the posterior draws of all
-item parameter and regression coeficents from a fitted Stan-based IRT norming
+item parameter and regression coefficients from a fitted Stan-based IRT norming
 model obtained with \code{\link{fit_IRTnorm}}.
 }
 \examples{

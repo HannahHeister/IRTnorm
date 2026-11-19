@@ -97,7 +97,7 @@ latent trait. Domain-specific degrees are specified as for
 \code{poly_mean}.}
 
 \item{poly_sd_unique}{Only required if \code{age_model = "poly"} and
-\code{irt_model} is a higher-order model with a age varing correlation matrix
+\code{irt_model} is a higher-order model with a age varying correlation matrix
 (\code{-P}) or (\code{-F}).
 For HO-P a \code{integer} specifying the degree of the polynomial used to model the
 age-dependent lambda of the latent trait.
@@ -112,7 +112,7 @@ default 8).}
 \item{k_sd2}{Only used if \code{age_model = "splines"} and \code{irt_model}
 is a higher-order model with a age-dependent correlation
 matrix (\code{-P}) or (\code{-F}).
-A \code{num} indicating the number of knots used for modelling the lambda for HO-P
+A \code{num} indicating the number of knots used for modeling the lambda for HO-P
 and the loading of the unique age effect for HO-F. Default is 8.}
 
 \item{fixed_knots_mean, fixed_knots_sd, fixed_knots_sd2}{Only used if

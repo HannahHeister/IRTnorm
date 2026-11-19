@@ -105,16 +105,16 @@ fit_IRTnorm <- function(data, seed = NULL,
     
   }
   # any parameter_fixed
-  if(any(duplicated(c(names(data),"alpha","beta","gamma", "b")))){
+  if(anyDuplicated(c(names(data),"alpha","beta","gamma", "b"))){
     param_fixed <-intersect(names(data), c("alpha","beta","gamma", "b"))
   }else{
     param_fixed <- NULL
   }
-  if(any(duplicated(c(names(data), "alpha_prior_mu","alpha_prior_sd",
+  if(anyDuplicated(c(names(data), "alpha_prior_mu","alpha_prior_sd",
                       "beta_prior_mu","beta_prior_sd",
                       "gamma_prior_mu","gamma_prior_sd",
                       "b_prior_mu","b_prior_sd",
-                      "nu_prior_mu","nu_prior_sd")))){
+                      "nu_prior_mu","nu_prior_sd"))){
               
     prior_known_temp <-intersect(names(data), c("alpha_prior_mu","alpha_prior_sd",
                                            "beta_prior_mu","beta_prior_sd",
@@ -285,19 +285,18 @@ extract_personinfo <- function(fit, data){
     
     info_sample <- data.frame(age = data$age_variab)
     
-    normscore <- fit$summary(variables = c("z_theta"))
+    normscore <- fit$summary(variables = "z_theta")
     
     info_sample$normscore_est <- normscore$mean
     info_sample$normscore_est_upper <- normscore$q95
     info_sample$normscore_est_lower <- normscore$q5
-    info_sample$theta_est <- as.data.frame(fit$summary(variables = c("theta"), "mean"))$mean
-    info_sample$theta_mu <- as.data.frame(fit$summary(variables = c("theta_mean"), "mean"))$mean
-    info_sample$theta_sigma <- as.data.frame(fit$summary(variables = c("theta_sigma"), "mean"))$mean
+    info_sample$theta_est <- as.data.frame(fit$summary(variables = "theta", "mean"))$mean
+    info_sample$theta_mu <- as.data.frame(fit$summary(variables = "theta_mean", "mean"))$mean
+    info_sample$theta_sigma <- as.data.frame(fit$summary(variables = "theta_sigma", "mean"))$mean
     info_sample$irt_mod <- data$irt_mod
   }
   # HO and Testlet model
   if(data$irt_mod > 4){
-    nitem <- data$I
     nperson <- data$J
     D <- data$D
     itemD <- data$itemD
@@ -470,7 +469,7 @@ extract_info <- function(fit, data){
 #'@name info_new_norming
 #'@description
 #' The \code{info_new_norming} function extracts the posterior draws of all 
-#' item parameter and regression coeficents from a fitted Stan-based IRT norming
+#' item parameter and regression coefficients from a fitted Stan-based IRT norming
 #' model obtained with \code{\link{fit_IRTnorm}}. 
 #' @param fit A \pkg{cmdstanr} \code{CmdStanMCMC} object as returned by
 #'   \code{\link{fit_IRTnorm}}.

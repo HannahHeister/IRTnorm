@@ -11,7 +11,6 @@ make_age_data <- function(
     S = S,
     W = W,
     D = D,
-    W = W,
     M = M
   )
 }

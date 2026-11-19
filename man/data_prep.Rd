@@ -140,7 +140,7 @@ response), \code{y} (the observed responses, in the same order as
 and standard deviation used for standardization, rounded to two
 decimals), and \code{age_mod} (1 = polynomial, 2 = splines).}
 \item{Polynomial age model}{
-\code{S} and \code{W} (number of mean and sd coefficients),
+\code{S} and \code{W} (number of mean and standard deviation (sd) coefficients),
 \code{age} and \code{age2} (design matrices for the mean and sd), and
 for HO-P/HO-F models \code{M} and \code{age3} (mean and sd and correlation between domains.}
 \item{Spline age model}{

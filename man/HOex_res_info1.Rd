@@ -3,7 +3,7 @@
 \docType{data}
 \name{HOex_res_info1}
 \alias{HOex_res_info1}
-\title{Presaved HOex_res_info1 for the vignette to run fast.}
+\title{Saved data for the vignette to run fast.}
 \format{
 A summary of the  information returned from item_residual_cor.
 }
@@ -14,6 +14,6 @@ based on data from the HO example  for the first domain
 data(HOex_res_info1)
 }
 \description{
-Presaved HOex_res_info1 for the vignette to run fast.
+Saved data for the vignette to run fast.
 }
 \keyword{datasets}

@@ -132,11 +132,13 @@ test_that("poly with missing poly_mean/poly_sd gives an informative error", {
 test_that("splines: components are mapped to the right names", {
   local_mocked_bindings(build_spline = fake_spline, .package = PKG)
   d <- prep(age_model = "splines", k_mean = 7, k_sd = 5)
-  expect_equal(d$age_mod, 2)
-  expect_equal(d$K1, 5); expect_equal(d$K2, 3)                  # k - 2
-  expect_equal(d$sm1, "sm_k7"); expect_equal(d$sm2, "sm_k5")
-  expect_equal(dim(d$R1_Z), c(7, 5)); expect_equal(dim(d$R2_Z), c(5, 3))
-  expect_true(all(d$X1 == 1) && all(d$Z1 == 2) && all(d$R1_X == 4))
+  expect_identical(d$age_mod, 2)
+  expect_identical(d$K1, 5); expect_identical(d$K2, 3)                  # k - 2
+  expect_identical(d$sm1, "sm_k7"); expect_identical(d$sm2, "sm_k5")
+  expect_identical(dim(d$R1_Z), c(7, 5)); expect_identical(dim(d$R2_Z), c(5, 3))
+  expect_true(all(d$X1 == 1))
+  expect_true(all(d$Z1 == 2))
+  expect_true(all(d$R1_X == 4))
   expect_null(d$sm3); expect_null(d$K3)
 })
 

@@ -3,7 +3,7 @@
 \docType{data}
 \name{info}
 \alias{info}
-\title{Presaved info for the vignette to run fast.}
+\title{Saved info for the vignette to run fast.}
 \format{
 A \code{list} with information of the fitted model.
 }
@@ -14,6 +14,6 @@ selected output from the estimate_norming_model function.
 data(info_small)
 }
 \description{
-Presaved info for the vignette to run fast.
+Saved info for the vignette to run fast.
 }
 \keyword{datasets}

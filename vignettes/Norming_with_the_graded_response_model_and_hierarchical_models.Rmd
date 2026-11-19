@@ -371,8 +371,8 @@ knitr::include_graphics("figures/HOex_normdist2.png")
 
 
 ### Age effects
-When visualizing the age-effect for hierachical model, the correlation between 
-domains and the general latent trait is desplayed alongside the latent trait
+When visualizing the age-effect for hierarchical model, the correlation between 
+domains and the general latent trait is displayed alongside the latent trait
 mean and standard deviation. 
 
 ```{r ho_effect_age, echo=TRUE, include=TRUE, eval=FALSE}

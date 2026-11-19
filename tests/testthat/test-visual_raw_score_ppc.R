@@ -230,10 +230,9 @@ test_that("no title when dim_plot is NULL", {
 
 test_that("dim_plot only sets the title when dimension selection is needed", {
   p <- run_vis(make_info_overall(c(3, 3, 3)), dim_plot = "general")
-  expect_equal(p$labels$title,NULL)
-  
+  expect_null(p$labels$title)
   p <- run_vis(make_info_age(c(3, 3, 3)), dim_plot = "general")
-  expect_equal(p$labels$title,"general")
+  expect_identical(p$labels$title,"general")
   })
 
 # ---- Side effects ----------------------------------------------------------

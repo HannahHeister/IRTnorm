@@ -114,7 +114,7 @@ test_that("models 9-12 return one column per domain pair plus age", {
 test_that("column names use the same pairs as the sum-score output", {
   fit <- make_mock_irtnorm(irt_mod = 9, D = 3)
   out <- cor_structure(fit, visual = FALSE)
-  expect_equal(length(setdiff(colnames(out), "age")), 3)
+  expect_length(setdiff(colnames(out), "age"), 3)
 })
 
 

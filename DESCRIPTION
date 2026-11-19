@@ -1,6 +1,6 @@
 Package: IRTnorm
 Title: Continuous Norming with Bayesian IRT Models
-Version: 0.0.0.1
+Version: 0.1.0
 Authors@R: 
     c(
       person("Hannah M.", "Heister",
@@ -13,7 +13,7 @@ Authors@R:
       person("Dutch Research Council", "NWO", role = c("fnd"),
       comment = c(GrantID = " 10.61686/YHUOB23106 "))
     )
-Description: facilitates the continuous norming of tests using Bayesian item response theory (IRT) models. It covers model selection and fitting, as well as evaluating the fit and norming newly observed individuals. 
+Description: Facilitates the continuous norming of tests using Bayesian item response theory (IRT) models. It covers model selection and fitting, as well as evaluating the fit and norming newly observed individuals. 
 License: GPL (>= 3) 
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -43,3 +43,4 @@ Additional_repositories:
 Config/testthat/edition: 3
 URL: https://github.com/HannahHeister/IRTnorm
 BugReports: https://github.com/HannahHeister/IRTnorm/issues
+LazyData: true
