@@ -38,6 +38,8 @@ Suggests:
     loo,
     knitr,
     rmarkdown
+Remotes:
+    stan-dev/cmdstanr
 Additional_repositories:
     https://stan-dev.r-universe.dev
 Config/testthat/edition: 3
