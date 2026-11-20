@@ -57,16 +57,17 @@ make_mock_ipf <- function(irt_mod = 3, J = 60, I = 6, D = 2,
     class = "IRTnorm", truth = truth
   )
 }
-local_quiet_plot <- function(env = parent.frame()) {
-  grDevices::pdf(NULL)
-  withr::defer(grDevices::dev.off(), envir = env)
-}
 # Stand-in for the internal make_dummy_matrix(): one 0/1 column per category
 # (codes 1..K), NA where the response is NA. Adapt to the real helper's coding.
 mock_dummy <- function(info, K_item) {
   info <- as.matrix(info)
   do.call(cbind, lapply(seq_along(K_item), function(i)
     sapply(seq_len(K_item[i]), function(k) as.numeric(info[, i] == k))))
+}
+
+local_quiet_plot <- function(env = parent.frame()) {
+  grDevices::pdf(NULL)
+  withr::defer(grDevices::dev.off(), envir = env)
 }
 
 test_that("rejects objects that are not IRTnorm", {

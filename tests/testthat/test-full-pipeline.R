@@ -146,7 +146,7 @@ option_cases <- function(I = 6, D = 2, K = 3) {
     list(name = "GRM fixed b", m = 4,
          args = list(parameter_fixed = list(b = b_fix)),
          check = function(out) {
-           expect_length(unlist(out$norm_info$threshold)/nrow(out$norm_info$threshold), I * (K - 1))
+           expect_identical(length(unlist(out$norm_info$threshold))/nrow(out$norm_info$threshold), I * (K - 1))
            expect_length(unique(out$norm_info$threshold[, 1]), 1)  # constant over draws
          }),
     list(name = "GRM prior b", m = 4,
@@ -201,7 +201,7 @@ test_that("real pipeline: missing responses are handled in fitting", {
   pipeline_check(out, sim)
 })
 
-test_that("real pi peline: fixed parameters and priors reach the fit", {
+test_that("real pipeline: fixed parameters and priors reach the fit", {
   for (case in option_cases()) {
     local({
       case <- case

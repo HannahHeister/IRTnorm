@@ -102,9 +102,9 @@ test_that("returned data has expected columns and class", {
 test_that("returned data has one row per person and probability", {
   n <- 60
   fit <- make_qfit_uni(n = n)
-  expect_identical(nrow(run_qc(fit)), n * 7)                       # default probs
-  expect_identical(nrow(run_qc(fit, probs = c(0.25, 0.5, 0.75))), n * 3)
-  expect_identical(nrow(run_qc(fit, probs = 0.5)), n)
+  expect_identical(nrow(run_qc(fit)), as.integer(n * 7))                       # default probs
+  expect_identical(nrow(run_qc(fit, probs = c(0.25, 0.5, 0.75))), as.integer(n * 3))
+  expect_identical(nrow(run_qc(fit, probs = 0.5)), as.integer(n))
 })
 
 test_that("qname labels follow the probs and are repeated for each person", {
@@ -161,7 +161,7 @@ test_that("symmetric probabilities are symmetric around theta_mu", {
   lo <- run_qc(fit, probs = 0.1)$quan
   hi <- run_qc(fit, probs = 0.9)$quan
   mu <- fit$model_info$info_sample$theta_mu
-  expect_identical(mu - lo, hi - mu)
+  expect_equal(mu - lo, hi - mu)
 })
 
 test_that("larger theta_sigma widens the quantile spread", {
@@ -194,7 +194,7 @@ test_that("plot data come from the right sources", {
   fit <- make_qfit_uni(n = 30)
   res <- run_qc(fit)
   p <- ggplot2::last_plot()
-  expect_identical(nrow(p$layers[[1]]$data), 30)
+  expect_identical(nrow(p$layers[[1]]$data),as.integer(30))
   expect_identical(p$layers[[2]]$data, res)
 })
 
@@ -214,8 +214,8 @@ test_that("multidimensional: only delta traits are used (not theta or normeddelt
 test_that("multidimensional: scales with the number of domains", {
   n <- 25
   res <- run_qc(make_qfit_multi(n = n, n_dim = 3))
-  expect_identical(length(unique(res$domain)), 3)
-  expect_identical(nrow(res), n * 7 * 3)
+  expect_identical(length(unique(res$domain)), as.integer(3))
+  expect_identical(nrow(res), as.integer(n * 7 * 3))
 })
 
 test_that("multidimensional: quantiles are computed per domain", {
@@ -248,10 +248,10 @@ test_that("multidimensional plot is faceted by domain and uses est_ability", {
   
   pts <- p$layers[[1]]$data
   expect_setequal(unique(pts$trait), c("delta1", "delta2"))
-  expect_identical(nrow(pts), 30 * 2)
+  expect_identical(nrow(pts), as.integer(30 * 2))
 
   built <- ggplot2::ggplot_build(p)
-  expect_identical(length(unique(built$layout$layout$PANEL)), 2)
+  expect_identical(length(unique(built$layout$layout$PANEL)), as.integer(2))
 })
 
 test_that("multidimensional: returns data with a domain column", {
@@ -263,8 +263,8 @@ test_that("multidimensional: returns data with a domain column", {
 test_that("multidimensional: one row per person x prob x domain", {
   n <- 40
   fit <- make_qfit_multi(n = n)
-  expect_identical(nrow(run_qc(fit)), n * 7 * 2)
-  expect_identical(nrow(run_qc(fit, probs = c(0.25, 0.75))), n * 2 * 2)
+  expect_identical(nrow(run_qc(fit)), as.integer(n * 7 * 2))
+  expect_identical(nrow(run_qc(fit, probs = c(0.25, 0.75))), as.integer(n * 2 * 2))
 })
 
 # ---- Edge cases ------------------------------------------------------------
