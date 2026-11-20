@@ -13,6 +13,13 @@
 #' @source Simulated data.
 "response_data"
 
+#' Fitted 1PLnorm model for illustrative purposes only. It is based on very few
+#' iterations and very few data points.
+#' @docType data
+#' @usage data(info_mini)
+#' @source Fitted model information returned from  estimate_norming_model()
+"info_mini"
+
 #' A data set containing item responses and age information based on a unidimensional GRMnorm model.
 #' @docType data
 #' @usage data(data_GRM)

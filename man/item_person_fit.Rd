@@ -49,23 +49,15 @@ multidimensional models, the raw score is computed separately for each
 domain and shown in one panel per domain.
 }
 \examples{
-\dontrun{
-data(response_data)
-info <- estimate_norming_model(
-  raw_data = response_data,
-  age_variable = "age",
-  item_variables = 1:50,
-  irt_model = "2PLnorm",
-  age_model = "poly",
-  poly_mean = 3,
-  poly_sd = 2
-)
+\donttest{
+# load complied 1PLnorm model
+data(info_mini)
 
 # Item fit
-item_person_fit(fit_info = info, parameter = "item")
+item_person_fit(fit_info = info_mini, parameter = "item")
 
 # Person fit, keeping the plot and the underlying data
-res <- item_person_fit(fit_info = info, parameter = "person")
+res <- item_person_fit(fit_info = info_mini, parameter = "person")
 res$plot
 head(res$data)
 }

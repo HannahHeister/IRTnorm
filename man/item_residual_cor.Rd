@@ -59,24 +59,16 @@ The heat map and the printed output are produced when the function is
 called. The numerical results are returned invisibly.
 }
 \examples{
-\dontrun{
-data(response_data)
-info <- estimate_norming_model(
-  raw_data = response_data,
-  age_variable = "age",
-  item_variables = 1:50,
-  irt_model = "2PLnorm",
-  age_model = "poly",
-  poly_mean = 3,
-  poly_sd = 2
-)
+\donttest{
+# load complied 1PLnorm model
+data(info_mini)
 
 # Summary and heat map
-item_residual_cor(info)
+item_residual_cor(info_mini)
 
 # Keep the residual correlation matrix, without the plot
-res <- item_residual_cor(info, visual = FALSE)
-res$Q3[1:5, 1:5]
+res <- item_residual_cor(info_mini, visual = FALSE)
+res$Q3
 
 # Multidimensional model: restrict to one domain
 # item_residual_cor(info_multi, domain = 1)

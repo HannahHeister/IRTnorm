@@ -40,23 +40,15 @@ curves across age. If there are too few distinct ages for smoothing, the
 quantiles are connected by lines instead.
 }
 \examples{
-\dontrun{
-data(response_data)
-info <- estimate_norming_model(
-  raw_data = response_data,
-  age_variable = "age",
-  item_variables = 1:50,
-  irt_model = "2PLnorm",
-  age_model = "poly",
-  poly_mean = 3,
-  poly_sd = 2
-)
+\donttest{
+# load complied 1PLnorm model
+data(info_mini)
 
 # Default quantiles
-quantile_curves(fit_info = info)
+quantile_curves(fit_info = info_mini)
 
-# Selected quantiles; keep the underlying values
-q <- quantile_curves(fit_info = info, probs = c(0.025, 0.5, 0.975))
+# Selected quantiles
+quantile_curves(fit_info = info_mini, probs = c(0.025, 0.5, 0.975))
 }
 
 }

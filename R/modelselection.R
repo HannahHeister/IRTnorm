@@ -195,7 +195,7 @@ check_dimension <- function(model_specifications){
   for(n in seq_len(nmodels)){
     unidim[n] <- model_specifications[[n]]$irt_model %in% c("1PLnorm", "2PLnorm","3PLnorm", "GRMnorm")
   }
-  if(any(unidim) & any(!unidim)){
+  if(any(unidim) && any(!unidim)){
     stop("models in model_specifications do not imply the same dimensionality and can therefore not be compared.",call. = FALSE)
   }
     invisible(TRUE)

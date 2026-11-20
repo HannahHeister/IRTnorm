@@ -135,7 +135,8 @@ test_that("splines: components are mapped to the right names", {
   expect_identical(d$age_mod, 2)
   expect_identical(d$K1, 5); expect_identical(d$K2, 3)                  # k - 2
   expect_identical(d$sm1, "sm_k7"); expect_identical(d$sm2, "sm_k5")
-  expect_identical(dim(d$R1_Z), c(7, 5)); expect_identical(dim(d$R2_Z), c(5, 3))
+  expect_equal(dim(d$R1_Z), c(7, 5)) 
+  expect_equal(dim(d$R2_Z), c(5, 3))
   expect_true(all(d$X1 == 1))
   expect_true(all(d$Z1 == 2))
   expect_true(all(d$R1_X == 4))

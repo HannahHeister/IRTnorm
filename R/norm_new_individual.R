@@ -23,7 +23,7 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
       D <- data$D
       mu_post <- array(dim = c(nrow(p1_theta_post), nperson, D))
       sigma_post <-array(dim = c(nrow(p1_theta_post), nperson, D))
-      if(irt_mod == 5 |irt_mod == 6){
+      if(irt_mod == 5 || irt_mod == 6){
         for(d in seq_len(D)){
           mu_post[,,d] <- p1_theta_post %*% t(age_mean)
           sigma_post[,,d] <- exp(p2_theta_post %*% t(age_sd))
@@ -43,10 +43,10 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
           }
           p3_theta_post <- post_draw$p3_theta
         }
-        if(irt_mod == 9 | irt_mod == 10){
+        if(irt_mod == 9 || irt_mod == 10){
           lambda_post <- stats::plogis(p3_theta_post %*% t(age3))
         }
-        if(irt_mod == 11 | irt_mod == 12){
+        if(irt_mod == 11 || irt_mod == 12){
           unique_post <- array(dim = c(nrow(p3_theta_post), nperson, D))
           for(d in seq_len(D)){
             unique_post[,,d] <- log1p(exp(p3_theta_post[,seq(d,D*data$M,D)] %*% t(age3)))
@@ -83,7 +83,7 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
       D <- data$D
       mu_post <- array(dim = c(nrow(l1_post), nperson, D))
       sigma_post <-array(dim = c(nrow(l2_post), nperson, D))
-      if(irt_mod == 5 |irt_mod == 6){
+      if(irt_mod == 5 || irt_mod == 6){
         for(d in seq_len(D)){
           mu_post[,,d] <- l1_post %*% t(X1_new) + u1_post %*% t(Z1_new)
           sigma_post[,,d] <- exp(l2_post %*% t(X2_new) + u2_post %*% t(Z2_new))
@@ -104,10 +104,10 @@ compute_age_effects <- function(post_draw, data, age_scale, nperson, irt_mod, mu
           X3_new    <- Xraw3_new %*% R3_X          # correct unpenalized
           Z3_new    <- Xraw3_new %*% R3_Z          # correct penalized
         }
-        if(irt_mod == 9 | irt_mod == 10){
+        if(irt_mod == 9 || irt_mod == 10){
           lambda_post <- stats::plogis(l3_post %*% t(X3_new) + u3_post %*% t(Z3_new))
         }
-        if(irt_mod == 11 | irt_mod == 12){
+        if(irt_mod == 11 || irt_mod == 12){
           unique_post <- array(dim = c(nrow(l3_post), nperson, D))
           for(d in seq_len(D)){
             unique_post[,,d] <- log1p(exp( l3_post[,seq(d,D*data$M,D)] %*% t(X3_new) + u3_post[,seq(d,D*data$M,D)] %*% t(Z3_new)))
@@ -136,10 +136,10 @@ log_post_draw_theta <- function(data, theta, a_vec, b_vec, c_vec, obs_K_item = N
                                 unique =NULL, nu_vec = NULL, lambda_vec = NULL,
                                 unique_vec = NULL, irt_mod, itemD = NULL) {
   nitem <- length(y_vec)
-  if(is.null(c_vec) | all(c_vec == 0)){
+  if(is.null(c_vec) || all(c_vec == 0)){
     c_vec <- rep(0, nitem)
   }
-  if(is.null(a_vec)| all(a_vec == 1)){
+  if(is.null(a_vec)|| all(a_vec == 1)){
     a_vec <- rep(1,nitem)
   }
   # compute log prior: normal(mu, sigma)
@@ -168,13 +168,13 @@ log_post_draw_theta <- function(data, theta, a_vec, b_vec, c_vec, obs_K_item = N
   if(irt_mod > 4){
     lp_prior <-  stats::dnorm(theta, mean = 0, sd = 1, log = TRUE) + 
       sum( stats::dnorm(unique, mean = 0, sd = 1, log = TRUE))
-    if(irt_mod >4 & irt_mod < 9){
+    if(irt_mod >4 && irt_mod < 9){
       delta <- mu + nu_vec * sigma * theta + sqrt(1 - nu_vec^2)*sigma *unique
     }
-    if(irt_mod == 9 | irt_mod == 10){
+    if(irt_mod == 9 || irt_mod == 10){
       delta <- mu + nu_vec * lambda_vec * sigma * theta + sqrt(1 - (lambda_vec*nu_vec)^2 )*sigma *unique
     }
-    if(irt_mod == 11 | irt_mod == 12){
+    if(irt_mod == 11 || irt_mod == 12){
       delta <- mu + sigma * theta + unique_vec *unique
     }
     
@@ -291,29 +291,20 @@ log_post_draw_theta <- function(data, theta, a_vec, b_vec, c_vec, obs_K_item = N
 #' @seealso \code{\link{estimate_norming_model}}
 #'
 #' @examples
-#' \dontrun{
-#' # Fit a norming model
-#' data(response_data)
-#' info <- estimate_norming_model(
-#'   raw_data = response_data,
-#'   age_variable = "age",
-#'   item_variables = 1:50,
-#'   irt_model = "2PLnorm",
-#'   age_model = "poly",
-#'   poly_mean = 3,
-#'   poly_sd = 2,
-#'   iter_warmup = 500,
-#'   iter_sampling = 500,
-#'   chains = 2,
-#'   parallel_chains = 2
-#' )
+#' \donttest{
+#' # load complied 1PLnorm model
+#' data(info_mini)
 #'
 #' # New individual with the same answer pattern as individual 20
-#' y <- unlist(response_data[20, 1:50])
-#' age <- response_data$age[20]
+#' y <- c(1,0,1,1,0)
+#' age <- 8
 #'
+#' # This is only for illustration purposes. In practice the number of iterations and 
+#' # burnin should be larger. 
 #' set.seed(1)
-#' result <- norm_new_individual(new_y = y, new_age = age, fit_info = info)
+#' result <- norm_new_individual(new_y = y, new_age = age,
+#' fit_info = info_mini, mh_args = list(n_iter = 20, burnin = 10,
+#'                                      thin = 1, proposal_sd = 0.6))
 #'
 #' # EAP estimate of the norm score
 #' mean(result$theta_zsample)
@@ -501,11 +492,11 @@ norm_new_individual <- function(new_y, new_age,fit_info,
           delta_curr <- mu_m + nu_m * sigma_m * theta_curr + sqrt(1 - nu_m^2)*sigma_m *unique_curr
           z_delta_curr <- (delta_curr - mu_m)/sigma_m
         }
-        if(irt_mod == 9 | irt_mod == 10){
+        if(irt_mod == 9 || irt_mod == 10){
           delta_curr <- mu_m + nu_m * lambda_m * sigma_m * theta_curr+ sqrt(1 - (nu_m *lambda_m)^2 )*sigma_m *unique_curr
           z_delta_curr <- (delta_curr - mu_m)/sigma_m
         }
-        if(irt_mod == 11 | irt_mod == 12){
+        if(irt_mod == 11 || irt_mod == 12){
           delta_curr <- mu_m + sigma_m * theta_curr + unique_m *unique_curr
           z_delta_curr <- (delta_curr - mu_m)/sqrt(sigma_m^2 + unique_m^2)
         }

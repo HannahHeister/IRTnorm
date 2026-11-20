@@ -97,7 +97,7 @@ array[N] int JD_loadings;")
           general_data <- paste(general_data, "array[I] ordered[K_max - 1] b;")
       }
 
-      if((is_2pl | irt_model == "GRMnorm") && "alpha" %in% parameter_fixed){
+      if((is_2pl || irt_model == "GRMnorm") && "alpha" %in% parameter_fixed){
         general_data <- paste(general_data,"vector<lower=1e-6>[I] alpha;")
       }
 
@@ -171,7 +171,7 @@ uni_age <- (!HO_P & !HO_C & !HO_F)
     }
   }
 
-  if(irt_model != "GRMnorm" & !any(parameter_fixed == "beta")){
+  if(irt_model != "GRMnorm" && !any(parameter_fixed == "beta")){
     block_param <- paste(block_param, "vector[I] beta;")
 
   }
@@ -184,11 +184,11 @@ uni_age <- (!HO_P & !HO_C & !HO_F)
     }
   }
 
-  if(is_2pl & !any(parameter_fixed == "alpha")){
+  if(is_2pl && !any(parameter_fixed == "alpha")){
     block_param <- paste(block_param, "vector<lower=1e-6>[I] alpha;")
   }
 
-  if(irt_model == "3PLnorm" & !any(parameter_fixed == "gamma")){
+  if(irt_model == "3PLnorm" && !any(parameter_fixed == "gamma")){
     block_param <- paste(block_param, "vector<lower=0, upper = 0.9>[I] gamma;")
   }
 
@@ -205,7 +205,7 @@ if(is_multi  && !HO_F){
 
 create_block_transparam <- function(irt_model, age_model = "poly", is_2pl, is_multi, is_flex_multi){
 
-  if(!is_multi |irt_model == "Testlet2PLnorm" |irt_model == "Testlet1PLnorm"){
+  if(!is_multi || irt_model == "Testlet2PLnorm" || irt_model == "Testlet1PLnorm"){
     block_transparam <- "}
   transformed parameters{
   vector[J] theta_mean;
@@ -247,7 +247,7 @@ create_block_transparam <- function(irt_model, age_model = "poly", is_2pl, is_mu
   }
 
 
-  if(is_flex_multi |irt_model ==  "HO1PLnorm-C" |irt_model ==  "HO2PLnorm-C"){
+  if(is_flex_multi || irt_model ==  "HO1PLnorm-C" || irt_model ==  "HO2PLnorm-C"){
 
     block_transparam <-
       "}
@@ -257,10 +257,10 @@ create_block_transparam <- function(irt_model, age_model = "poly", is_2pl, is_mu
       vector[N] substraits;"
 
 
-    if(irt_model ==  "HO1PLnorm-P" |irt_model ==  "HO2PLnorm-P"){
+    if(irt_model ==  "HO1PLnorm-P" || irt_model ==  "HO2PLnorm-P"){
       block_transparam <- paste(block_transparam, "vector<lower=0, upper=1>[J] lambda;")
     }
-    if(irt_model == "HO1PLnorm-F" | irt_model == "HO2PLnorm-F"){
+    if(irt_model == "HO1PLnorm-F" || irt_model == "HO2PLnorm-F"){
       block_transparam <- paste(block_transparam,"vector[U] unique_sigma;")
     }
 
@@ -271,7 +271,7 @@ create_block_transparam <- function(irt_model, age_model = "poly", is_2pl, is_mu
 
 
     if(age_model == "poly"){
-      if(irt_model == "HO1PLnorm-F" | irt_model == "HO2PLnorm-F"){
+      if(irt_model == "HO1PLnorm-F" || irt_model == "HO2PLnorm-F"){
         block_transparam <- paste(block_transparam,
                                   "unique_sigma[start_idx:end_idx] = log1p_exp(age3 * p3_theta[d]);")
       }
@@ -279,12 +279,12 @@ create_block_transparam <- function(irt_model, age_model = "poly", is_2pl, is_mu
                                 "theta_mean[start_idx:end_idx] = age * p1_theta[d];
                                 theta_sigma[start_idx:end_idx] = log1p_exp(age2 * p2_theta[d]);}")
 
-      if(irt_model ==  "HO1PLnorm-P" |irt_model ==  "HO2PLnorm-P"){
+      if(irt_model ==  "HO1PLnorm-P" || irt_model ==  "HO2PLnorm-P"){
         block_transparam <- paste(block_transparam, "lambda = inv_logit(age3 * p3_theta);")
       }
     }
     if(age_model == "splines"){
-      if(irt_model == "HO1PLnorm-F" | irt_model == "HO2PLnorm-F"){
+      if(irt_model == "HO1PLnorm-F" || irt_model == "HO2PLnorm-F"){
         block_transparam <- paste(block_transparam,
                                   "unique_sigma[start_idx:end_idx] = log1p_exp(X3 * l3[d] + Z3 * u3[d]);")
       }
@@ -292,7 +292,7 @@ create_block_transparam <- function(irt_model, age_model = "poly", is_2pl, is_mu
                                 "theta_mean[start_idx:end_idx] = X1 * l1[d] + Z1 * u1[d];
                                 theta_sigma[start_idx:end_idx] = log1p_exp(X2 * l2[d] + Z2 * u2[d]);}")
 
-      if(irt_model ==  "HO1PLnorm-P" |irt_model ==  "HO2PLnorm-P"){
+      if(irt_model ==  "HO1PLnorm-P" || irt_model ==  "HO2PLnorm-P"){
         block_transparam <- paste(block_transparam, "lambda = inv_logit(X3 * l3 + Z3 * u3);")
       }
 
@@ -300,19 +300,19 @@ create_block_transparam <- function(irt_model, age_model = "poly", is_2pl, is_mu
 
 
 
-    if(irt_model ==  "HO1PLnorm-C" |irt_model ==  "HO2PLnorm-C"){
+    if(irt_model ==  "HO1PLnorm-C" || irt_model ==  "HO2PLnorm-C"){
       block_transparam <- paste(block_transparam,
                                 "substraits = theta_mean[JD_loadings] +
           z_theta[jj] .* nu[dd] .* theta_sigma[JD_loadings] +
           unique[JD_loadings] .* sqrt(1 - nu[dd]^2) .* theta_sigma[JD_loadings];")
 
     }
-    if(irt_model ==  "HO1PLnorm-P" |irt_model ==  "HO2PLnorm-P"){
+    if(irt_model ==  "HO1PLnorm-P" || irt_model ==  "HO2PLnorm-P"){
       block_transparam <- paste(block_transparam, "substraits = theta_mean[JD_loadings] +
                     z_theta[jj] .* nu[dd] .*lambda[jj].* theta_sigma[JD_loadings] +
                     unique[JD_loadings] .* sqrt(1 - (nu[dd].*lambda[jj])^2) .* theta_sigma[JD_loadings];")
     }
-    if(irt_model ==  "HO1PLnorm-F" |irt_model ==  "HO2PLnorm-F"){
+    if(irt_model ==  "HO1PLnorm-F" || irt_model ==  "HO2PLnorm-F"){
       block_transparam <- paste(block_transparam, "substraits = theta_mean[JD_loadings] + z_theta[jj] .* (theta_sigma[JD_loadings]) + unique[JD_loadings].*(unique_sigma[JD_loadings]);")
     }
   }
@@ -504,7 +504,7 @@ create_block_generatequantities <- function(irt_model, is_2pl, is_multi, is_flex
   if(!is_multi){
 
 
-    if(irt_model == "1PLnorm" |irt_model == "2PLnorm"|irt_model == "3PLnorm"){
+    if(irt_model == "1PLnorm" || irt_model == "2PLnorm" || irt_model == "3PLnorm"){
       block_quantities <- paste(block_quantities ,"array[J] real theta_rep;
     theta_rep = normal_rng(theta_mean, theta_sigma);")
     }

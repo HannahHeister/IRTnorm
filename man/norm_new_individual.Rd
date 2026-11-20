@@ -114,29 +114,20 @@ at a time.
 }
 
 \examples{
-\dontrun{
-# Fit a norming model
-data(response_data)
-info <- estimate_norming_model(
-  raw_data = response_data,
-  age_variable = "age",
-  item_variables = 1:50,
-  irt_model = "2PLnorm",
-  age_model = "poly",
-  poly_mean = 3,
-  poly_sd = 2,
-  iter_warmup = 500,
-  iter_sampling = 500,
-  chains = 2,
-  parallel_chains = 2
-)
+\donttest{
+# load complied 1PLnorm model
+data(info_mini)
 
 # New individual with the same answer pattern as individual 20
-y <- unlist(response_data[20, 1:50])
-age <- response_data$age[20]
+y <- c(1,0,1,1,0)
+age <- 8
 
+# This is only for illustration purposes. In practice the number of iterations and 
+# burnin should be larger. 
 set.seed(1)
-result <- norm_new_individual(new_y = y, new_age = age, fit_info = info)
+result <- norm_new_individual(new_y = y, new_age = age,
+fit_info = info_mini, mh_args = list(n_iter = 20, burnin = 10,
+                                     thin = 1, proposal_sd = 0.6))
 
 # EAP estimate of the norm score
 mean(result$theta_zsample)

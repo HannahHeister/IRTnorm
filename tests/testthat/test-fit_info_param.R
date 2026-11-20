@@ -95,7 +95,7 @@ test_that("output has one row per diagnostic and parameter, in block order", {
   expect_s3_class(res, "data.frame")
   expect_named(res, c("diagnostic", "variable",
                       "Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max."))
-  expect_identical(nrow(res), 3 * length(p))
+  expect_identical(nrow(res), as.integer(3 * length(p)))
   expect_identical(res$diagnostic, rep(c("rhat", "ess_bulk", "ess_tail"), each = 4))
   expect_identical(res$variable, rep(p, times = 3))
   expect_identical(rownames(res), as.character(seq_len(nrow(res))))

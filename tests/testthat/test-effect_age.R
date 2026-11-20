@@ -94,7 +94,7 @@ test_that("uni: data are in long format with mean and sd stacked", {
   s <- fit$model_info$info_sample
   
   expect_named(d, c("age", "value", "moment"))
-  expect_identical(nrow(d), 100)
+  expect_equal(nrow(d), 100)
   expect_identical(levels(d$moment), c("mean", "standard deviation"))
   expect_identical(d$value[d$moment == "mean"], s$theta_mu)
   expect_identical(d$value[d$moment == "standard deviation"], s$theta_sigma)
@@ -112,7 +112,7 @@ test_that("uni: one line layer, two free-scale panels, correct label", {
   expect_identical(p$labels$y, "latent trait")
   expect_s3_class(p$facet, "FacetWrap")
   lay <- layout_of(p)
-  expect_identical(nrow(lay), 2)
+  expect_equal(nrow(lay), 2)
   expect_identical(as.character(facet_col(lay, "moment")), c("mean", "standard deviation"))
   expect_true(p$facet$params$free$x)
   expect_true(p$facet$params$free$y)
@@ -130,15 +130,15 @@ test_that("multi: three moments for every person and trait", {
   n <- 30; D <- 2
   d <- run_effect(make_effect_multi(n = n, n_dim = D))$data
   expect_named(d, c("age", "value", "moment", "trait"))
-  expect_identical(nrow(d), 3 * D * n)
+  expect_equal(nrow(d), 3 * D * n)
   expect_identical(levels(d$moment), c("mean", "standard deviation", "correlation"))
-  expect_identical(as.vector(table(d$moment, d$trait)), rep(n, 3 * D))
+  expect_equal(as.vector(table(d$moment, d$trait)), rep(n, 3 * D))
 })
 
 test_that("multi: scales with the number of dimensions", {
   d <- run_effect(make_effect_multi(n = 20, n_dim = 3))$data
   expect_length(unique(d$trait), 3)
-  expect_identical(nrow(d), 3 * 3 * 20)
+  expect_equal(nrow(d), 3 * 3 * 20)
 })
 
 test_that("multi: mean and sd come from theta_mu and theta_sigma of the delta rows", {
@@ -212,7 +212,7 @@ test_that("info_relation is read from model_info", {
 test_that("multi: one row per moment and column per trait with free y scales", {
   p <- run_effect(make_effect_multi(n = 30, n_dim = 2))$plot
   lay <- layout_of(p)
-  expect_identical(nrow(lay), 6)
+  expect_identical(nrow(lay), is.integer(6))
   expect_setequal(as.character(facet_col(lay, "moment")),
                   c("mean", "standard deviation", "correlation"))
   expect_setequal(as.character(facet_col(lay, "trait")), c("delta1", "delta2"))
@@ -222,7 +222,7 @@ test_that("multi: one row per moment and column per trait with free y scales", {
 })
 
 test_that("multi: panel count scales with dimensions", {
-  expect_identical(nrow(layout_of(run_effect(make_effect_multi(n_dim = 3))$plot)), 9)
+  expect_identical(nrow(layout_of(run_effect(make_effect_multi(n_dim = 3))$plot)), as.integer(9))
 })
 
 test_that("multi: one line layer, builds without error for all model families", {

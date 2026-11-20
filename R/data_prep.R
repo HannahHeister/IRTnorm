@@ -267,7 +267,7 @@ data_prep <- function(raw_data, age_variable, item_variables,
   age_scale <- (age - m_age)/s_age
   age_df <- data.frame(age = age_scale)
   if(age_model == "poly"){
-    if(is.null(poly_sd) | is.null(poly_mean)){
+    if(is.null(poly_sd) || is.null(poly_mean)){
       stop("If age_model = poly is selected poly_mean and poly_sd have to be provided.")
     }
     if(poly_sd == 0){
@@ -447,14 +447,14 @@ data_prep <- function(raw_data, age_variable, item_variables,
   }
   
   if(!is.null(prior_knowledge)){
-    for(j in seq_len(length(prior_knowledge))){
-      if(any(prior_names[j] == c("alpha","beta","gamma")) &
+    for(j in seq_along(prior_knowledge)){
+      if(any(prior_names[j] == c("alpha","beta","gamma")) &&
          any(lengths(prior_knowledge[[j]]) != nitem)){
         stop(paste0("When you choose to incoperate prior knowledge for ", prior_names[j],
                     " you have to indicate the distribution mean and standard deviation for all items.
                         Your information is in the wrong format."))
       }
-      if(prior_names[j] == "nu" & any(c("Testlet1PLnorm","Testlet2PLnorm", "HO1PLnorm-C", "HO2PLnorm-C",
+      if(prior_names[j] == "nu" && any(c("Testlet1PLnorm","Testlet2PLnorm", "HO1PLnorm-C", "HO2PLnorm-C",
                                            "HO1PLnorm-P", "HO2PLnorm-P") == irt_model)){
         if(any(lengths(prior_knowledge[[j]]) != D)){
         stop(paste0("When you choose to incoperate prior knowledge for ", prior_names[j],
@@ -462,11 +462,11 @@ data_prep <- function(raw_data, age_variable, item_variables,
                         Your information is in the wrong format."))
         }
       }
-      if(irt_model == "GRMnorm" & prior_names[j] == "b"){
-        if(length(prior_knowledge[[j]][[1]])!= nitem |
-           length(prior_knowledge[[j]][[2]])!= nitem |
-           any(lengths(prior_knowledge[[j]][[1]]) != max(K_item) -1) |
-           any(lengths(prior_knowledge[[j]][[2]]) != max(K_item) -1) |
+      if(irt_model == "GRMnorm" && prior_names[j] == "b"){
+        if(length(prior_knowledge[[j]][[1]])!= nitem ||
+           length(prior_knowledge[[j]][[2]])!= nitem ||
+           any(lengths(prior_knowledge[[j]][[1]]) != max(K_item) -1) ||
+           any(lengths(prior_knowledge[[j]][[2]]) != max(K_item) -1) ||
            any(sapply(prior_knowledge[[j]][[1]], function(x) any(diff(x) <0)))){
           stop(paste0("When you choose to incoperate prior knowledge for ", prior_names[j],
                       " you have to indicate those for all thresholds. Therefore you need
@@ -483,15 +483,15 @@ data_prep <- function(raw_data, age_variable, item_variables,
   }
   
   if(!is.null(parameter_fixed)){
-    for(j in seq_len(length(parameter_fixed))){
-      if(para_names[j] %in% c("alpha","beta","gamma") & length(parameter_fixed[[j]]) != nitem){
+    for(j in seq_along(parameter_fixed)){
+      if(para_names[j] %in% c("alpha","beta","gamma") && length(parameter_fixed[[j]]) != nitem){
         stop(paste0("When you choose to fix ", para_names[j],
                     " you have to indicate those for all items."))
       }
-        if(irt_model == "GRMnorm" & para_names[j] == "b"){
-          if(length(parameter_fixed[[j]]) != nitem |
-             !is.list(parameter_fixed[[j]]) |
-             all(lengths(parameter_fixed[[j]]) != max(K_item) -1 ) |
+        if(irt_model == "GRMnorm" && para_names[j] == "b"){
+          if(length(parameter_fixed[[j]]) != nitem ||
+             !is.list(parameter_fixed[[j]]) ||
+             all(lengths(parameter_fixed[[j]]) != max(K_item) -1 ) ||
              any(sapply(parameter_fixed[[j]], function(x) any(diff(x) <0)))){
                stop(paste0("When you choose to fix ", para_names[j],
                            " you have to indicate those for all thresholds. Therefore you need
@@ -512,13 +512,13 @@ data_prep <- function(raw_data, age_variable, item_variables,
 
 check_rawinput <- function(raw_data, item_variables, age_variable){
   if(is.numeric(item_variables)){
-    if(max(item_variables) > ncol(raw_data) | min(item_variables) < 1){
+    if(max(item_variables) > ncol(raw_data) || min(item_variables) < 1){
       stop("`item_variables` contains an index outside the range of `raw_data`.")
     }
     item_variables <- colnames(raw_data)[item_variables]
   }
   if(is.numeric(age_variable)){
-    if(age_variable > ncol(raw_data) | age_variable < 1){
+    if(age_variable > ncol(raw_data) || age_variable < 1){
       stop("`age_variable` is outside the range of `raw_data`.")
     }
     age_variable <- colnames(raw_data)[age_variable]

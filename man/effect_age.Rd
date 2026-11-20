@@ -40,22 +40,15 @@ be compared directly. The correlation is the correlation between the
 domain-specific trait and the general trait.
 }
 \examples{
-\dontrun{
-info <- estimate_norming_model(
-  raw_data = response_data,
-  age_variable = "age",
-  item_variables = 1:50,
-  irt_model = "2PLnorm",
-  age_model = "poly",
-  poly_mean = 3,
-  poly_sd = 2
-)
+\donttest{
+# load complied 1PLnorm model
+data(info_mini)
 
 # Plot the estimated age effect
-effect_age(fit_info = info)
+effect_age(fit_info = info_mini)
 
 # Keep the plot and the underlying data
-res <- effect_age(fit_info = info)
+res <- effect_age(fit_info = info_mini)
 res$plot
 head(res$data)
 }

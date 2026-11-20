@@ -59,24 +59,16 @@ all items and, in addition, for the raw score of each domain.
 Raw scores without any observations are kept in the output with frequency 0.
 }
 \examples{
-\dontrun{
-data(response_data)
-info <- estimate_norming_model(
-  raw_data = response_data,
-  age_variable = "age",
-  item_variables = 1:50,
-  irt_model = "2PLnorm",
-  age_model = "poly",
-  poly_mean = 3,
-  poly_sd = 2
-)
+\donttest{
+# load complied 1PLnorm model
+data(info_mini)
 
 # Whole sample
-result <- raw_score_ppc(fit_info = info)
+result <- raw_score_ppc(fit_info = info_mini)
 visual_raw_score_ppc(result)
 
 # Separately by age group
-result_age <- raw_score_ppc(fit_info = info, age_range = c(5, 7, 9, 11))
+result_age <- raw_score_ppc(fit_info = info_mini, age_range = c(5, 7, 9, 10))
 visual_raw_score_ppc(result_age)
 }
 

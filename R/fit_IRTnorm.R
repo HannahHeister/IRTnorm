@@ -309,7 +309,7 @@ extract_personinfo <- function(fit, data){
     mu_est <- fit$draws( "theta_mean",format =  "draws_matrix")
     sd_est <- fit$draws(  "theta_sigma",format =  "draws_matrix")
     
-    if(data$irt_mod == 5 |data$irt_mod == 6){
+    if(data$irt_mod == 5 || data$irt_mod == 6){
       mu_est <-   do.call(cbind, replicate(D, mu_est, simplify = FALSE))
       sd_est <-   do.call(cbind, replicate(D, sd_est, simplify = FALSE))
       

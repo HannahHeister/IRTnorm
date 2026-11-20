@@ -49,24 +49,16 @@
 #'   \code{age}, a label describing the age group (e.g., \code{"age: [30,60]"}).
 #'
 #' @examples
-#' \dontrun{
-#' data(response_data)
-#' info <- estimate_norming_model(
-#'   raw_data = response_data,
-#'   age_variable = "age",
-#'   item_variables = 1:50,
-#'   irt_model = "2PLnorm",
-#'   age_model = "poly",
-#'   poly_mean = 3,
-#'   poly_sd = 2
-#' )
-#'
+#' \donttest{
+#' # load complied 1PLnorm model
+#' data(info_mini)
+#' 
 #' # Whole sample
-#' result <- raw_score_ppc(fit_info = info)
+#' result <- raw_score_ppc(fit_info = info_mini)
 #' visual_raw_score_ppc(result)
 #'
 #' # Separately by age group
-#' result_age <- raw_score_ppc(fit_info = info, age_range = c(5, 7, 9, 11))
+#' result_age <- raw_score_ppc(fit_info = info_mini, age_range = c(5, 7, 9, 10))
 #' visual_raw_score_ppc(result_age)
 #' }
 #'
@@ -310,26 +302,18 @@ compute_nc_by_age <- function(observed_scores, raw_data, age_variable,
 #'   \code{\link[ggplot2]{ggsave}}.
 #'
 #' @examples
-#' \dontrun{
-#' data(response_data)
-#' info <- estimate_norming_model(
-#'   raw_data = response_data,
-#'   age_variable = "age",
-#'   item_variables = 1:50,
-#'   irt_model = "2PLnorm",
-#'   age_model = "poly",
-#'   poly_mean = 3,
-#'   poly_sd = 2
-#' )
-#'
+#' 
+#' \donttest{
+#' # load complied 1PLnorm model
+#' data(info_mini)
+#' 
 #' # Whole sample
-#' result <- raw_score_ppc(fit_info = info)
+#' result <- raw_score_ppc(fit_info = info_mini)
 #' visual_raw_score_ppc(result)
 #'
 #' # Separately by age group
-#' result_age <- raw_score_ppc(fit_info = info, age_range = c(-2,-1,0,1,2))
+#' result_age <- raw_score_ppc(fit_info = info_mini, age_range = c(5, 7, 9, 10))
 #' visual_raw_score_ppc(result_age)
-#'
 #' }
 #'
 #' @seealso \code{\link{raw_score_ppc}} for computing the raw score
@@ -389,7 +373,7 @@ if (!(length(raw_score_ppc_info) > 1 && !is.null(raw_score_ppc_info[[1]][[1]]$ag
   dim_plot <- NULL
 }
 # True if multiple dimensions are tested and if multiple ages are evaluated
-if(length(raw_score_ppc_info) > 1 & !is.null(raw_score_ppc_info[[1]][[1]]$age)){
+if(length(raw_score_ppc_info) > 1 && !is.null(raw_score_ppc_info[[1]][[1]]$age)){
   if(is.null(dim_plot)){
     stop("'dim_plot' missing. Please provide which latent trait dimension  should be visualized. Due to
         the different age groups the latent trait dimensions have to be plotted individually.")
@@ -539,20 +523,13 @@ return(invisible(p))
 #'   \code{\link{raw_score_ppc}}
 #'
 #' @examples
-#' \dontrun{
-#' load(response_data)
-#' info <- estimate_norming_model(
-#'   raw_data = response_data,
-#'   age_variable = "age",
-#'   item_variables = 1:50,
-#'   irt_model = "2PLnorm",
-#'   age_model = "poly",
-#'   poly_mean = 3,
-#'   poly_sd = 2
-#' )
+#' 
+#' \donttest{
+#' # load complied 1PLnorm model
+#' data(info_mini)
 #'
 #' # Norm score distribution in age groups
-#' normscore_dist(fit_info = info, age_range = c(-2,1,0,1,2))
+#' normscore_dist(fit_info = info_mini, age_range = c(5,8,10))
 #' }
 #'
 #' @export
@@ -685,23 +662,15 @@ is_multidim <- function(irt_mod) irt_mod >= 5
 #'   \code{\link{normscore_dist}}
 #'
 #' @examples
-#' \dontrun{
-#' data(response_data)
-#' info <- estimate_norming_model(
-#'   raw_data = response_data,
-#'   age_variable = "age",
-#'   item_variables = 1:50,
-#'   irt_model = "2PLnorm",
-#'   age_model = "poly",
-#'   poly_mean = 3,
-#'   poly_sd = 2
-#' )
+#' \donttest{
+#' # load complied 1PLnorm model
+#' data(info_mini)
 #'
 #' # Default quantiles
-#' quantile_curves(fit_info = info)
+#' quantile_curves(fit_info = info_mini)
 #'
-#' # Selected quantiles; keep the underlying values
-#' q <- quantile_curves(fit_info = info, probs = c(0.025, 0.5, 0.975))
+#' # Selected quantiles
+#' quantile_curves(fit_info = info_mini, probs = c(0.025, 0.5, 0.975))
 #' }
 #'
 #' @export
@@ -901,23 +870,15 @@ make_dummy_matrix <- function(info, K_item) {
 #'   \code{\link{raw_score_ppc}}
 #'
 #' @examples
-#' \dontrun{
-#' data(response_data)
-#' info <- estimate_norming_model(
-#'   raw_data = response_data,
-#'   age_variable = "age",
-#'   item_variables = 1:50,
-#'   irt_model = "2PLnorm",
-#'   age_model = "poly",
-#'   poly_mean = 3,
-#'   poly_sd = 2
-#' )
-#'
+#' \donttest{
+#' # load complied 1PLnorm model
+#' data(info_mini)
+#' 
 #' # Item fit
-#' item_person_fit(fit_info = info, parameter = "item")
+#' item_person_fit(fit_info = info_mini, parameter = "item")
 #'
 #' # Person fit, keeping the plot and the underlying data
-#' res <- item_person_fit(fit_info = info, parameter = "person")
+#' res <- item_person_fit(fit_info = info_mini, parameter = "person")
 #' res$plot
 #' head(res$data)
 #' }
@@ -1051,7 +1012,7 @@ item_person_fit <- function(fit_info,  parameter){
     yname <- "model-implied"
     titlename <- "person fit: raw score"
   }
-  if(data$irt_mod == 4 & parameter == "item"){
+  if(data$irt_mod == 4 && parameter == "item"){
     p <- ggplot2::ggplot(df, ggplot2::aes(x = factor(.data$type),
                                           y = .data$value, fill = factor(.data$level))) +
       ggplot2::geom_bar(stat = "identity") +
@@ -1122,22 +1083,16 @@ item_person_fit <- function(fit_info,  parameter){
 #'   \code{\link{quantile_curves}}
 #'
 #' @examples
-#' \dontrun{
-#' info <- estimate_norming_model(
-#'   raw_data = response_data,
-#'   age_variable = "age",
-#'   item_variables = 1:50,
-#'   irt_model = "2PLnorm",
-#'   age_model = "poly",
-#'   poly_mean = 3,
-#'   poly_sd = 2
-#' )
-#'
+
+#' \donttest{
+#' # load complied 1PLnorm model
+#' data(info_mini)
+#' 
 #' # Plot the estimated age effect
-#' effect_age(fit_info = info)
+#' effect_age(fit_info = info_mini)
 #'
 #' # Keep the plot and the underlying data
-#' res <- effect_age(fit_info = info)
+#' res <- effect_age(fit_info = info_mini)
 #' res$plot
 #' head(res$data)
 #' }
@@ -1372,24 +1327,17 @@ visual_multi <- function(Q3 = Q3, itemD = itemD){
 #' \emph{Applied Psychological Measurement, 8}(2), 125-145.
 #'
 #' @examples
-#' \dontrun{
-#' data(response_data)
-#' info <- estimate_norming_model(
-#'   raw_data = response_data,
-#'   age_variable = "age",
-#'   item_variables = 1:50,
-#'   irt_model = "2PLnorm",
-#'   age_model = "poly",
-#'   poly_mean = 3,
-#'   poly_sd = 2
-#' )
-#'
+
+#' \donttest{
+#' # load complied 1PLnorm model
+#' data(info_mini)
+#' 
 #' # Summary and heat map
-#' item_residual_cor(info)
+#' item_residual_cor(info_mini)
 #'
 #' # Keep the residual correlation matrix, without the plot
-#' res <- item_residual_cor(info, visual = FALSE)
-#' res$Q3[1:5, 1:5]
+#' res <- item_residual_cor(info_mini, visual = FALSE)
+#' res$Q3
 #'
 #' # Multidimensional model: restrict to one domain
 #' # item_residual_cor(info_multi, domain = 1)
