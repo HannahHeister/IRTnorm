@@ -57,7 +57,8 @@ of age, using polynomial regression or penalized splines.
 Simulation studies have shown that IRT-based continuous norming models can
 accurately recover age-specific norms; further, an empirical evaluation with the intelligence test
 IDS-2 [@grob2018idsNL] has shown that these models can fit empirical data
-well [@heister2024item]. The default approach to norm psychological tests is to use raw score-based continuous norming [@timmerman2025GRoNC]. Unlike raw score-based continuous norming, IRT-based models use all
+well [@heister2024item]. The default approach to norm psychological tests is to use raw score-based 
+continuous norming [@timmerman2025GRoNC]. Unlike raw score-based continuous norming, IRT-based models use all
 available item-level information, can model multiple latent traits and their
 relationships, and integrate straightforwardly with adaptive testing.
 
@@ -365,7 +366,9 @@ sum(info$model_stan_obj$sampler_diagnostics()[, , "divergent__"])
 Two further key diagnostics are the potential scale reduction factor (R-hat)
 and the effective sample size (ESS). R-hat should be close to 1 (commonly,
 below 1.01), indicating agreement between the chains. Larger ESS values
-indicate more precise estimates. As a rule of thumb, an ESS of at least 400 is generally recommended for reliable estimation, although higher values may be needed for precise estimation of tail quantities or other specific quantities of interest.
+indicate more precise estimates. As a rule of thumb, an ESS of at least 400 is generally 
+recommended for reliable estimation, although higher values may be needed for precise 
+estimation of tail quantities or other specific quantities of interest.
 
 ```{r showfit02, echo=TRUE, include=TRUE, eval=TRUE}
 info$conv_info
