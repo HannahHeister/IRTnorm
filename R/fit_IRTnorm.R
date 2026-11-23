@@ -439,13 +439,6 @@ extract_relationinfo <- function(fit, irt_mod,
 #'@keywords internal
 
 extract_info <- function(fit, data){
-  if (!requireNamespace("cmdstanr", quietly = TRUE)) {
-    stop(
-      "Package 'cmdstanr' is required but not installed.\n",
-      "Install it with: install.packages('cmdstanr', repos = c('https://stan-dev.r-universe.dev', getOption('repos')))",
-      call. = FALSE
-    )
-  }
   info_item <- extract_iteminfo(fit = fit, data = data, type = "mean")
 
   info_coef <- extract_coefinfo(fit = fit, age_mod = data$age_mod, irt_mod = data$irt_mod,  type = "mean")
@@ -509,13 +502,6 @@ extract_info <- function(fit, data){
 #'
 
 info_new_norming  <- function(fit, data){
-  if (!requireNamespace("cmdstanr", quietly = TRUE)) {
-    stop(
-      "Package 'cmdstanr' is required but not installed.\n",
-      "Install it with: install.packages('cmdstanr', repos = c('https://stan-dev.r-universe.dev', getOption('repos')))",
-      call. = FALSE
-    )
-  }
   info_coef <- extract_coefinfo(fit = fit, age_mod = data$age_mod, 
                                 irt_mod = data$irt_mod,  type = "draws")
 

@@ -1,0 +1,12 @@
+bibentry(
+  bibtype = "Article",
+  title = "Item Response Theory-Based Continuous Test Norming",
+  author = c(
+  person("Hannah M.", "Heister"), 
+  person("Casper J.", "Albers"),
+  person("Marie", "Wiberg"), 
+  person("Marieke E.", "Timmerman")), 
+  journal = "Psychological Methods",
+  year = "2024",
+  doi = "10.1037/met0000686"
+)

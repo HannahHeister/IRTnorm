@@ -376,6 +376,12 @@ compare_age_models <- function(method = c("grid", "forward"),
                                parallel_chains = NULL,
                                include_splines = TRUE){
   
+  if (!requireNamespace("loo", quietly = TRUE)) {
+    stop("Package 'loo' is required for this function. ",
+         "Please install it with install.packages(\"loo\").",
+         call. = FALSE)
+  }
+  
   method <- match.arg(method)
   if (is.null(irt_model)) {
     stop("`irt_model` must be a single model name.")
@@ -792,6 +798,11 @@ compare_IRTnorm_models <- function(model_specifications, raw_data, age_variable,
                                    item_variables, seed = NULL,
                                    iter_warmup = 500, iter_sampling = 500,
                                    chains = 2, parallel_chains = NULL) {
+  if (!requireNamespace("loo", quietly = TRUE)) {
+    stop("Package 'loo' is required for this function. ",
+         "Please install it with install.packages(\"loo\").",
+         call. = FALSE)
+  }
   
   validate_model_specifications_list(model_specifications)
   check_dimension(model_specifications)
