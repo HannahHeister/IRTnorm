@@ -389,5 +389,5 @@ Norming new individuals proceeds as in the unidimensional case with
 `norm_new_individual()`. For hierarchical models, the result contains the
 norm scores of the general trait and of each domain.
 
-# Funding 
+# Founding 
 Development of `IRTnorm` was supported by Dutch Research Council NWO, [grant 406.27.GO.022](https://doi.org/10.61686/YHUOB23106).
